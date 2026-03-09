@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { ScrollView, Text, View, TouchableOpacity, StyleSheet, Alert } from "react-native";
+import { ScrollView, Text, View, TouchableOpacity, StyleSheet, Alert, useWindowDimensions } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
 import { useRisks } from "@/lib/risk-context";
 import { getRiskLevel, getGutLevel } from "@/lib/models";
+import { IconSymbol } from "@/components/ui/icon-symbol";
 
 export default function RiskDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -12,20 +13,8 @@ export default function RiskDetailScreen() {
   const colors = useColors();
   const { getRisk, deleteRisk } = useRisks();
   const risk = getRisk(id || '');
-
-  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
-    identificacao: true,
-    descricao: true,
-    classificacao: true,
-    avaliacao: true,
-    priorizacao: true,
-    tratamento: false,
-    residual: false,
-  });
-
-  const toggleSection = (key: string) => {
-    setExpandedSections(prev => ({ ...prev, [key]: !prev[key] }));
-  };
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 768;
 
   const handleDelete = () => {
     Alert.alert(
@@ -62,133 +51,133 @@ export default function RiskDetailScreen() {
   const gutLevel = getGutLevel(risk.gutScore);
 
   return (
-    <ScreenContainer className="flex-1">
+    <ScreenContainer className="flex-1" edges={isDesktop ? [] : ["top", "left", "right"]}>
       {/* Header */}
-      <View style={[styles.header, { borderBottomColor: colors.border }]}>
-        <TouchableOpacity onPress={() => router.back()} activeOpacity={0.7}>
-          <Text style={{ color: colors.primary, fontSize: 16 }}>Voltar</Text>
+      <View style={[styles.header, { borderBottomColor: colors.border }, isDesktop && styles.headerDesktop]}>
+        <TouchableOpacity onPress={() => router.back()} activeOpacity={0.7} style={styles.backBtn}>
+          <IconSymbol name="arrow.left" size={20} color={colors.foreground} />
+          <Text style={{ color: colors.foreground, fontSize: 15, fontWeight: '500', marginLeft: 8 }}>Voltar</Text>
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.foreground }]}>{risk.id}</Text>
-        <TouchableOpacity onPress={handleDelete} activeOpacity={0.7}>
-          <Text style={{ color: colors.error, fontSize: 16 }}>Excluir</Text>
-        </TouchableOpacity>
+        <Text style={[styles.headerTitle, { color: colors.foreground }]}>Risco {risk.id}</Text>
+        <View style={styles.headerActions}>
+          <TouchableOpacity
+            style={[styles.headerBtn, { backgroundColor: colors.primary + '10' }]}
+            onPress={() => router.push(`/risk/edit/${risk.id}` as any)}
+            activeOpacity={0.7}
+          >
+            <IconSymbol name="pencil" size={16} color={colors.primary} />
+            <Text style={{ color: colors.primary, fontWeight: '600', fontSize: 13, marginLeft: 6 }}>Editar</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.headerBtn, { backgroundColor: '#FEE2E2' }]}
+            onPress={handleDelete}
+            activeOpacity={0.7}
+          >
+            <IconSymbol name="trash.fill" size={16} color="#DC2626" />
+            <Text style={{ color: '#DC2626', fontWeight: '600', fontSize: 13, marginLeft: 6 }}>Excluir</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Risk Summary Card */}
-        <View className="px-5 pt-4 pb-2">
-          <View style={[styles.summaryCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-            <View style={styles.summaryHeader}>
-              <View style={[styles.badge, { backgroundColor: riskLevel.color + '20' }]}>
-                <Text style={[styles.badgeText, { color: riskLevel.color }]}>{riskLevel.label}</Text>
+      <ScrollView contentContainerStyle={[styles.scrollContent, isDesktop && styles.scrollContentDesktop]} showsVerticalScrollIndicator={false}>
+        {/* Summary Banner */}
+        <View style={[styles.summaryBanner, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <View style={styles.summaryTop}>
+            <View style={styles.summaryBadges}>
+              <View style={[styles.pill, { backgroundColor: riskLevel.color + '15' }]}>
+                <Text style={[styles.pillText, { color: riskLevel.color }]}>{riskLevel.label}</Text>
               </View>
-              <View style={[styles.badge, { backgroundColor: gutLevel.color + '20' }]}>
-                <Text style={[styles.badgeText, { color: gutLevel.color }]}>GUT: {risk.gutScore}</Text>
+              <View style={[styles.pill, { backgroundColor: gutLevel.color + '15' }]}>
+                <Text style={[styles.pillText, { color: gutLevel.color }]}>GUT: {risk.gutScore}</Text>
+              </View>
+              <View style={[styles.pill, { backgroundColor: colors.primary + '10' }]}>
+                <Text style={[styles.pillText, { color: colors.primary }]}>{risk.tipoRisco}</Text>
               </View>
             </View>
-            <Text style={[styles.riskDesc, { color: colors.foreground }]}>{risk.descricaoRisco}</Text>
-            <View style={styles.metricsRow}>
-              <MetricBox label="P×I" value={String(risk.riscoInerente)} color={riskLevel.color} colors={colors} />
-              <MetricBox label="Prob." value={String(risk.probabilidade)} color={colors.primary} colors={colors} />
-              <MetricBox label="Impacto" value={String(risk.impacto)} color={colors.primary} colors={colors} />
-              <MetricBox label="GUT" value={String(risk.gutScore)} color={gutLevel.color} colors={colors} />
-            </View>
+          </View>
+          <Text style={[styles.riskDescText, { color: colors.foreground }]}>{risk.descricaoRisco}</Text>
+          <View style={[styles.metricsRow, isDesktop && styles.metricsRowDesktop]}>
+            <MetricBox label="Probabilidade" value={`${risk.probabilidade}/5`} color={colors.primary} colors={colors} />
+            <MetricBox label="Impacto" value={`${risk.impacto}/5`} color={colors.primary} colors={colors} />
+            <MetricBox label="Risco Inerente" value={String(risk.riscoInerente)} color={riskLevel.color} colors={colors} />
+            <MetricBox label="GUT Score" value={String(risk.gutScore)} color={gutLevel.color} colors={colors} />
+            <MetricBox label="Risco Residual" value={`${risk.riscoResidual}/5`} color="#38A169" colors={colors} />
           </View>
         </View>
 
-        {/* Collapsible Sections */}
-        <View className="px-5 gap-2 pb-8">
-          <CollapsibleSection
-            title="1. Identificação"
-            expanded={expandedSections.identificacao}
-            onToggle={() => toggleSection('identificacao')}
-            colors={colors}
-          >
-            <DetailRow label="Fonte de Risco" value={risk.fonteDeRisco} colors={colors} />
-            <DetailRow label="Descrição da Fonte" value={risk.descricaoFonte} colors={colors} />
-            <DetailRow label="Ameaça" value={risk.ameaca} colors={colors} />
-          </CollapsibleSection>
+        {/* Content Grid */}
+        <View style={[styles.contentGrid, isDesktop && styles.contentGridDesktop]}>
+          {/* Left Column */}
+          <View style={[styles.column, isDesktop && { flex: 1 }]}>
+            <SectionCard title="1. Identificação" colors={colors}>
+              <DetailRow label="Fonte de Risco" value={risk.fonteDeRisco} colors={colors} />
+              <DetailRow label="Descrição da Fonte" value={risk.descricaoFonte} colors={colors} />
+              <DetailRow label="Ameaça" value={risk.ameaca} colors={colors} />
+            </SectionCard>
 
-          <CollapsibleSection
-            title="2. Descrição do Risco"
-            expanded={expandedSections.descricao}
-            onToggle={() => toggleSection('descricao')}
-            colors={colors}
-          >
-            <DetailRow label="Descrição (Forma 3)" value={risk.descricaoRisco} colors={colors} />
-            <DetailRow label="Consequência" value={risk.consequencia} colors={colors} />
-          </CollapsibleSection>
+            <SectionCard title="2. Descrição do Risco" colors={colors}>
+              <DetailRow label="Descrição (Forma 3)" value={risk.descricaoRisco} colors={colors} />
+              <DetailRow label="Consequência" value={risk.consequencia} colors={colors} />
+            </SectionCard>
 
-          <CollapsibleSection
-            title="3. Classificação"
-            expanded={expandedSections.classificacao}
-            onToggle={() => toggleSection('classificacao')}
-            colors={colors}
-          >
-            <DetailRow label="Estratégico" value={risk.estrategico} colors={colors} />
-            <DetailRow label="Tipo de Risco" value={risk.tipoRisco} colors={colors} />
-          </CollapsibleSection>
+            <SectionCard title="3. Classificação" colors={colors}>
+              <View style={styles.inlineRow}>
+                <DetailRow label="Estratégico" value={risk.estrategico} colors={colors} />
+                <DetailRow label="Tipo de Risco" value={risk.tipoRisco} colors={colors} />
+              </View>
+            </SectionCard>
 
-          <CollapsibleSection
-            title="4. Avaliação"
-            expanded={expandedSections.avaliacao}
-            onToggle={() => toggleSection('avaliacao')}
-            colors={colors}
-          >
-            <DetailRow label="Probabilidade" value={`${risk.probabilidade} / 5`} colors={colors} />
-            <DetailRow label="Impacto" value={`${risk.impacto} / 5`} colors={colors} />
-            <DetailRow label="Risco Inerente (P×I)" value={`${risk.riscoInerente} - ${riskLevel.label}`} colors={colors} />
-          </CollapsibleSection>
+            <SectionCard title="4. Avaliação (P × I)" colors={colors}>
+              <View style={styles.evalGrid}>
+                <EvalItem label="Probabilidade" value={risk.probabilidade} max={5} colors={colors} />
+                <EvalItem label="Impacto" value={risk.impacto} max={5} colors={colors} />
+                <View style={[styles.evalResult, { backgroundColor: riskLevel.color + '10', borderColor: riskLevel.color + '30' }]}>
+                  <Text style={[styles.evalResultLabel, { color: colors.muted }]}>Risco Inerente</Text>
+                  <Text style={[styles.evalResultValue, { color: riskLevel.color }]}>{risk.riscoInerente}</Text>
+                  <Text style={[styles.evalResultLevel, { color: riskLevel.color }]}>{riskLevel.label}</Text>
+                </View>
+              </View>
+            </SectionCard>
+          </View>
 
-          <CollapsibleSection
-            title="5. Priorização (GUT)"
-            expanded={expandedSections.priorizacao}
-            onToggle={() => toggleSection('priorizacao')}
-            colors={colors}
-          >
-            <DetailRow label="Gravidade (G)" value={`${risk.gravidade} / 5`} colors={colors} />
-            <DetailRow label="Urgência (U)" value={`${risk.urgencia} / 5`} colors={colors} />
-            <DetailRow label="Tendência (T)" value={`${risk.tendencia} / 5`} colors={colors} />
-            <DetailRow label="GUT Score (G×U×T)" value={`${risk.gutScore} - ${gutLevel.label}`} colors={colors} />
-          </CollapsibleSection>
+          {/* Right Column */}
+          <View style={[styles.column, isDesktop && { flex: 1 }]}>
+            <SectionCard title="5. Priorização (GUT)" colors={colors}>
+              <View style={styles.evalGrid}>
+                <EvalItem label="Gravidade (G)" value={risk.gravidade} max={5} colors={colors} />
+                <EvalItem label="Urgência (U)" value={risk.urgencia} max={5} colors={colors} />
+                <EvalItem label="Tendência (T)" value={risk.tendencia} max={5} colors={colors} />
+                <View style={[styles.evalResult, { backgroundColor: gutLevel.color + '10', borderColor: gutLevel.color + '30' }]}>
+                  <Text style={[styles.evalResultLabel, { color: colors.muted }]}>GUT Score</Text>
+                  <Text style={[styles.evalResultValue, { color: gutLevel.color }]}>{risk.gutScore}</Text>
+                  <Text style={[styles.evalResultLevel, { color: gutLevel.color }]}>{gutLevel.label}</Text>
+                </View>
+              </View>
+            </SectionCard>
 
-          <CollapsibleSection
-            title="6. Tratamento"
-            expanded={expandedSections.tratamento}
-            onToggle={() => toggleSection('tratamento')}
-            colors={colors}
-          >
-            <DetailRow label="Estratégia (MATE)" value={risk.tratamento} colors={colors} />
-            <DetailRow label="Controles" value={risk.controles} colors={colors} />
-            <DetailRow label="Responsável" value={risk.responsavel} colors={colors} />
-            <DetailRow label="Prazo" value={risk.prazo} colors={colors} />
-            <DetailRow label="KRI" value={risk.kri} colors={colors} />
-            <DetailRow label="Ação se KRI atingido" value={risk.acaoKri} colors={colors} />
-            <DetailRow label="Quem mede" value={risk.quemMede} colors={colors} />
-            <DetailRow label="Quando mede" value={risk.quandoMede} colors={colors} />
-          </CollapsibleSection>
+            <SectionCard title="6. Tratamento" colors={colors}>
+              <DetailRow label="Estratégia (MATE)" value={risk.tratamento} colors={colors} />
+              <DetailRow label="Controles" value={risk.controles} colors={colors} />
+              <View style={styles.inlineRow}>
+                <DetailRow label="Responsável" value={risk.responsavel} colors={colors} />
+                <DetailRow label="Prazo" value={risk.prazo} colors={colors} />
+              </View>
+              <DetailRow label="KRI" value={risk.kri} colors={colors} />
+              <DetailRow label="Ação se KRI atingido" value={risk.acaoKri} colors={colors} />
+              <View style={styles.inlineRow}>
+                <DetailRow label="Quem mede" value={risk.quemMede} colors={colors} />
+                <DetailRow label="Quando mede" value={risk.quandoMede} colors={colors} />
+              </View>
+            </SectionCard>
 
-          <CollapsibleSection
-            title="7. Risco Residual"
-            expanded={expandedSections.residual}
-            onToggle={() => toggleSection('residual')}
-            colors={colors}
-          >
-            <DetailRow label="Redução Pretendida" value={`${risk.reducaoPretendida} / 5`} colors={colors} />
-            <DetailRow label="Risco Residual" value={`${risk.riscoResidual} / 5`} colors={colors} />
-            <DetailRow label="Eficácia do Tratamento" value={risk.eficaciaTratamento} colors={colors} />
-          </CollapsibleSection>
-        </View>
-
-        {/* Edit Button */}
-        <View className="px-5 pb-8">
-          <TouchableOpacity
-            style={[styles.editBtn, { backgroundColor: colors.primary }]}
-            onPress={() => router.push(`/risk/edit/${risk.id}` as any)}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.editBtnText}>Editar Risco</Text>
-          </TouchableOpacity>
+            <SectionCard title="7. Risco Residual" colors={colors}>
+              <View style={styles.evalGrid}>
+                <EvalItem label="Redução Pretendida" value={risk.reducaoPretendida} max={5} colors={colors} />
+                <EvalItem label="Risco Residual" value={risk.riscoResidual} max={5} colors={colors} />
+              </View>
+              <DetailRow label="Eficácia do Tratamento" value={risk.eficaciaTratamento} colors={colors} />
+            </SectionCard>
+          </View>
         </View>
 
         <View style={{ height: 40 }} />
@@ -197,16 +186,11 @@ export default function RiskDetailScreen() {
   );
 }
 
-function CollapsibleSection({ title, expanded, onToggle, colors, children }: {
-  title: string; expanded: boolean; onToggle: () => void; colors: any; children: React.ReactNode;
-}) {
+function SectionCard({ title, colors, children }: { title: string; colors: any; children: React.ReactNode }) {
   return (
-    <View style={[styles.section, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-      <TouchableOpacity style={styles.sectionHeader} onPress={onToggle} activeOpacity={0.7}>
-        <Text style={[styles.sectionTitle, { color: colors.foreground }]}>{title}</Text>
-        <Text style={{ color: colors.muted, fontSize: 18 }}>{expanded ? '−' : '+'}</Text>
-      </TouchableOpacity>
-      {expanded && <View style={styles.sectionContent}>{children}</View>}
+    <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+      <Text style={[styles.sectionTitle, { color: colors.foreground }]}>{title}</Text>
+      <View style={styles.sectionBody}>{children}</View>
     </View>
   );
 }
@@ -223,55 +207,68 @@ function DetailRow({ label, value, colors }: { label: string; value: string; col
 
 function MetricBox({ label, value, color, colors }: { label: string; value: string; color: string; colors: any }) {
   return (
-    <View style={[styles.metricBox, { backgroundColor: color + '10', borderColor: color + '30' }]}>
+    <View style={[styles.metricBox, { backgroundColor: color + '08', borderColor: color + '25' }]}>
       <Text style={[styles.metricLabel, { color: colors.muted }]}>{label}</Text>
       <Text style={[styles.metricValue, { color }]}>{value}</Text>
     </View>
   );
 }
 
+function EvalItem({ label, value, max, colors }: { label: string; value: number; max: number; colors: any }) {
+  const pct = (value / max) * 100;
+  const barColor = value <= 2 ? '#38A169' : value === 3 ? '#DD6B20' : '#E53E3E';
+  return (
+    <View style={styles.evalItem}>
+      <View style={styles.evalItemHeader}>
+        <Text style={[styles.evalItemLabel, { color: colors.foreground }]}>{label}</Text>
+        <Text style={[styles.evalItemValue, { color: barColor }]}>{value}/{max}</Text>
+      </View>
+      <View style={[styles.evalBar, { backgroundColor: colors.border }]}>
+        <View style={[styles.evalBarFill, { width: `${pct}%`, backgroundColor: barColor }]} />
+      </View>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    borderBottomWidth: 0.5,
-  },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 24, paddingVertical: 14, borderBottomWidth: 1 },
+  headerDesktop: { paddingHorizontal: 32 },
+  backBtn: { flexDirection: 'row', alignItems: 'center' },
   headerTitle: { fontSize: 17, fontWeight: '700' },
-  scrollContent: { flexGrow: 1 },
-  summaryCard: { borderWidth: 1, borderRadius: 16, padding: 18 },
-  summaryHeader: { flexDirection: 'row', gap: 8, marginBottom: 12 },
-  badge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10 },
-  badgeText: { fontSize: 12, fontWeight: '600' },
-  riskDesc: { fontSize: 15, lineHeight: 22, marginBottom: 14 },
-  metricsRow: { flexDirection: 'row', gap: 8 },
-  metricBox: {
-    flex: 1,
-    borderWidth: 1,
-    borderRadius: 10,
-    padding: 10,
-    alignItems: 'center',
-  },
+  headerActions: { flexDirection: 'row', gap: 8 },
+  headerBtn: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8 },
+  scrollContent: { flexGrow: 1, paddingHorizontal: 24, paddingTop: 20 },
+  scrollContentDesktop: { paddingHorizontal: 32 },
+  summaryBanner: { borderWidth: 1, borderRadius: 14, padding: 20, marginBottom: 20 },
+  summaryTop: { marginBottom: 12 },
+  summaryBadges: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  pill: { paddingHorizontal: 12, paddingVertical: 5, borderRadius: 20 },
+  pillText: { fontSize: 12, fontWeight: '700' },
+  riskDescText: { fontSize: 16, lineHeight: 24, marginBottom: 16 },
+  metricsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  metricsRowDesktop: { flexWrap: 'nowrap' },
+  metricBox: { flex: 1, minWidth: 100, borderWidth: 1, borderRadius: 10, padding: 12, alignItems: 'center' },
   metricLabel: { fontSize: 11, fontWeight: '500', marginBottom: 4 },
-  metricValue: { fontSize: 20, fontWeight: '800' },
-  section: { borderWidth: 1, borderRadius: 14, overflow: 'hidden' },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-  },
-  sectionTitle: { fontSize: 15, fontWeight: '600' },
-  sectionContent: { paddingHorizontal: 16, paddingBottom: 16, gap: 8 },
-  detailRow: { marginBottom: 4 },
-  detailLabel: { fontSize: 12, fontWeight: '600', marginBottom: 3 },
+  metricValue: { fontSize: 22, fontWeight: '800' },
+  contentGrid: { gap: 16 },
+  contentGridDesktop: { flexDirection: 'row' },
+  column: { gap: 16 },
+  sectionCard: { borderWidth: 1, borderRadius: 14, padding: 20 },
+  sectionTitle: { fontSize: 16, fontWeight: '700', marginBottom: 14 },
+  sectionBody: { gap: 12 },
+  detailRow: { gap: 3 },
+  detailLabel: { fontSize: 12, fontWeight: '700' },
   detailValue: { fontSize: 14, lineHeight: 20 },
-  editBtn: {
-    paddingVertical: 16,
-    borderRadius: 14,
-    alignItems: 'center',
-  },
-  editBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  inlineRow: { flexDirection: 'row', gap: 20 },
+  evalGrid: { gap: 12 },
+  evalItem: { gap: 6 },
+  evalItemHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  evalItemLabel: { fontSize: 13, fontWeight: '500' },
+  evalItemValue: { fontSize: 14, fontWeight: '700' },
+  evalBar: { height: 8, borderRadius: 4, overflow: 'hidden' },
+  evalBarFill: { height: '100%', borderRadius: 4 },
+  evalResult: { borderWidth: 1, borderRadius: 10, padding: 14, alignItems: 'center', marginTop: 4 },
+  evalResultLabel: { fontSize: 12, fontWeight: '500' },
+  evalResultValue: { fontSize: 32, fontWeight: '800', marginVertical: 4 },
+  evalResultLevel: { fontSize: 14, fontWeight: '700' },
 });

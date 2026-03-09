@@ -1,19 +1,22 @@
-import { FlatList, Text, View, TouchableOpacity, TextInput, StyleSheet } from "react-native";
+import { FlatList, Text, View, TouchableOpacity, TextInput, StyleSheet, useWindowDimensions, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
 import { ScreenContainer } from "@/components/screen-container";
 import { useRisks } from "@/lib/risk-context";
-import { getRiskLevel, getGutLevel, FONTES_DE_RISCO, TIPOS_DE_RISCO } from "@/lib/models";
+import { getRiskLevel, getGutLevel, TIPOS_DE_RISCO } from "@/lib/models";
 import type { Risk } from "@/lib/models";
 import { useColors } from "@/hooks/use-colors";
 import { useState, useMemo, useCallback } from "react";
+import { IconSymbol } from "@/components/ui/icon-symbol";
 
 export default function RisksScreen() {
   const { risks, loading } = useRisks();
   const router = useRouter();
   const colors = useColors();
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 768;
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState<string | null>(null);
-  const [showFilters, setShowFilters] = useState(false);
+  const [filterLevel, setFilterLevel] = useState<string | null>(null);
 
   const filteredRisks = useMemo(() => {
     let result = risks;
@@ -29,38 +32,96 @@ export default function RisksScreen() {
     if (filterType) {
       result = result.filter(r => r.tipoRisco === filterType);
     }
+    if (filterLevel) {
+      result = result.filter(r => getRiskLevel(r.riscoInerente).label === filterLevel);
+    }
     return result.sort((a, b) => b.gutScore - a.gutScore);
-  }, [risks, search, filterType]);
+  }, [risks, search, filterType, filterLevel]);
 
-  const renderRiskItem = useCallback(({ item }: { item: Risk }) => {
+  const renderDesktopTable = () => (
+    <View style={[styles.tableCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+      {/* Table Header */}
+      <View style={[styles.tableHeaderRow, { borderBottomColor: colors.border }]}>
+        <Text style={[styles.thCell, styles.thId, { color: colors.muted }]}>ID</Text>
+        <Text style={[styles.thCell, styles.thDesc, { color: colors.muted }]}>Descrição do Risco (Forma 3)</Text>
+        <Text style={[styles.thCell, styles.thType, { color: colors.muted }]}>Tipo</Text>
+        <Text style={[styles.thCell, styles.thScore, { color: colors.muted }]}>P×I</Text>
+        <Text style={[styles.thCell, styles.thScore, { color: colors.muted }]}>Nível</Text>
+        <Text style={[styles.thCell, styles.thScore, { color: colors.muted }]}>GUT</Text>
+        <Text style={[styles.thCell, styles.thResp, { color: colors.muted }]}>Responsável</Text>
+        <Text style={[styles.thCell, styles.thTrat, { color: colors.muted }]}>Tratamento</Text>
+      </View>
+      {/* Table Body */}
+      {filteredRisks.map((risk, idx) => {
+        const level = getRiskLevel(risk.riscoInerente);
+        const gutLevel = getGutLevel(risk.gutScore);
+        return (
+          <TouchableOpacity
+            key={risk.id}
+            style={[
+              styles.tableRow,
+              { borderBottomColor: colors.border },
+              idx % 2 === 0 && { backgroundColor: colors.background + '60' },
+            ]}
+            onPress={() => router.push(`/risk/${risk.id}` as any)}
+            activeOpacity={0.6}
+          >
+            <Text style={[styles.tdCell, styles.thId, { color: colors.primary, fontWeight: '700' }]}>{risk.id}</Text>
+            <Text style={[styles.tdCell, styles.thDesc, { color: colors.foreground }]} numberOfLines={2}>{risk.descricaoRisco}</Text>
+            <Text style={[styles.tdCell, styles.thType, { color: colors.muted }]} numberOfLines={1}>{risk.tipoRisco.replace('Risco ', '')}</Text>
+            <View style={[styles.tdCellCenter, styles.thScore]}>
+              <Text style={[styles.scoreNum, { color: colors.foreground }]}>{risk.riscoInerente}</Text>
+            </View>
+            <View style={[styles.tdCellCenter, styles.thScore]}>
+              <View style={[styles.levelPill, { backgroundColor: level.color + '18' }]}>
+                <Text style={[styles.levelPillText, { color: level.color }]}>{level.label}</Text>
+              </View>
+            </View>
+            <View style={[styles.tdCellCenter, styles.thScore]}>
+              <View style={[styles.levelPill, { backgroundColor: gutLevel.color + '18' }]}>
+                <Text style={[styles.levelPillText, { color: gutLevel.color }]}>{risk.gutScore}</Text>
+              </View>
+            </View>
+            <Text style={[styles.tdCell, styles.thResp, { color: colors.foreground }]}>{risk.responsavel || '—'}</Text>
+            <Text style={[styles.tdCell, styles.thTrat, { color: colors.muted }]}>{risk.tratamento || '—'}</Text>
+          </TouchableOpacity>
+        );
+      })}
+      {filteredRisks.length === 0 && (
+        <View style={styles.emptyTable}>
+          <Text style={{ color: colors.muted, fontSize: 14 }}>Nenhum risco encontrado</Text>
+        </View>
+      )}
+    </View>
+  );
+
+  const renderMobileCard = useCallback(({ item }: { item: Risk }) => {
     const level = getRiskLevel(item.riscoInerente);
     const gutLevel = getGutLevel(item.gutScore);
     return (
       <TouchableOpacity
-        style={[styles.riskCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
+        style={[styles.mobileCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
         onPress={() => router.push(`/risk/${item.id}` as any)}
         activeOpacity={0.7}
       >
-        <View style={styles.cardHeader}>
-          <View style={styles.cardHeaderLeft}>
-            <Text style={[styles.riskId, { color: colors.primary }]}>{item.id}</Text>
-            <View style={[styles.badge, { backgroundColor: level.color + '20' }]}>
-              <Text style={[styles.badgeText, { color: level.color }]}>{level.label}</Text>
+        <View style={styles.mobileCardHeader}>
+          <View style={styles.mobileCardLeft}>
+            <Text style={[styles.mobileRiskId, { color: colors.primary }]}>{item.id}</Text>
+            <View style={[styles.levelPill, { backgroundColor: level.color + '18' }]}>
+              <Text style={[styles.levelPillText, { color: level.color }]}>{level.label}</Text>
             </View>
           </View>
-          <View style={styles.cardHeaderRight}>
-            <Text style={[styles.scoreLabel, { color: colors.muted }]}>P×I: {item.riscoInerente}</Text>
-            <View style={[styles.gutBadge, { backgroundColor: gutLevel.color + '20' }]}>
-              <Text style={[styles.gutText, { color: gutLevel.color }]}>GUT: {item.gutScore}</Text>
+          <View style={styles.mobileCardRight}>
+            <Text style={[styles.mobileScore, { color: colors.muted }]}>P×I: {item.riscoInerente}</Text>
+            <View style={[styles.levelPill, { backgroundColor: gutLevel.color + '18' }]}>
+              <Text style={[styles.levelPillText, { color: gutLevel.color }]}>GUT: {item.gutScore}</Text>
             </View>
           </View>
         </View>
-        <Text style={[styles.riskDesc, { color: colors.foreground }]} numberOfLines={2}>
-          {item.descricaoRisco}
-        </Text>
-        <View style={styles.cardFooter}>
-          <Text style={[styles.footerText, { color: colors.muted }]}>{item.fonteDeRisco}</Text>
-          <Text style={[styles.footerText, { color: colors.muted }]}>{item.responsavel || '—'}</Text>
+        <Text style={[styles.mobileDesc, { color: colors.foreground }]} numberOfLines={2}>{item.descricaoRisco}</Text>
+        <View style={styles.mobileFooter}>
+          <Text style={[styles.mobileFooterText, { color: colors.muted }]}>{item.fonteDeRisco}</Text>
+          <Text style={[styles.mobileFooterText, { color: colors.muted }]}>{item.responsavel || '—'}</Text>
         </View>
       </TouchableOpacity>
     );
@@ -75,154 +136,136 @@ export default function RisksScreen() {
   }
 
   return (
-    <ScreenContainer className="flex-1">
+    <ScreenContainer className="flex-1" edges={isDesktop ? [] : ["top", "left", "right"]}>
       {/* Header */}
-      <View className="px-5 pt-2 pb-3">
-        <Text className="text-2xl font-bold text-foreground">Riscos</Text>
-        <Text className="text-sm text-muted mt-1">{risks.length} riscos cadastrados</Text>
+      <View style={[styles.header, isDesktop && styles.headerDesktop]}>
+        <View style={styles.headerLeft}>
+          <Text style={[styles.pageTitle, { color: colors.foreground }]}>Riscos Cadastrados</Text>
+          <Text style={[styles.pageSubtitle, { color: colors.muted }]}>{risks.length} riscos no registro</Text>
+        </View>
+        <TouchableOpacity
+          style={[styles.addButton, { backgroundColor: colors.primary }]}
+          onPress={() => router.push('/risk/new' as any)}
+          activeOpacity={0.8}
+        >
+          <IconSymbol name="plus.circle.fill" size={18} color="#fff" />
+          <Text style={styles.addButtonText}>Novo Risco</Text>
+        </TouchableOpacity>
       </View>
 
-      {/* Search */}
-      <View className="px-5 mb-3">
-        <View style={[styles.searchContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <Text style={{ color: colors.muted, marginRight: 8 }}>🔍</Text>
+      {/* Search & Filters */}
+      <View style={[styles.filtersArea, isDesktop && styles.filtersAreaDesktop]}>
+        <View style={[styles.searchBox, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <IconSymbol name="magnifyingglass" size={18} color={colors.muted} />
           <TextInput
             style={[styles.searchInput, { color: colors.foreground }]}
-            placeholder="Buscar riscos..."
+            placeholder="Buscar por ID, descrição, fonte ou ameaça..."
             placeholderTextColor={colors.muted}
             value={search}
             onChangeText={setSearch}
             returnKeyType="done"
           />
+          {search.length > 0 && (
+            <TouchableOpacity onPress={() => setSearch('')} activeOpacity={0.7}>
+              <IconSymbol name="xmark" size={16} color={colors.muted} />
+            </TouchableOpacity>
+          )}
         </View>
-      </View>
-
-      {/* Filter Toggle */}
-      <View className="px-5 mb-2">
-        <TouchableOpacity
-          onPress={() => setShowFilters(!showFilters)}
-          activeOpacity={0.7}
-        >
-          <Text style={{ color: colors.primary, fontSize: 14, fontWeight: '600' }}>
-            {showFilters ? 'Ocultar Filtros' : 'Filtrar por Tipo'} {filterType ? `(${filterType.split(' ')[1] || filterType})` : ''}
-          </Text>
-        </TouchableOpacity>
-        {showFilters && (
-          <View style={styles.filterContainer}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterChips}>
+          {/* Level filters */}
+          {['Crítico', 'Alto', 'Médio', 'Baixo'].map(level => (
             <TouchableOpacity
-              style={[styles.filterChip, !filterType && { backgroundColor: colors.primary + '20', borderColor: colors.primary }]}
-              onPress={() => setFilterType(null)}
+              key={level}
+              style={[styles.chip, filterLevel === level && { backgroundColor: colors.primary + '15', borderColor: colors.primary }]}
+              onPress={() => setFilterLevel(filterLevel === level ? null : level)}
               activeOpacity={0.7}
             >
-              <Text style={[styles.filterChipText, { color: !filterType ? colors.primary : colors.muted }]}>Todos</Text>
+              <Text style={[styles.chipText, { color: filterLevel === level ? colors.primary : colors.muted }]}>{level}</Text>
             </TouchableOpacity>
-            {TIPOS_DE_RISCO.map(tipo => (
-              <TouchableOpacity
-                key={tipo}
-                style={[styles.filterChip, filterType === tipo && { backgroundColor: colors.primary + '20', borderColor: colors.primary }]}
-                onPress={() => setFilterType(filterType === tipo ? null : tipo)}
-                activeOpacity={0.7}
-              >
-                <Text style={[styles.filterChipText, { color: filterType === tipo ? colors.primary : colors.muted }]} numberOfLines={1}>
-                  {tipo.replace('Risco ', '').replace('de ', '')}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
+          ))}
+          <View style={[styles.chipDivider, { backgroundColor: colors.border }]} />
+          {/* Type filters */}
+          {TIPOS_DE_RISCO.map(tipo => (
+            <TouchableOpacity
+              key={tipo}
+              style={[styles.chip, filterType === tipo && { backgroundColor: colors.primary + '15', borderColor: colors.primary }]}
+              onPress={() => setFilterType(filterType === tipo ? null : tipo)}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.chipText, { color: filterType === tipo ? colors.primary : colors.muted }]} numberOfLines={1}>
+                {tipo.replace('Risco ', '').replace('de ', '')}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
       </View>
 
-      {/* Risk List */}
-      <FlatList
-        data={filteredRisks}
-        renderItem={renderRiskItem}
-        keyExtractor={item => item.id}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-        ListEmptyComponent={
-          <View className="items-center justify-center py-12">
-            <Text className="text-muted text-base">Nenhum risco encontrado</Text>
-          </View>
-        }
-      />
-
-      {/* FAB */}
-      <TouchableOpacity
-        style={[styles.fab, { backgroundColor: colors.primary }]}
-        onPress={() => router.push('/risk/new' as any)}
-        activeOpacity={0.8}
-      >
-        <Text style={styles.fabText}>+</Text>
-      </TouchableOpacity>
+      {/* Content */}
+      {isDesktop ? (
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={[styles.tableArea, isDesktop && styles.tableAreaDesktop]}>
+          {renderDesktopTable()}
+          <View style={{ height: 40 }} />
+        </ScrollView>
+      ) : (
+        <FlatList
+          data={filteredRisks}
+          renderItem={renderMobileCard}
+          keyExtractor={item => item.id}
+          contentContainerStyle={styles.mobileList}
+          showsVerticalScrollIndicator={false}
+          ListEmptyComponent={
+            <View style={styles.emptyTable}>
+              <Text style={{ color: colors.muted, fontSize: 14 }}>Nenhum risco encontrado</Text>
+            </View>
+          }
+        />
+      )}
     </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-  },
-  searchInput: { flex: 1, fontSize: 15 },
-  filterContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginTop: 10,
-  },
-  filterChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#E2E5E9',
-  },
-  filterChipText: { fontSize: 12, fontWeight: '500' },
-  listContent: { paddingHorizontal: 20, paddingBottom: 100 },
-  riskCard: {
-    borderWidth: 1,
-    borderRadius: 14,
-    padding: 16,
-    marginBottom: 10,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  cardHeaderLeft: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  cardHeaderRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  riskId: { fontSize: 14, fontWeight: '700' },
-  badge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10 },
-  badgeText: { fontSize: 11, fontWeight: '600' },
-  gutBadge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10 },
-  gutText: { fontSize: 11, fontWeight: '600' },
-  scoreLabel: { fontSize: 11 },
-  riskDesc: { fontSize: 14, lineHeight: 20, marginBottom: 8 },
-  cardFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  footerText: { fontSize: 12 },
-  fab: {
-    position: 'absolute',
-    bottom: 20,
-    right: 20,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 6,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-  },
-  fabText: { color: '#fff', fontSize: 28, fontWeight: '300', marginTop: -2 },
+  header: { paddingHorizontal: 24, paddingTop: 16, paddingBottom: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+  headerDesktop: { paddingHorizontal: 32, paddingTop: 28 },
+  headerLeft: { flex: 1 },
+  pageTitle: { fontSize: 26, fontWeight: '800', letterSpacing: -0.5 },
+  pageSubtitle: { fontSize: 14, marginTop: 4 },
+  addButton: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 10 },
+  addButtonText: { color: '#fff', fontSize: 14, fontWeight: '600' },
+  filtersArea: { paddingHorizontal: 24, marginBottom: 16 },
+  filtersAreaDesktop: { paddingHorizontal: 32 },
+  searchBox: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 10, gap: 10, marginBottom: 12 },
+  searchInput: { flex: 1, fontSize: 14 },
+  filterChips: { flexDirection: 'row', gap: 8, paddingBottom: 4 },
+  chip: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20, borderWidth: 1, borderColor: '#E2E8F0' },
+  chipText: { fontSize: 12, fontWeight: '500' },
+  chipDivider: { width: 1, marginHorizontal: 4, alignSelf: 'stretch' },
+  tableArea: { paddingHorizontal: 24 },
+  tableAreaDesktop: { paddingHorizontal: 32 },
+  tableCard: { borderWidth: 1, borderRadius: 14, overflow: 'hidden' },
+  tableHeaderRow: { flexDirection: 'row', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 2, alignItems: 'center' },
+  thCell: { fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5 },
+  thId: { width: 56 },
+  thDesc: { flex: 3, paddingRight: 12 },
+  thType: { flex: 1.5, paddingRight: 8 },
+  thScore: { width: 70, alignItems: 'center' },
+  thResp: { flex: 1, paddingRight: 8 },
+  thTrat: { flex: 1 },
+  tableRow: { flexDirection: 'row', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, alignItems: 'center' },
+  tdCell: { fontSize: 13 },
+  tdCellCenter: { justifyContent: 'center', alignItems: 'center' },
+  scoreNum: { fontSize: 14, fontWeight: '700' },
+  levelPill: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 12 },
+  levelPillText: { fontSize: 11, fontWeight: '700' },
+  emptyTable: { padding: 40, alignItems: 'center' },
+  mobileList: { paddingHorizontal: 24, paddingBottom: 100 },
+  mobileCard: { borderWidth: 1, borderRadius: 14, padding: 16, marginBottom: 10 },
+  mobileCardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  mobileCardLeft: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  mobileCardRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  mobileRiskId: { fontSize: 14, fontWeight: '700' },
+  mobileScore: { fontSize: 11 },
+  mobileDesc: { fontSize: 14, lineHeight: 20, marginBottom: 8 },
+  mobileFooter: { flexDirection: 'row', justifyContent: 'space-between' },
+  mobileFooterText: { fontSize: 12 },
 });

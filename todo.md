@@ -22,3 +22,12 @@
 - [x] Atualizar nome do app para "Vetor Horizon" no app.config.ts
 - [x] Atualizar textos de marca no Dashboard e telas do app
 - [x] Fornecer link de compartilhamento ao usuário
+- [x] Redesenhar tema de cores e tipografia para visual mais atraente
+- [x] Criar layout responsivo desktop (1366x768) + mobile
+- [x] Redesenhar Dashboard com grid desktop e cards modernos
+- [x] Redesenhar tela de Lista de Riscos com tabela desktop
+- [x] Redesenhar tela de Tabelas de Referência
+- [x] Redesenhar tela de Configurações
+- [x] Redesenhar formulário de cadastro de risco
+- [x] Redesenhar tela de detalhe do risco
+- [x] Melhorar navegação com sidebar desktop + tabs mobile
