@@ -1,0 +1,20 @@
+# Project TODO
+
+- [x] Configurar tema de cores corporativo (azul ICAPT)
+- [x] Criar modelos de dados TypeScript para riscos ICAPT
+- [x] Criar dados de referência (fontes de risco, ameaças, tipos, tabelas)
+- [x] Criar contexto/store de riscos com AsyncStorage
+- [x] Criar dados iniciais pré-carregados (exemplos R001-R005 da planilha)
+- [x] Configurar navegação com 4 tabs (Dashboard, Riscos, Tabelas, Config)
+- [x] Criar tela Dashboard com resumo executivo e matriz de risco
+- [x] Criar tela Lista de Riscos com busca e filtros
+- [x] Criar tela de Tabelas de Referência (Impacto, Probabilidade, GUT)
+- [x] Criar tela de Configurações
+- [x] Criar formulário multi-step de cadastro de risco (7 etapas ICAPT)
+- [x] Criar tela de detalhe do risco
+- [x] Implementar geração automática da Forma 3 (Fonte + impacto)
+- [x] Implementar cálculo automático de Risco Inerente (P x I)
+- [x] Implementar cálculo automático de GUT Score (G x U x T)
+- [x] Implementar edição e exclusão de riscos
+- [x] Gerar logo do aplicativo
+- [x] Atualizar branding no app.config.ts
