@@ -18,7 +18,7 @@ export default function SettingsScreen() {
 
         {/* Company Info */}
         <View className="px-5 mb-5">
-          <Text className="text-lg font-semibold text-foreground mb-3">Empresa</Text>
+          <Text className="text-lg font-semibold text-foreground mb-3">Empresa (Estudo de Caso)</Text>
           <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <InfoRow label="Nome" value="DAMACORP" colors={colors} />
             <InfoRow label="Setor" value="Comércio Eletrônico" colors={colors} />
@@ -82,9 +82,9 @@ export default function SettingsScreen() {
         {/* About */}
         <View className="px-5 mb-5">
           <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-            <Text style={[styles.aboutTitle, { color: colors.foreground }]}>ICAPT Risk Manager</Text>
+            <Text style={[styles.aboutTitle, { color: colors.foreground }]}>Vetor Horizon</Text>
             <Text style={[styles.aboutText, { color: colors.muted }]}>
-              Aplicativo de gestão de riscos corporativos baseado na metodologia ICAPT. Desenvolvido para o estudo de caso DAMACORP - IDESP.
+              Consultoria de Risco. Aplicativo de gestão de riscos corporativos baseado na metodologia ICAPT. Estudo de caso DAMACORP - IDESP.
             </Text>
             <Text style={[styles.aboutVersion, { color: colors.muted }]}>Versão 1.0.0</Text>
           </View>

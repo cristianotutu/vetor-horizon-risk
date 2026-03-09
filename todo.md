@@ -18,3 +18,7 @@
 - [x] Implementar edição e exclusão de riscos
 - [x] Gerar logo do aplicativo
 - [x] Atualizar branding no app.config.ts
+- [x] Atualizar logo para imagem Vetor Horizon fornecida pelo usuário
+- [x] Atualizar nome do app para "Vetor Horizon" no app.config.ts
+- [x] Atualizar textos de marca no Dashboard e telas do app
+- [x] Fornecer link de compartilhamento ao usuário

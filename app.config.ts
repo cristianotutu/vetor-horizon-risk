@@ -28,11 +28,11 @@ const schemeFromBundleId = `manus${timestamp}`;
 
 const env = {
   // App branding - update these values directly (do not use env vars)
-  appName: "ICAPT Risk Manager",
+  appName: "Vetor Horizon",
   appSlug: "icapt-risk-manager",
   // S3 URL of the app logo - set this to the URL returned by generate_image when creating custom logo
   // Leave empty to use the default icon from assets/images/icon.png
-  logoUrl: "https://d2xsxph8kpxj0f.cloudfront.net/310519663279749611/S4QHwYj8FmQfptbJZZXmYo/icon-DgmZzqbYJVfDAYmnqJF2bH.png",
+  logoUrl: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663279749611/BmSGeyiojwoCbinp.png",
   scheme: schemeFromBundleId,
   iosBundleId: bundleId,
   androidPackage: bundleId,

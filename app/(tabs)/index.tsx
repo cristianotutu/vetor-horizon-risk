@@ -47,9 +47,9 @@ export default function DashboardScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View className="px-5 pt-2 pb-4">
-          <Text className="text-sm font-medium text-primary tracking-wider">DAMACORP</Text>
-          <Text className="text-2xl font-bold text-foreground mt-1">ICAPT Risk Manager</Text>
-          <Text className="text-sm text-muted mt-1">Gestão de Riscos Corporativos</Text>
+          <Text className="text-sm font-medium text-primary tracking-wider">VETOR HORIZON</Text>
+          <Text className="text-2xl font-bold text-foreground mt-1">Consultoria de Risco</Text>
+          <Text className="text-sm text-muted mt-1">ICAPT - Gestão de Riscos Corporativos</Text>
         </View>
 
         {/* Summary Cards */}
