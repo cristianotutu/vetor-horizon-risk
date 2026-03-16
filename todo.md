@@ -44,3 +44,10 @@
 - [x] Revisar e melhorar GUT de todos os riscos existentes
 - [x] Atualizar dados no aplicativo com novos riscos e GUT revisado
 - [x] Adicionar imagem do logo Vetor Horizon no aplicativo (sidebar, dashboard, sobre)
+- [x] Tornar células da Matriz de Risco clicáveis (mostrar riscos ao clicar)
+- [x] Tornar cards de estatísticas clicáveis (filtrar riscos por nível)
+- [x] Tornar gráfico de distribuição por tipo clicável
+- [x] Tornar Top 5 riscos GUT clicáveis (navegar para detalhe)
+- [x] Adicionar modal/popup com lista de riscos ao clicar em elementos
+- [x] Tornar matrizes da tela Evolução clicáveis
+- [x] Tornar itens da comparação evolutiva clicáveis
