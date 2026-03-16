@@ -1,7 +1,9 @@
-import { ScrollView, Text, View, StyleSheet, useWindowDimensions } from "react-native";
+import { ScrollView, Text, View, StyleSheet, useWindowDimensions, Image } from "react-native";
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
 import { useRisks } from "@/lib/risk-context";
+
+const vetorHorizonLogo = require("@/assets/images/vetor-horizon-logo.png");
 
 export default function SettingsScreen() {
   const colors = useColors();
@@ -14,8 +16,15 @@ export default function SettingsScreen() {
       <ScrollView contentContainerStyle={[styles.scrollContent, isDesktop && styles.scrollContentDesktop]} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={[styles.pageTitle, { color: colors.foreground }]}>Sobre o Projeto</Text>
-          <Text style={[styles.pageSubtitle, { color: colors.muted }]}>Informações do estudo de caso e metodologia</Text>
+          <View style={{ alignItems: 'center', marginBottom: 16 }}>
+            <Image
+              source={vetorHorizonLogo}
+              style={{ width: isDesktop ? 200 : 160, height: isDesktop ? 200 : 160, borderRadius: 16 }}
+              resizeMode="contain"
+            />
+          </View>
+          <Text style={[styles.pageTitle, { color: colors.foreground, textAlign: 'center' }]}>Sobre o Projeto</Text>
+          <Text style={[styles.pageSubtitle, { color: colors.muted, textAlign: 'center' }]}>Informações do estudo de caso e metodologia</Text>
         </View>
 
         {/* Grid Layout */}

@@ -43,3 +43,4 @@
 - [x] Analisar documentos DAMACORP para identificar novos riscos
 - [x] Revisar e melhorar GUT de todos os riscos existentes
 - [x] Atualizar dados no aplicativo com novos riscos e GUT revisado
+- [x] Adicionar imagem do logo Vetor Horizon no aplicativo (sidebar, dashboard, sobre)

@@ -3,6 +3,8 @@ import { useRouter, usePathname } from "expo-router";
 import { useColors } from "@/hooks/use-colors";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 
+const vetorHorizonLogo = require("@/assets/images/vetor-horizon-logo.png");
+
 const NAV_ITEMS = [
   { key: '/(tabs)', label: 'Dashboard', icon: 'shield.fill' as const, path: '/' },
   { key: '/(tabs)/risks', label: 'Riscos', icon: 'list.bullet' as const, path: '/risks' },
@@ -26,15 +28,13 @@ export function Sidebar() {
 
   return (
     <View style={[styles.sidebar, { backgroundColor: colors.surface, borderRightColor: colors.border }]}>
-      {/* Logo area */}
+      {/* Logo area with image */}
       <View style={styles.logoArea}>
-        <View style={[styles.logoCircle, { backgroundColor: colors.primary + '15' }]}>
-          <IconSymbol name="shield.fill" size={24} color={colors.primary} />
-        </View>
-        <View style={styles.logoText}>
-          <Text style={[styles.brandName, { color: colors.foreground }]}>Vetor Horizon</Text>
-          <Text style={[styles.brandSub, { color: colors.muted }]}>Consultoria de Risco</Text>
-        </View>
+        <Image
+          source={vetorHorizonLogo}
+          style={styles.logoImage}
+          resizeMode="contain"
+        />
       </View>
 
       {/* Divider */}
@@ -86,27 +86,20 @@ const styles = StyleSheet.create({
   sidebar: {
     width: 240,
     borderRightWidth: 1,
-    paddingTop: 20,
+    paddingTop: 12,
     paddingBottom: 16,
     justifyContent: 'flex-start',
   },
   logoArea: {
-    flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingBottom: 16,
-    gap: 12,
+    paddingHorizontal: 16,
+    paddingBottom: 8,
   },
-  logoCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
+  logoImage: {
+    width: 180,
+    height: 180,
+    borderRadius: 12,
   },
-  logoText: { flex: 1 },
-  brandName: { fontSize: 15, fontWeight: '700', letterSpacing: 0.3 },
-  brandSub: { fontSize: 11, marginTop: 1 },
   divider: { height: 1, marginHorizontal: 16, marginVertical: 8 },
   navList: { paddingHorizontal: 12, gap: 2, flex: 1 },
   navItem: {

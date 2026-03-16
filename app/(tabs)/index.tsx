@@ -1,4 +1,4 @@
-import { ScrollView, Text, View, TouchableOpacity, StyleSheet, useWindowDimensions } from "react-native";
+import { ScrollView, Text, View, TouchableOpacity, StyleSheet, useWindowDimensions, Image } from "react-native";
 import { useRouter } from "expo-router";
 import { ScreenContainer } from "@/components/screen-container";
 import { useRisks } from "@/lib/risk-context";
@@ -6,6 +6,8 @@ import { getRiskLevel, getMatrixColor, getGutLevel } from "@/lib/models";
 import { useColors } from "@/hooks/use-colors";
 import { useMemo } from "react";
 import { IconSymbol } from "@/components/ui/icon-symbol";
+
+const vetorHorizonLogo = require("@/assets/images/vetor-horizon-logo.png");
 
 export default function DashboardScreen() {
   const { risks, loading } = useRisks();
@@ -61,7 +63,11 @@ export default function DashboardScreen() {
         <View style={[styles.header, isDesktop && styles.headerDesktop]}>
           <View style={styles.headerLeft}>
             {!isDesktop && (
-              <Text style={[styles.brandTag, { color: colors.primary }]}>VETOR HORIZON</Text>
+              <Image
+                source={vetorHorizonLogo}
+                style={{ width: 120, height: 120, borderRadius: 10, marginBottom: 8 }}
+                resizeMode="contain"
+              />
             )}
             <Text style={[styles.pageTitle, { color: colors.foreground }]}>Dashboard</Text>
             <Text style={[styles.pageSubtitle, { color: colors.muted }]}>
