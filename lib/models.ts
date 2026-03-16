@@ -4,7 +4,7 @@
 
 // --- Core Risk Model ---
 export interface Risk {
-  id: string; // e.g. "R001"
+  id: string; // e.g. "R003"
   // 1. Identificação
   fonteDeRisco: string; // dropdown value
   descricaoFonte: string;
@@ -205,66 +205,6 @@ export function getMatrixColor(prob: number, imp: number): string {
 // --- Initial Sample Data (from DAMACORP spreadsheet) ---
 
 export const INITIAL_RISKS: Risk[] = [
-  {
-    id: 'R001',
-    fonteDeRisco: 'FE - Cibersegurança ou Tecnológicas externas',
-    descricaoFonte: 'Uso de tecnologia desatualizada, fornecedor instável, políticas internas falhas.',
-    ameaca: 'Ataque ransomware explorando software desatualizado',
-    descricaoRisco: 'Ataque ransomware ocasionando perda de dados críticos, impactando a continuidade dos negócios e gerando prejuízos financeiros e operacionais.',
-    estrategico: 'SIM',
-    tipoRisco: 'Risco de Segurança da Informação (Cibernético)',
-    probabilidade: 1,
-    impacto: 4,
-    riscoInerente: 4,
-    consequencia: 'Comprometer dados críticos da empresa, resultando em perda de informações essenciais, paralisação de operações e possíveis impactos financeiros e reputacionais.',
-    gravidade: 2,
-    urgencia: 3,
-    tendencia: 3,
-    gutScore: 18,
-    tratamento: 'Mitigar e Transferir',
-    controles: 'Seguros cibernéticos, Backups seguros e criptografados, Monitoramento contínuo (SIEM, SOC, IDS/IPS), MFA, Treinamento de colaboradores, Planos de resposta a incidentes (ISO 22301).',
-    responsavel: 'CIO',
-    prazo: '12 meses',
-    kri: 'Número de tentativas de ataque bem-sucedidas = 2; Credenciais comprometidas = 2; Falhas em testes de penetração = 2',
-    acaoKri: 'Acionar plano de resposta a incidentes',
-    quemMede: 'CIO',
-    quandoMede: 'Mensalmente',
-    reducaoPretendida: 3,
-    riscoResidual: 1,
-    eficaciaTratamento: 'Seguro Cibernético: cobertura e tempo de resposta. Backups: RTO/RPO. Monitoramento: MTTD/MTTR. MFA: taxa de bloqueio. Treinamento: taxa de phishing simulado.',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: 'R002',
-    fonteDeRisco: 'FE - Mercado',
-    descricaoFonte: 'Flutuação cambial abrupta causada por fatores macroeconômicos, crises políticas ou instabilidade global.',
-    ameaca: 'Aumento inesperado no custo de importação',
-    descricaoRisco: 'Valorização abrupta da moeda estrangeira ocasionando aumento dos custos de importação, impactando negativamente a margem de lucro e reduzindo competitividade no mercado.',
-    estrategico: 'SIM',
-    tipoRisco: 'Risco Estratégico',
-    probabilidade: 2,
-    impacto: 4,
-    riscoInerente: 8,
-    consequencia: 'Aumento do custo de produtos importados, reduzindo margens de lucro. Dificuldade em repassar custos ao consumidor. Impacto no fluxo de caixa. Possível endividamento.',
-    gravidade: 4,
-    urgencia: 3,
-    tendencia: 3,
-    gutScore: 36,
-    tratamento: 'Mitigar e Transferir',
-    controles: 'Hedge cambial, Diversificação de fornecedores, Precificação dinâmica, Planejamento financeiro, Seguros cambiais.',
-    responsavel: 'CFO',
-    prazo: '6 meses',
-    kri: 'Variação cambial acima de 10% da projeção; Exposição cambial da empresa; Percentual de hedge contratado',
-    acaoKri: 'Ativar hedge cambial emergencial e renegociar contratos',
-    quemMede: 'CFO',
-    quandoMede: 'Semanalmente',
-    reducaoPretendida: 2,
-    riscoResidual: 2,
-    eficaciaTratamento: 'Comparação entre perdas projetadas vs. cobertas por hedge. Tempo de resposta a variações cambiais.',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
   {
     id: 'R003',
     fonteDeRisco: 'FE - Meio ambiente',

@@ -39,3 +39,4 @@
 - [x] Fornecer link de acesso atualizado
 - [x] Remover textos de exemplo ("Exemplo:") dos riscos R001 e R002
 - [x] Remover completamente R001 e R002 do aplicativo (Aula 3, Aula 4, evolução)
+- [x] Remover R001 e R002 de risk-context.tsx e todos os demais arquivos do projeto

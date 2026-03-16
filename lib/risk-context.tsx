@@ -3,8 +3,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Risk, generateRiskId, createEmptyRisk } from './models';
 import { RISKS_AULA4 } from './evolution-data';
 
-const STORAGE_KEY = '@icapt_risks_v2';
-const INITIALIZED_KEY = '@icapt_initialized_v2';
+const STORAGE_KEY = '@icapt_risks_v3';
+const INITIALIZED_KEY = '@icapt_initialized_v3';
 
 interface RiskContextType {
   risks: Risk[];
@@ -23,7 +23,7 @@ const RiskContext = createContext<RiskContextType>({
   updateRisk: async () => {},
   deleteRisk: async () => {},
   getRisk: () => undefined,
-  getNextId: () => 'R001',
+  getNextId: () => 'R003',
 });
 
 export function RiskProvider({ children }: { children: React.ReactNode }) {

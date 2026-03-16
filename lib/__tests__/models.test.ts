@@ -123,13 +123,13 @@ describe('createEmptyRisk', () => {
 
 describe('INITIAL_RISKS', () => {
   it('has 5 pre-loaded risks', () => {
-    expect(INITIAL_RISKS.length).toBe(5);
+    expect(INITIAL_RISKS.length).toBe(3);
   });
 
   it('has correct IDs', () => {
     const ids = INITIAL_RISKS.map(r => r.id);
-    expect(ids).toContain('R001');
-    expect(ids).toContain('R002');
+    expect(ids).not.toContain('R001');
+    expect(ids).not.toContain('R002');
     expect(ids).toContain('R003');
     expect(ids).toContain('R004');
     expect(ids).toContain('R005');
