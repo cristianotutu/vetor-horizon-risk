@@ -51,3 +51,6 @@
 - [x] Adicionar modal/popup com lista de riscos ao clicar em elementos
 - [x] Tornar matrizes da tela Evolução clicáveis
 - [x] Tornar itens da comparação evolutiva clicáveis
+- [x] Corrigir overflow de texto na tela de detalhe do risco (coluna direita cortada)
+- [x] Enquadrar todo o conteúdo dentro dos limites da tela 1366x768
+- [x] Corrigir layout 2 colunas para que ambas respeitem o espaço disponível
