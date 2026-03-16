@@ -35,12 +35,12 @@ describe('Evolution Data - Aula 3', () => {
 });
 
 describe('Evolution Data - Aula 4', () => {
-  it('should have 19 risks in Aula 4 (R001 and R002 removed)', () => {
-    expect(RISKS_AULA4.length).toBe(19);
+  it('should have 27 risks in Aula 4 (19 original + 8 new R024-R031)', () => {
+    expect(RISKS_AULA4.length).toBe(27);
   });
 
-  it('Aula 4 should have 3 more risks than Aula 3', () => {
-    expect(RISKS_AULA4.length - RISKS_AULA3.length).toBe(3);
+  it('Aula 4 should have 11 more risks than Aula 3 (3 original new + 8 added)', () => {
+    expect(RISKS_AULA4.length - RISKS_AULA3.length).toBe(11);
   });
 
   it('R001 and R002 should not exist in any dataset', () => {
@@ -50,10 +50,10 @@ describe('Evolution Data - Aula 4', () => {
     expect(RISKS_AULA4.find(r => r.id === 'R002')).toBeUndefined();
   });
 
-  it('new risks in Aula 4 should be R021, R022, R023', () => {
+  it('new risks in Aula 4 should include R021-R023 and R024-R031', () => {
     const a3Ids = new Set(RISKS_AULA3.map(r => r.id));
     const newIds = RISKS_AULA4.filter(r => !a3Ids.has(r.id)).map(r => r.id).sort();
-    expect(newIds).toEqual(['R021', 'R022', 'R023']);
+    expect(newIds).toEqual(['R021', 'R022', 'R023', 'R024', 'R025', 'R026', 'R027', 'R028', 'R029', 'R030', 'R031']);
   });
 
   it('all Aula 4 risks should have valid fields', () => {
@@ -62,6 +62,29 @@ describe('Evolution Data - Aula 4', () => {
       expect(r.tipoRisco).toBeTruthy();
       expect(r.probabilidade).toBeGreaterThanOrEqual(1);
       expect(r.impacto).toBeGreaterThanOrEqual(1);
+    });
+  });
+
+  it('GUT scores should be revised (no more all-8 pattern)', () => {
+    const gutScores = RISKS_AULA4.map(r => r.gutScore);
+    const allEight = gutScores.filter(g => g === 8);
+    expect(allEight.length).toBe(0); // No risk should have GUT=8 anymore
+  });
+
+  it('all GUT scores should be G*U*T', () => {
+    RISKS_AULA4.forEach(r => {
+      expect(r.gutScore).toBe(r.gravidade * r.urgencia * r.tendencia);
+    });
+  });
+
+  it('all G, U, T values should be between 1-5', () => {
+    RISKS_AULA4.forEach(r => {
+      expect(r.gravidade).toBeGreaterThanOrEqual(1);
+      expect(r.gravidade).toBeLessThanOrEqual(5);
+      expect(r.urgencia).toBeGreaterThanOrEqual(1);
+      expect(r.urgencia).toBeLessThanOrEqual(5);
+      expect(r.tendencia).toBeGreaterThanOrEqual(1);
+      expect(r.tendencia).toBeLessThanOrEqual(5);
     });
   });
 });
@@ -76,9 +99,9 @@ describe('Evolution Summary', () => {
     expect(EVOLUTION_SUMMARY.find(e => e.riskId === 'R002')).toBeUndefined();
   });
 
-  it('should have 3 new risks', () => {
+  it('should have 11 new risks (R021-R023 + R024-R031)', () => {
     const newEntries = EVOLUTION_SUMMARY.filter(e => e.type === 'new');
-    expect(newEntries.length).toBe(3);
+    expect(newEntries.length).toBe(11);
   });
 
   it('should have modified risks with changes listed', () => {
@@ -89,11 +112,10 @@ describe('Evolution Summary', () => {
     });
   });
 
-  it('unchanged risks should have empty changes', () => {
-    const unchanged = EVOLUTION_SUMMARY.filter(e => e.type === 'unchanged');
-    unchanged.forEach(u => {
-      expect(u.changes.length).toBe(0);
-    });
+  it('modified risks should include GUT Revisado in changes', () => {
+    const modified = EVOLUTION_SUMMARY.filter(e => e.type === 'modified');
+    const withGut = modified.filter(m => m.changes.includes('GUT Revisado'));
+    expect(withGut.length).toBeGreaterThan(0);
   });
 });
 
