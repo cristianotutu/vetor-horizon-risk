@@ -3,8 +3,8 @@ import { RISKS_AULA3, RISKS_AULA4, EVOLUTION_SUMMARY } from '../evolution-data';
 import { getRiskLevel, getGutLevel } from '../models';
 
 describe('Evolution Data - Aula 3', () => {
-  it('should have 18 risks in Aula 3', () => {
-    expect(RISKS_AULA3.length).toBe(18);
+  it('should have 16 risks in Aula 3 (R001 and R002 removed)', () => {
+    expect(RISKS_AULA3.length).toBe(16);
   });
 
   it('all Aula 3 risks should have valid IDs', () => {
@@ -35,12 +35,19 @@ describe('Evolution Data - Aula 3', () => {
 });
 
 describe('Evolution Data - Aula 4', () => {
-  it('should have 21 risks in Aula 4', () => {
-    expect(RISKS_AULA4.length).toBe(21);
+  it('should have 19 risks in Aula 4 (R001 and R002 removed)', () => {
+    expect(RISKS_AULA4.length).toBe(19);
   });
 
   it('Aula 4 should have 3 more risks than Aula 3', () => {
     expect(RISKS_AULA4.length - RISKS_AULA3.length).toBe(3);
+  });
+
+  it('R001 and R002 should not exist in any dataset', () => {
+    expect(RISKS_AULA3.find(r => r.id === 'R001')).toBeUndefined();
+    expect(RISKS_AULA3.find(r => r.id === 'R002')).toBeUndefined();
+    expect(RISKS_AULA4.find(r => r.id === 'R001')).toBeUndefined();
+    expect(RISKS_AULA4.find(r => r.id === 'R002')).toBeUndefined();
   });
 
   it('new risks in Aula 4 should be R021, R022, R023', () => {
@@ -62,6 +69,11 @@ describe('Evolution Data - Aula 4', () => {
 describe('Evolution Summary', () => {
   it('should have entries for all Aula 4 risks', () => {
     expect(EVOLUTION_SUMMARY.length).toBe(RISKS_AULA4.length);
+  });
+
+  it('should not have entries for R001 or R002', () => {
+    expect(EVOLUTION_SUMMARY.find(e => e.riskId === 'R001')).toBeUndefined();
+    expect(EVOLUTION_SUMMARY.find(e => e.riskId === 'R002')).toBeUndefined();
   });
 
   it('should have 3 new risks', () => {
