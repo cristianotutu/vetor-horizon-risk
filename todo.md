@@ -37,3 +37,4 @@
 - [x] Atualizar dados de riscos no app com dados reais das planilhas
 - [x] Implementar tela/funcionalidade de evolução do estudo de riscos
 - [x] Fornecer link de acesso atualizado
+- [x] Remover textos de exemplo ("Exemplo:") dos riscos R001 e R002
