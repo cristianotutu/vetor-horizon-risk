@@ -30,6 +30,13 @@ const MAPPING = {
   "xmark": "close",
   "magnifyingglass": "search",
   "line.3.horizontal.decrease": "filter-list",
+  "chart.line.uptrend.xyaxis": "trending-up",
+  "arrow.right": "arrow-forward",
+  "checkmark.circle.fill": "check-circle",
+  "info.circle.fill": "info",
+  "arrow.up.circle.fill": "arrow-upward",
+  "arrow.down.circle.fill": "arrow-downward",
+  "minus.circle.fill": "remove-circle",
 } as IconMapping;
 
 /**

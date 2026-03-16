@@ -31,3 +31,9 @@
 - [x] Redesenhar formulário de cadastro de risco
 - [x] Redesenhar tela de detalhe do risco
 - [x] Melhorar navegação com sidebar desktop + tabs mobile
+- [x] Analisar planilha Aula 3 (VetorHorizon-Grupo5)
+- [x] Analisar planilha Aula 4 (VetorHorizon-Grupo5)
+- [x] Criar visão evolutiva dos riscos (Aula 3 → Aula 4)
+- [x] Atualizar dados de riscos no app com dados reais das planilhas
+- [x] Implementar tela/funcionalidade de evolução do estudo de riscos
+- [x] Fornecer link de acesso atualizado

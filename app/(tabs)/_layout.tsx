@@ -53,6 +53,13 @@ export default function TabLayout() {
             }}
           />
           <Tabs.Screen
+            name="evolution"
+            options={{
+              title: "Evolucao",
+              tabBarIcon: ({ color }) => <IconSymbol size={24} name="chart.line.uptrend.xyaxis" color={color} />,
+            }}
+          />
+          <Tabs.Screen
             name="tables"
             options={{
               title: "Tabelas",

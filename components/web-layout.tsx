@@ -6,6 +6,7 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 const NAV_ITEMS = [
   { key: '/(tabs)', label: 'Dashboard', icon: 'shield.fill' as const, path: '/' },
   { key: '/(tabs)/risks', label: 'Riscos', icon: 'list.bullet' as const, path: '/risks' },
+  { key: '/(tabs)/evolution', label: 'Evolucao', icon: 'chart.line.uptrend.xyaxis' as const, path: '/evolution' },
   { key: '/(tabs)/tables', label: 'Tabelas', icon: 'tablecells' as const, path: '/tables' },
   { key: '/(tabs)/settings', label: 'Sobre', icon: 'gearshape.fill' as const, path: '/settings' },
 ];
