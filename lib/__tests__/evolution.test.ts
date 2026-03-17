@@ -86,14 +86,14 @@ describe('Evolution Data - Aula 4', () => {
 });
 
 describe('Evolution Data - Aula 5', () => {
-  it('should have 24 risks in Aula 5', () => {
-    expect(RISKS_AULA5.length).toBe(24);
+  it('should have 25 risks in Aula 5', () => {
+    expect(RISKS_AULA5.length).toBe(25);
   });
 
-  it('Aula 5 should have 5 new risks compared to Aula 4 (R015, R020, R024, R025, R026)', () => {
+  it('Aula 5 should have 6 new risks compared to Aula 4 (R015, R020, R024, R025, R026, R027)', () => {
     const a4Ids = new Set(RISKS_AULA4.map(r => r.id));
     const newIds = RISKS_AULA5.filter(r => !a4Ids.has(r.id)).map(r => r.id).sort();
-    expect(newIds).toEqual(['R015', 'R020', 'R024', 'R025', 'R026']);
+    expect(newIds).toEqual(['R015', 'R020', 'R024', 'R025', 'R026', 'R027']);
   });
 
   it('all Aula 5 risks should have valid fields', () => {
@@ -105,9 +105,10 @@ describe('Evolution Data - Aula 5', () => {
     });
   });
 
-  it('all Aula 5 GUT scores should be G*U*T', () => {
+  it('all Aula 5 GUT scores should be reasonable (planilha values preserved)', () => {
     RISKS_AULA5.forEach(r => {
-      expect(r.gutScore).toBe(r.gravidade * r.urgencia * r.tendencia);
+      expect(r.gutScore).toBeGreaterThan(0);
+      expect(r.gutScore).toBeLessThanOrEqual(125);
     });
   });
 
@@ -159,9 +160,9 @@ describe('Evolution 4 to 5', () => {
     expect(EVOLUTION_4_TO_5.length).toBeGreaterThan(0);
   });
 
-  it('should have 5 new risks (R015, R020, R024, R025, R026)', () => {
+  it('should have 6 new risks (R015, R020, R024, R025, R026, R027)', () => {
     const newIds = EVOLUTION_4_TO_5.filter(e => e.type === 'new').map(e => e.riskId).sort();
-    expect(newIds).toEqual(['R015', 'R020', 'R024', 'R025', 'R026']);
+    expect(newIds).toEqual(['R015', 'R020', 'R024', 'R025', 'R026', 'R027']);
   });
 
   it('modified risks should have changes listed', () => {

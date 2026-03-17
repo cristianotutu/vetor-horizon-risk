@@ -1777,6 +1777,36 @@ export const RISKS_AULA5: Risk[] = [
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   },
+  {
+    id: 'R027',
+    fonteDeRisco: 'FE - Clientes',
+    descricaoFonte: 'Fraudes em transações de e-commerce por clientes mal-intencionados ocasionando chargebacks, perdas financeiras diretas e aumento de custos operacionais com disputas',
+    ameaca: 'Fraude em transações de e-commerce',
+    descricaoRisco: 'Fraudes em transações de e-commerce por clientes mal-intencionados ocasionando chargebacks, perdas financeiras diretas e aumento de custos operacionais com disputas',
+    estrategico: 'NÃO',
+    tipoRisco: 'Risco Financeiro',
+    probabilidade: 4,
+    impacto: 3,
+    riscoInerente: 12,
+    consequencia: 'Perdas financeiras por chargebacks, aumento de taxas de processamento, possível bloqueio por operadoras de cartão, custos com investigação de fraudes.',
+    gravidade: 3,
+    urgencia: 4,
+    tendencia: 4,
+    gutScore: 36,
+    tratamento: 'Mitigar e Transferir',
+    controles: 'Sistema antifraude com ML/IA, Autenticação 3D Secure, Análise de comportamento de compra, Seguro contra fraudes, Equipe dedicada de prevenção a fraudes.',
+    responsavel: 'CFO / Diretor de Pagamentos',
+    prazo: '3 meses',
+    kri: 'Taxa de chargeback (%); Volume financeiro de fraudes detectadas; Taxa de falsos positivos do antifraude',
+    acaoKri: 'Ativar regras restritivas de antifraude e suspender meios de pagamento comprometidos',
+    quemMede: 'Gerente de Pagamentos',
+    quandoMede: 'Semanalmente',
+    reducaoPretendida: 9,
+    riscoResidual: 3,
+    eficaciaTratamento: 'Taxa de chargeback vs. benchmark do setor. Precisão do sistema antifraude. Volume de fraudes evitadas.',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
 ];
 
 export interface EvolutionChange {
@@ -1834,6 +1864,7 @@ export const EVOLUTION_4_TO_5: EvolutionChange[] = [
   { riskId: 'R024', type: 'new', changes: ['Novo risco adicionado na Aula 5'] },
   { riskId: 'R025', type: 'new', changes: ['Novo risco adicionado na Aula 5'] },
   { riskId: 'R026', type: 'new', changes: ['Novo risco adicionado na Aula 5'] },
+  { riskId: 'R027', type: 'new', changes: ['Novo risco adicionado na Aula 5'] },
 ];
 
 // Legacy compatibility - EVOLUTION_SUMMARY now refers to 4→5 changes

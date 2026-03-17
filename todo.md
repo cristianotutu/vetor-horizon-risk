@@ -70,3 +70,9 @@
 - [x] Atualizar evolution-data.ts com RISKS_AULA5 e expandir EVOLUTION_SUMMARY
 - [x] Atualizar tela de Evolução para suportar 3 aulas na timeline (Aula 3 → 4 → 5 com seletor de comparação)
 - [x] Atualizar dados iniciais do app para Aula 5 (24 riscos com controles, KRI e eficácia)
+- [x] Analisar planilha VetorHorizon-Grupo5-v3(1).xlsx atualizada
+- [x] Corrigir dados para 25 riscos (R003-R027) incluindo R027 que faltava
+- [x] Atualizar RISKS_AULA5 no evolution-data.ts com todos os 25 riscos
+- [x] Atualizar EVOLUTION_4_TO_5 para incluir R027
+- [x] Atualizar testes para refletir 25 riscos na Aula 5
+- [x] Forçar recarga dos dados no risk-context.tsx
