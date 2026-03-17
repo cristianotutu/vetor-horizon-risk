@@ -1,8 +1,11 @@
 [build]
-  # Comando de build: extrai dados da planilha e gera o site web
-  command = "node scripts/extract-risks.mjs && npx expo export --platform web"
+  # Cria o cache CSS do NativeWind antes do export para evitar erro SHA-1
+  command = "pnpm install && mkdir -p node_modules/react-native-css-interop/.cache && touch node_modules/react-native-css-interop/.cache/web.css && npx expo export --platform web"
   # Diretório de saída do Expo web export
   publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
 
 # Redirecionar todas as rotas para index.html (SPA)
 [[redirects]]

@@ -123,6 +123,35 @@ export default function SettingsScreen() {
           </View>
         </View>
 
+        {/* Consultores */}
+        <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border, marginTop: 16 }]}>
+          <View style={styles.cardHeaderRow}>
+            <View style={[styles.cardIcon, { backgroundColor: colors.primary + '12' }]}>
+              <Text style={{ fontSize: 20 }}>👥</Text>
+            </View>
+            <Text style={[styles.cardTitle, { color: colors.foreground }]}>Consultores - Vetor Horizon</Text>
+          </View>
+          <Text style={[styles.methodDesc, { color: colors.muted }]}>
+            Equipe de consultores responsáveis pela análise e gestão de riscos do estudo de caso DAMACORP.
+          </Text>
+          <View style={styles.consultantsList}>
+            {[
+              'Cristiano Siqueira Israel',
+              'Danielli Mezavilla Pinto',
+              'Karolina Guimarães Negrizolo',
+              'Matheus Augusto Arduini',
+              'Pedro Ricci Righeti',
+            ].map((name, idx) => (
+              <View key={idx} style={[styles.consultantRow, { borderBottomColor: colors.border }]}>
+                <View style={[styles.consultantAvatar, { backgroundColor: colors.primary + '15' }]}>
+                  <Text style={[styles.consultantInitial, { color: colors.primary }]}>{name.charAt(0)}</Text>
+                </View>
+                <Text style={[styles.consultantName, { color: colors.foreground }]}>{name}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+
         {/* Footer */}
         <View style={styles.footer}>
           <Text style={[styles.footerBrand, { color: colors.foreground }]}>Vetor Horizon</Text>
@@ -184,6 +213,11 @@ const styles = StyleSheet.create({
   statBox: { flex: 1, minWidth: '40%', borderWidth: 1, borderRadius: 10, padding: 16, alignItems: 'center' },
   statBoxValue: { fontSize: 20, fontWeight: '800' },
   statBoxLabel: { fontSize: 12, marginTop: 4, textAlign: 'center' },
+  consultantsList: { gap: 0 },
+  consultantRow: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 12, borderBottomWidth: 0.5 },
+  consultantAvatar: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center' },
+  consultantInitial: { fontSize: 18, fontWeight: '700' },
+  consultantName: { fontSize: 15, fontWeight: '600', flex: 1 },
   footer: { alignItems: 'center', paddingTop: 32, paddingBottom: 20 },
   footerBrand: { fontSize: 18, fontWeight: '800' },
   footerSub: { fontSize: 13, marginTop: 2 },

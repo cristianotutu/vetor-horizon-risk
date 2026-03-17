@@ -81,3 +81,6 @@
 - [x] Configurar build web Expo para deploy no Netlify
 - [x] Criar documentação de setup GitHub + Netlify
 - [x] Testar pipeline de extração localmente
+- [x] Corrigir erro de build Netlify: NativeWind CSS cache (SHA-1 for web.css)
+- [x] Adicionar nomes dos consultores Vetor Horizon na tela Sobre
+- [ ] Corrigir fundo branco na tela Sobre (deve ser dark mode como as demais telas)
