@@ -65,3 +65,8 @@
 - [x] Implementar análise de riscos TPRM (terceiros)
 - [x] Implementar Top 10 riscos críticos com indicadores visuais
 - [x] Integrar tela na navegação (sidebar e tabs)
+- [x] Analisar planilha Aula 5 (VetorHorizon-Grupo5-v3.xlsx)
+- [x] Comparar dados Aula 5 vs Aula 4 (novos riscos, alterações, remoções)
+- [x] Atualizar evolution-data.ts com RISKS_AULA5 e expandir EVOLUTION_SUMMARY
+- [x] Atualizar tela de Evolução para suportar 3 aulas na timeline (Aula 3 → 4 → 5 com seletor de comparação)
+- [x] Atualizar dados iniciais do app para Aula 5 (24 riscos com controles, KRI e eficácia)

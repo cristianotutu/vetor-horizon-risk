@@ -1,10 +1,10 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Risk, generateRiskId, createEmptyRisk } from './models';
-import { RISKS_AULA4 } from './evolution-data';
+import { RISKS_AULA5 } from './evolution-data';
 
-const STORAGE_KEY = '@icapt_risks_v6';
-const INITIALIZED_KEY = '@icapt_initialized_v6';
+const STORAGE_KEY = '@icapt_risks_v8_aula5';
+const INITIALIZED_KEY = '@icapt_initialized_v8_aula5';
 
 interface RiskContextType {
   risks: Risk[];
@@ -38,9 +38,9 @@ export function RiskProvider({ children }: { children: React.ReactNode }) {
     try {
       const initialized = await AsyncStorage.getItem(INITIALIZED_KEY);
       if (!initialized) {
-        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(RISKS_AULA4));
+        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(RISKS_AULA5));
         await AsyncStorage.setItem(INITIALIZED_KEY, 'true');
-        setRisks(RISKS_AULA4);
+        setRisks(RISKS_AULA5);
       } else {
         const stored = await AsyncStorage.getItem(STORAGE_KEY);
         if (stored) {
@@ -49,7 +49,7 @@ export function RiskProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (e) {
       console.error('Error loading risks:', e);
-      setRisks(RISKS_AULA4);
+      setRisks(RISKS_AULA5);
     } finally {
       setLoading(false);
     }
