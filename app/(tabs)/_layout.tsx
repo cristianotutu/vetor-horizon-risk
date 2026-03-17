@@ -60,6 +60,13 @@ export default function TabLayout() {
             }}
           />
           <Tabs.Screen
+            name="strategic"
+            options={{
+              title: "Estrat\u00e9gico",
+              tabBarIcon: ({ color }) => <IconSymbol size={24} name="chart.bar.fill" color={color} />,
+            }}
+          />
+          <Tabs.Screen
             name="tables"
             options={{
               title: "Tabelas",

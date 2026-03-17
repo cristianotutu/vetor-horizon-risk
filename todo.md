@@ -58,3 +58,10 @@
 - [x] Identificar situações de avaliação de terceiros (TPRM) no estudo de caso
 - [x] Atualizar controles dos riscos existentes no aplicativo
 - [x] Adicionar riscos TPRM identificados no aplicativo
+- [x] Criar tela de Visão Estratégica para o Board da DAMACORP
+- [x] Implementar KPIs executivos (exposição total, apetite de risco, cobertura de controles)
+- [x] Implementar heat map de riscos por área/departamento
+- [x] Implementar gráfico de distribuição de estratégias de tratamento (MATE)
+- [x] Implementar análise de riscos TPRM (terceiros)
+- [x] Implementar Top 10 riscos críticos com indicadores visuais
+- [x] Integrar tela na navegação (sidebar e tabs)

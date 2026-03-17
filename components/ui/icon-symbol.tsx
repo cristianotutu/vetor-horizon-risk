@@ -37,6 +37,12 @@ const MAPPING = {
   "arrow.up.circle.fill": "arrow-upward",
   "arrow.down.circle.fill": "arrow-downward",
   "minus.circle.fill": "remove-circle",
+  "chart.bar.fill": "bar-chart",
+  "building.2.fill": "business",
+  "person.3.fill": "groups",
+  "flag.fill": "flag",
+  "target": "gps-fixed",
+  "gauge.medium": "speed",
 } as IconMapping;
 
 /**
