@@ -1,0 +1,11 @@
+[build]
+  # Comando de build: extrai dados da planilha e gera o site web
+  command = "node scripts/extract-risks.mjs && npx expo export --platform web"
+  # Diretório de saída do Expo web export
+  publish = "dist"
+
+# Redirecionar todas as rotas para index.html (SPA)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

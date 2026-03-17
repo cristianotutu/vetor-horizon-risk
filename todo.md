@@ -76,3 +76,8 @@
 - [x] Atualizar EVOLUTION_4_TO_5 para incluir R027
 - [x] Atualizar testes para refletir 25 riscos na Aula 5
 - [x] Forçar recarga dos dados no risk-context.tsx
+- [x] Criar script de extração automática de planilha Excel para TypeScript
+- [x] Configurar GitHub Actions workflow para CI/CD
+- [x] Configurar build web Expo para deploy no Netlify
+- [x] Criar documentação de setup GitHub + Netlify
+- [x] Testar pipeline de extração localmente

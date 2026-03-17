@@ -1,3 +1,11 @@
+// ============================================================
+// ARQUIVO GERADO AUTOMATICAMENTE - NÃO EDITAR MANUALMENTE
+// Gerado por: scripts/extract-risks.mjs
+// Data: 2026-03-17T02:31:22.457Z
+// Planilha: VetorHorizon-Grupo5.xlsx
+// Total de riscos extraídos: 25
+// ============================================================
+
 import { Risk } from './models';
 
 export const RISKS_AULA3: Risk[] = [
@@ -1840,33 +1848,31 @@ export const EVOLUTION_3_TO_4: EvolutionChange[] = [
 
 // Changes from Aula 4 to Aula 5
 export const EVOLUTION_4_TO_5: EvolutionChange[] = [
-  { riskId: 'R003', type: 'modified', changes: ['KRI definido', 'Consequência detalhada', 'Eficácia de tratamento definida'] },
-  { riskId: 'R004', type: 'modified', changes: ['GUT: 48→64', 'Consequência detalhada', 'Eficácia de tratamento definida'] },
-  { riskId: 'R005', type: 'modified', changes: ['GUT: 100→80', 'Consequência detalhada', 'Eficácia de tratamento definida'] },
-  { riskId: 'R006', type: 'modified', changes: ['Consequência detalhada', 'Eficácia de tratamento definida'] },
-  { riskId: 'R007', type: 'modified', changes: ['GUT: 125→100', 'Controles detalhados', 'Consequência detalhada', 'Eficácia de tratamento definida'] },
-  { riskId: 'R008', type: 'modified', changes: ['GUT: 36→60', 'Consequência detalhada', 'Eficácia de tratamento definida'] },
-  { riskId: 'R009', type: 'modified', changes: ['GUT: 48→64', 'Consequência detalhada', 'Eficácia de tratamento definida'] },
-  { riskId: 'R010', type: 'modified', changes: ['Consequência detalhada', 'Eficácia de tratamento definida'] },
-  { riskId: 'R011', type: 'modified', changes: ['GUT: 27→36', 'Consequência detalhada', 'Eficácia de tratamento definida'] },
-  { riskId: 'R012', type: 'modified', changes: ['Consequência detalhada', 'Eficácia de tratamento definida'] },
-  { riskId: 'R013', type: 'modified', changes: ['Consequência detalhada', 'Eficácia de tratamento definida'] },
-  { riskId: 'R014', type: 'modified', changes: ['GUT: 100→125', 'Tratamento atualizado', 'Consequência detalhada', 'Eficácia de tratamento definida', 'Responsável atualizado'] },
-  { riskId: 'R015', type: 'new', changes: ['Novo risco adicionado na Aula 5'] },
-  { riskId: 'R016', type: 'modified', changes: ['GUT: 80→60', 'Controles detalhados', 'Consequência detalhada', 'Eficácia de tratamento definida'] },
-  { riskId: 'R017', type: 'modified', changes: ['Consequência detalhada', 'Eficácia de tratamento definida'] },
-  { riskId: 'R018', type: 'modified', changes: ['GUT: 36→60', 'Consequência detalhada', 'Eficácia de tratamento definida'] },
-  { riskId: 'R019', type: 'modified', changes: ['GUT: 36→48', 'Consequência detalhada', 'Eficácia de tratamento definida'] },
-  { riskId: 'R020', type: 'new', changes: ['Novo risco adicionado na Aula 5'] },
-  { riskId: 'R021', type: 'modified', changes: ['GUT: 18→32', 'Controles detalhados', 'Consequência detalhada', 'Eficácia de tratamento definida'] },
-  { riskId: 'R022', type: 'modified', changes: ['Controles detalhados', 'Consequência detalhada', 'Eficácia de tratamento definida'] },
-  { riskId: 'R023', type: 'modified', changes: ['Controles detalhados', 'Consequência detalhada', 'Eficácia de tratamento definida'] },
-  { riskId: 'R024', type: 'new', changes: ['Novo risco adicionado na Aula 5'] },
-  { riskId: 'R025', type: 'new', changes: ['Novo risco adicionado na Aula 5'] },
-  { riskId: 'R026', type: 'new', changes: ['Novo risco adicionado na Aula 5'] },
-  { riskId: 'R027', type: 'new', changes: ['Novo risco adicionado na Aula 5'] },
+  { riskId: 'R003', type: 'modified', changes: ['Tipo de risco alterado', 'Tratamento atualizado', 'Controles detalhados', 'Consequência detalhada', 'KRI definido', 'Eficácia de tratamento definida'] },
+  { riskId: 'R004', type: 'modified', changes: ['GUT: 48→64', 'Controles detalhados', 'Consequência detalhada', 'KRI atualizado'] },
+  { riskId: 'R005', type: 'modified', changes: ['GUT: 100→80'] },
+  { riskId: 'R007', type: 'modified', changes: ['GUT: 125→100', 'Controles detalhados', 'Consequência detalhada', 'KRI atualizado', 'Eficácia de tratamento definida'] },
+  { riskId: 'R008', type: 'modified', changes: ['GUT: 36→60', 'Tipo de risco alterado'] },
+  { riskId: 'R009', type: 'modified', changes: ['GUT: 48→64', 'Tipo de risco alterado'] },
+  { riskId: 'R010', type: 'modified', changes: ['Tipo de risco alterado', 'Tratamento atualizado', 'Controles detalhados', 'Consequência detalhada', 'KRI atualizado', 'Eficácia de tratamento definida'] },
+  { riskId: 'R011', type: 'modified', changes: ['GUT: 27→36', 'Tratamento atualizado', 'Responsável atualizado', 'Consequência detalhada', 'KRI atualizado'] },
+  { riskId: 'R012', type: 'modified', changes: ['Controles detalhados', 'Consequência detalhada', 'KRI atualizado'] },
+  { riskId: 'R013', type: 'modified', changes: ['Responsável atualizado'] },
+  { riskId: 'R014', type: 'modified', changes: ['GUT: 100→125', 'Tipo de risco alterado', 'Tratamento atualizado', 'Responsável atualizado', 'Controles detalhados', 'Consequência detalhada', 'KRI atualizado', 'Eficácia de tratamento definida'] },
+  { riskId: 'R015', type: 'new', changes: ['Novo risco adicionado'] },
+  { riskId: 'R016', type: 'modified', changes: ['GUT: 80→60', 'Tipo de risco alterado', 'Responsável atualizado', 'Controles detalhados'] },
+  { riskId: 'R017', type: 'modified', changes: ['Responsável atualizado'] },
+  { riskId: 'R018', type: 'modified', changes: ['GUT: 36→60'] },
+  { riskId: 'R019', type: 'modified', changes: ['GUT: 36→48', 'Responsável atualizado'] },
+  { riskId: 'R020', type: 'new', changes: ['Novo risco adicionado'] },
+  { riskId: 'R021', type: 'modified', changes: ['GUT: 18→32', 'Controles detalhados', 'KRI atualizado', 'Eficácia de tratamento definida'] },
+  { riskId: 'R022', type: 'modified', changes: ['Controles detalhados', 'KRI atualizado', 'Eficácia de tratamento definida'] },
+  { riskId: 'R023', type: 'modified', changes: ['Controles detalhados', 'KRI atualizado', 'Eficácia de tratamento definida'] },
+  { riskId: 'R024', type: 'new', changes: ['Novo risco adicionado'] },
+  { riskId: 'R025', type: 'new', changes: ['Novo risco adicionado'] },
+  { riskId: 'R026', type: 'new', changes: ['Novo risco adicionado'] },
+  { riskId: 'R027', type: 'new', changes: ['Novo risco adicionado'] },
 ];
 
-// Legacy compatibility - EVOLUTION_SUMMARY now refers to 4→5 changes
+// Legacy compatibility
 export const EVOLUTION_SUMMARY = EVOLUTION_4_TO_5;
-

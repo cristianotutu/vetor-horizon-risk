@@ -1,0 +1,61 @@
+name: Atualizar Riscos e Deploy
+
+on:
+  # Dispara quando a planilha é atualizada na pasta data/
+  push:
+    paths:
+      - 'data/**/*.xlsx'
+    branches:
+      - main
+  
+  # Permite execução manual
+  workflow_dispatch:
+
+jobs:
+  extract-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Instalar pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Instalar dependências
+        run: pnpm install --frozen-lockfile
+
+      - name: Extrair dados da planilha
+        run: node scripts/extract-risks.mjs
+
+      - name: Rodar testes
+        run: pnpm test
+
+      - name: Build web (Expo)
+        run: npx expo export --platform web
+
+      - name: Deploy para Netlify
+        uses: nwtgck/actions-netlify@v3
+        with:
+          publish-dir: './dist'
+          production-deploy: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          deploy-message: "Deploy automático - Planilha atualizada"
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+
+      - name: Commit dados atualizados (se houve mudança)
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add lib/evolution-data.ts
+          git diff --staged --quiet || git commit -m "🔄 Dados de riscos atualizados automaticamente da planilha"
+          git push || echo "Nada para commitar"
