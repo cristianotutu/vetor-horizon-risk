@@ -35,12 +35,12 @@ describe('Evolution Data - Aula 3', () => {
 });
 
 describe('Evolution Data - Aula 4', () => {
-  it('should have 27 risks in Aula 4 (19 original + 8 new R024-R031)', () => {
-    expect(RISKS_AULA4.length).toBe(27);
+  it('should have 30 risks in Aula 4 (19 original + 8 new R024-R031 + 3 TPRM R032-R034)', () => {
+    expect(RISKS_AULA4.length).toBe(30);
   });
 
-  it('Aula 4 should have 11 more risks than Aula 3 (3 original new + 8 added)', () => {
-    expect(RISKS_AULA4.length - RISKS_AULA3.length).toBe(11);
+  it('Aula 4 should have 14 more risks than Aula 3 (3 original new + 8 added + 3 TPRM)', () => {
+    expect(RISKS_AULA4.length - RISKS_AULA3.length).toBe(14);
   });
 
   it('R001 and R002 should not exist in any dataset', () => {
@@ -50,10 +50,10 @@ describe('Evolution Data - Aula 4', () => {
     expect(RISKS_AULA4.find(r => r.id === 'R002')).toBeUndefined();
   });
 
-  it('new risks in Aula 4 should include R021-R023 and R024-R031', () => {
+  it('new risks in Aula 4 should include R021-R023, R024-R031 and TPRM R032-R034', () => {
     const a3Ids = new Set(RISKS_AULA3.map(r => r.id));
     const newIds = RISKS_AULA4.filter(r => !a3Ids.has(r.id)).map(r => r.id).sort();
-    expect(newIds).toEqual(['R021', 'R022', 'R023', 'R024', 'R025', 'R026', 'R027', 'R028', 'R029', 'R030', 'R031']);
+    expect(newIds).toEqual(['R021', 'R022', 'R023', 'R024', 'R025', 'R026', 'R027', 'R028', 'R029', 'R030', 'R031', 'R032', 'R033', 'R034']);
   });
 
   it('all Aula 4 risks should have valid fields', () => {
@@ -99,9 +99,9 @@ describe('Evolution Summary', () => {
     expect(EVOLUTION_SUMMARY.find(e => e.riskId === 'R002')).toBeUndefined();
   });
 
-  it('should have 11 new risks (R021-R023 + R024-R031)', () => {
+  it('should have 14 new risks (R021-R023 + R024-R031 + R032-R034 TPRM)', () => {
     const newEntries = EVOLUTION_SUMMARY.filter(e => e.type === 'new');
-    expect(newEntries.length).toBe(11);
+    expect(newEntries.length).toBe(14);
   });
 
   it('should have modified risks with changes listed', () => {

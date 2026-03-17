@@ -54,3 +54,7 @@
 - [x] Corrigir overflow de texto na tela de detalhe do risco (coluna direita cortada)
 - [x] Enquadrar todo o conteúdo dentro dos limites da tela 1366x768
 - [x] Corrigir layout 2 colunas para que ambas respeitem o espaço disponível
+- [x] Reanalisar estudo de caso DAMACORP para verificar controles de cada risco
+- [x] Identificar situações de avaliação de terceiros (TPRM) no estudo de caso
+- [x] Atualizar controles dos riscos existentes no aplicativo
+- [x] Adicionar riscos TPRM identificados no aplicativo
