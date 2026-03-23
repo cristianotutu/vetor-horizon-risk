@@ -115,3 +115,8 @@
 - [x] Preparar documento de sugestões de novos riscos e melhorias para o time
 - [x] Ajustar painel IMPACTO FINANCEIRO CONSOLIDADO no Dashboard
 - [x] Ajustar quadros de Investimento e Impacto no Estratégico conforme solicitado
+- [x] Implementar R001 e R002 (riscos faltantes) no evolution-data.ts
+- [x] Implementar R028-R037 (10 novos riscos sugeridos) no evolution-data.ts
+- [x] Adicionar dados financeiros dos 12 novos riscos no financial-data.ts
+- [x] Fornecer tabela completa com todos os dados dos novos riscos ao usuário
+- [x] Corrigir layout do painel IMPACTO FINANCEIRO CONSOLIDADO — cards cortados no desktop (4 colunas overflow)

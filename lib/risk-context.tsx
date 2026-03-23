@@ -4,8 +4,8 @@ import { Risk, generateRiskId, createEmptyRisk } from './models';
 import { RISKS_AULA5 } from './evolution-data';
 import { FINANCIAL_DATA } from './financial-data';
 
-const STORAGE_KEY = '@icapt_risks_v10_financial';
-const INITIALIZED_KEY = '@icapt_initialized_v10_financial';
+const STORAGE_KEY = '@icapt_risks_v11_37risks';
+const INITIALIZED_KEY = '@icapt_initialized_v11_37risks';
 
 // Enrich risks with financial data
 const RISKS_WITH_FINANCIAL = RISKS_AULA5.map(r => ({

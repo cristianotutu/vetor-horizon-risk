@@ -572,58 +572,33 @@ export default function DashboardScreen() {
                   </View>
                   <Text style={{ fontSize: 11, color: '#6B8A7A', fontFamily: 'monospace', marginTop: -12 }}>Visão consolidada de exposição, investimento e economia — {financialSummary.riscosComDados} riscos analisados</Text>
                 </View>
-                {/* 2x2 grid on mobile, 4 columns on desktop */}
-                {isDesktop ? (
+                {/* Always 2x2 grid to avoid overflow */}
+                <View style={{ gap: 10 }}>
                   <View style={{ flexDirection: 'row', gap: 10 }}>
                     <View style={[styles.finCardResponsive, { borderColor: '#FF3D3D30', backgroundColor: '#FF3D3D08' }]}>
                       <Text style={[styles.finLabel, { color: '#6B8A7A', fontFamily: 'monospace' }]}>EXPOSIÇÃO TOTAL{"\n"}(ALTA DEMANDA)</Text>
-                      <Text style={[styles.finValue, { color: '#FF3D3D', fontFamily: 'monospace' }]}>R$ {(financialSummary.totalExposicaoAlta / 1000000).toFixed(1)}M</Text>
+                      <Text style={[isDesktop ? styles.finValue : styles.finValueMobile, { color: '#FF3D3D', fontFamily: 'monospace' }]}>R$ {(financialSummary.totalExposicaoAlta / 1000000).toFixed(1)}M</Text>
                       <Text style={[styles.finHint, { color: '#FF3D3D80', fontFamily: 'monospace' }]}>Black Friday / Natal</Text>
                     </View>
                     <View style={[styles.finCardResponsive, { borderColor: '#FF8C0030', backgroundColor: '#FF8C0008' }]}>
                       <Text style={[styles.finLabel, { color: '#6B8A7A', fontFamily: 'monospace' }]}>EXPOSIÇÃO TOTAL{"\n"}(BAIXA DEMANDA)</Text>
-                      <Text style={[styles.finValue, { color: '#FF8C00', fontFamily: 'monospace' }]}>R$ {(financialSummary.totalExposicaoBaixa / 1000000).toFixed(1)}M</Text>
+                      <Text style={[isDesktop ? styles.finValue : styles.finValueMobile, { color: '#FF8C00', fontFamily: 'monospace' }]}>R$ {(financialSummary.totalExposicaoBaixa / 1000000).toFixed(1)}M</Text>
                       <Text style={[styles.finHint, { color: '#FF8C0080', fontFamily: 'monospace' }]}>Período normal</Text>
                     </View>
+                  </View>
+                  <View style={{ flexDirection: 'row', gap: 10 }}>
                     <View style={[styles.finCardResponsive, { borderColor: '#00E5FF30', backgroundColor: '#00E5FF08' }]}>
                       <Text style={[styles.finLabel, { color: '#6B8A7A', fontFamily: 'monospace' }]}>INVESTIMENTO{"\n"}PREVENTIVO</Text>
-                      <Text style={[styles.finValue, { color: '#00E5FF', fontFamily: 'monospace' }]}>R$ {(financialSummary.totalInvestimento / 1000000).toFixed(1)}M</Text>
+                      <Text style={[isDesktop ? styles.finValue : styles.finValueMobile, { color: '#00E5FF', fontFamily: 'monospace' }]}>R$ {(financialSummary.totalInvestimento / 1000000).toFixed(1)}M</Text>
                       <Text style={[styles.finHint, { color: '#00E5FF80', fontFamily: 'monospace' }]}>Controles + Contingências</Text>
                     </View>
                     <View style={[styles.finCardResponsive, { borderColor: '#00FF8830', backgroundColor: '#00FF8808' }]}>
                       <Text style={[styles.finLabel, { color: '#6B8A7A', fontFamily: 'monospace' }]}>ECONOMIA{"\n"}POTENCIAL</Text>
-                      <Text style={[styles.finValue, { color: '#00FF88', fontFamily: 'monospace' }]}>R$ {(financialSummary.totalEconomia / 1000000).toFixed(1)}M</Text>
+                      <Text style={[isDesktop ? styles.finValue : styles.finValueMobile, { color: '#00FF88', fontFamily: 'monospace' }]}>R$ {(financialSummary.totalEconomia / 1000000).toFixed(1)}M</Text>
                       <Text style={[styles.finHint, { color: '#00FF8880', fontFamily: 'monospace' }]}>ROI: {financialSummary.roiMedio.toFixed(0)}%</Text>
                     </View>
                   </View>
-                ) : (
-                  <View style={{ gap: 10 }}>
-                    <View style={{ flexDirection: 'row', gap: 10 }}>
-                      <View style={[styles.finCardResponsive, { borderColor: '#FF3D3D30', backgroundColor: '#FF3D3D08' }]}>
-                        <Text style={[styles.finLabel, { color: '#6B8A7A', fontFamily: 'monospace' }]}>EXPOSIÇÃO{"\n"}(ALTA DEMANDA)</Text>
-                        <Text style={[styles.finValueMobile, { color: '#FF3D3D', fontFamily: 'monospace' }]}>R$ {(financialSummary.totalExposicaoAlta / 1000000).toFixed(1)}M</Text>
-                        <Text style={[styles.finHint, { color: '#FF3D3D80', fontFamily: 'monospace' }]}>Black Friday</Text>
-                      </View>
-                      <View style={[styles.finCardResponsive, { borderColor: '#FF8C0030', backgroundColor: '#FF8C0008' }]}>
-                        <Text style={[styles.finLabel, { color: '#6B8A7A', fontFamily: 'monospace' }]}>EXPOSIÇÃO{"\n"}(BAIXA DEMANDA)</Text>
-                        <Text style={[styles.finValueMobile, { color: '#FF8C00', fontFamily: 'monospace' }]}>R$ {(financialSummary.totalExposicaoBaixa / 1000000).toFixed(1)}M</Text>
-                        <Text style={[styles.finHint, { color: '#FF8C0080', fontFamily: 'monospace' }]}>Normal</Text>
-                      </View>
-                    </View>
-                    <View style={{ flexDirection: 'row', gap: 10 }}>
-                      <View style={[styles.finCardResponsive, { borderColor: '#00E5FF30', backgroundColor: '#00E5FF08' }]}>
-                        <Text style={[styles.finLabel, { color: '#6B8A7A', fontFamily: 'monospace' }]}>INVESTIMENTO{"\n"}PREVENTIVO</Text>
-                        <Text style={[styles.finValueMobile, { color: '#00E5FF', fontFamily: 'monospace' }]}>R$ {(financialSummary.totalInvestimento / 1000000).toFixed(1)}M</Text>
-                        <Text style={[styles.finHint, { color: '#00E5FF80', fontFamily: 'monospace' }]}>Controles</Text>
-                      </View>
-                      <View style={[styles.finCardResponsive, { borderColor: '#00FF8830', backgroundColor: '#00FF8808' }]}>
-                        <Text style={[styles.finLabel, { color: '#6B8A7A', fontFamily: 'monospace' }]}>ECONOMIA{"\n"}POTENCIAL</Text>
-                        <Text style={[styles.finValueMobile, { color: '#00FF88', fontFamily: 'monospace' }]}>R$ {(financialSummary.totalEconomia / 1000000).toFixed(1)}M</Text>
-                        <Text style={[styles.finHint, { color: '#00FF8880', fontFamily: 'monospace' }]}>ROI: {financialSummary.roiMedio.toFixed(0)}%</Text>
-                      </View>
-                    </View>
-                  </View>
-                )}
+                </View>
                 <View style={[styles.finBarContainer, { marginTop: 20 }]}>
                   <Text style={[styles.finBarLabel, { color: '#00E5FF', fontFamily: 'monospace', fontWeight: '800', fontSize: 11 }]}>INVESTIR R$ {(financialSummary.totalInvestimento / 1000000).toFixed(1)}M → EVITAR PERDA DE ATÉ R$ {(financialSummary.totalExposicaoAlta / 1000000).toFixed(1)}M</Text>
                   <View style={[styles.finBar, { backgroundColor: '#111820' }]}>
