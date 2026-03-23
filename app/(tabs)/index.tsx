@@ -560,14 +560,17 @@ export default function DashboardScreen() {
 
         {/* Financial Summary Panel */}
         {financialSummary.riscosComDados > 0 && (
-          <View style={[styles.section, isDesktop && styles.sectionDesktop, { marginTop: 16 }]}>
+          <View style={[styles.section, isDesktop && styles.sectionDesktop, { marginTop: 24 }]}>
             <Animated.View entering={FadeInDown.duration(500).delay(500)}>
               <GlowCard variant="default">
-                <View style={styles.cardHeader}>
-                  <Text style={[styles.cardTitle, { color: '#00E5FF', fontFamily: 'monospace' }]}>IMPACTO FINANCEIRO CONSOLIDADO</Text>
-                  <View style={[styles.cardBadge, { backgroundColor: '#FF3D3D15', borderWidth: 1, borderColor: '#FF3D3D30' }]}>
-                    <Text style={[styles.cardBadgeText, { color: '#FF3D3D', fontFamily: 'monospace' }]}>R$ MILHÕES</Text>
+                <View style={{ marginBottom: 20 }}>
+                  <View style={styles.cardHeader}>
+                    <Text style={[styles.cardTitle, { color: '#00E5FF', fontFamily: 'monospace', fontSize: 16 }]}>IMPACTO FINANCEIRO CONSOLIDADO</Text>
+                    <View style={[styles.cardBadge, { backgroundColor: '#FF3D3D15', borderWidth: 1, borderColor: '#FF3D3D30' }]}>
+                      <Text style={[styles.cardBadgeText, { color: '#FF3D3D', fontFamily: 'monospace' }]}>R$ MILHÕES</Text>
+                    </View>
                   </View>
+                  <Text style={{ fontSize: 11, color: '#6B8A7A', fontFamily: 'monospace', marginTop: -12 }}>Visão consolidada de exposição, investimento e economia — {financialSummary.riscosComDados} riscos analisados</Text>
                 </View>
                 {/* 2x2 grid on mobile, 4 columns on desktop */}
                 {isDesktop ? (
@@ -621,8 +624,8 @@ export default function DashboardScreen() {
                     </View>
                   </View>
                 )}
-                <View style={[styles.finBarContainer, { marginTop: 16 }]}>
-                  <Text style={[styles.finBarLabel, { color: '#6B8A7A', fontFamily: 'monospace' }]}>INVESTIR R$ {(financialSummary.totalInvestimento / 1000000).toFixed(1)}M → EVITAR PERDA DE ATÉ R$ {(financialSummary.totalExposicaoAlta / 1000000).toFixed(1)}M</Text>
+                <View style={[styles.finBarContainer, { marginTop: 20 }]}>
+                  <Text style={[styles.finBarLabel, { color: '#00E5FF', fontFamily: 'monospace', fontWeight: '800', fontSize: 11 }]}>INVESTIR R$ {(financialSummary.totalInvestimento / 1000000).toFixed(1)}M → EVITAR PERDA DE ATÉ R$ {(financialSummary.totalExposicaoAlta / 1000000).toFixed(1)}M</Text>
                   <View style={[styles.finBar, { backgroundColor: '#111820' }]}>
                     <View style={[styles.finBarFill, { width: `${Math.min((financialSummary.totalInvestimento / financialSummary.totalExposicaoAlta) * 100, 100)}%`, backgroundColor: '#00E5FF' }]} />
                   </View>

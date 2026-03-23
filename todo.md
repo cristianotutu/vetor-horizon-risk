@@ -111,3 +111,7 @@
 - [x] Estratégico: criar quadro de Investimento Preventivo clicável
 - [x] Estratégico: criar quadro de Impacto Financeiro clicável
 - [x] Estratégico: ao clicar, listar investimentos priorizados por maior ROI/benefício
+- [x] Analisar estudo de caso DAMACORP e identificar riscos faltantes (mercado, demanda, estoque, cultura, TPRM)
+- [x] Preparar documento de sugestões de novos riscos e melhorias para o time
+- [x] Ajustar painel IMPACTO FINANCEIRO CONSOLIDADO no Dashboard
+- [x] Ajustar quadros de Investimento e Impacto no Estratégico conforme solicitado

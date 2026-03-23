@@ -580,6 +580,13 @@ export default function StrategicScreen() {
 
           {/* Financial Investment & Impact */}
           <View style={[s.section, { paddingHorizontal: isDesktop ? 32 : 16 }]}>
+            <View style={{ marginBottom: 16 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                <View style={{ width: 4, height: 24, borderRadius: 2, backgroundColor: '#00E5FF' }} />
+                <Text style={{ fontSize: 18, fontWeight: '800', color: NEON.text, letterSpacing: 1, fontFamily: Platform.OS === 'web' ? 'monospace' : undefined }}>Análise Financeira</Text>
+              </View>
+              <Text style={{ fontSize: 11, color: NEON.muted, fontFamily: 'monospace', marginTop: 4, marginLeft: 14 }}>Investimento preventivo vs. impacto financeiro — clique nos quadros para ver detalhes priorizados</Text>
+            </View>
             <View style={isDesktop ? s.twoColGrid : { gap: 16 }}>
               {/* Investment Card */}
               <TouchableOpacity
@@ -593,8 +600,8 @@ export default function StrategicScreen() {
                 activeOpacity={0.7}
               >
                 <View style={s.cardHeader}>
-                  <IconSymbol name="shield.fill" size={18} color="#00E5FF" />
-                  <Text style={[s.cardTitle, { color: NEON.text }]}>Investimento Preventivo</Text>
+                  <IconSymbol name="shield.fill" size={20} color="#00E5FF" />
+                  <Text style={[s.cardTitle, { color: NEON.text, fontSize: 15 }]}>Investimento Preventivo</Text>
                 </View>
                 <View style={{ alignItems: 'center', paddingVertical: 12 }}>
                   <Text style={{ fontSize: 10, fontWeight: '700', color: NEON.muted, fontFamily: 'monospace', letterSpacing: 1, marginBottom: 4 }}>TOTAL RECOMENDADO</Text>
@@ -628,8 +635,8 @@ export default function StrategicScreen() {
                 activeOpacity={0.7}
               >
                 <View style={s.cardHeader}>
-                  <IconSymbol name="exclamationmark.triangle.fill" size={18} color="#FF3D3D" />
-                  <Text style={[s.cardTitle, { color: NEON.text }]}>Impacto Financeiro</Text>
+                  <IconSymbol name="exclamationmark.triangle.fill" size={20} color="#FF3D3D" />
+                  <Text style={[s.cardTitle, { color: NEON.text, fontSize: 15 }]}>Impacto Financeiro</Text>
                 </View>
                 <View style={{ alignItems: 'center', paddingVertical: 12 }}>
                   <Text style={{ fontSize: 10, fontWeight: '700', color: NEON.muted, fontFamily: 'monospace', letterSpacing: 1, marginBottom: 4 }}>EXPOSIÇÃO TOTAL (ALTA)</Text>
