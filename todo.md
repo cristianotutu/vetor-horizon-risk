@@ -85,3 +85,9 @@
 - [x] Adicionar nomes dos consultores Vetor Horizon na tela Sobre
 - [x] Corrigir fundo branco na tela Sobre (deve ser dark mode como as demais telas)
 - [x] Criar README.md profissional para o repositório GitHub
+- [x] Criar componentes GlowCard, PulsingBadge, AnimatedCounter, TickerBar
+- [x] Redesenhar Dashboard com estética terminal/neon e animações
+- [x] Redesenhar tela de Riscos com painel interativo estilo Signals
+- [x] Melhorar telas Evolução, Estratégico e Tabelas com novos componentes
+- [x] Adicionar ticker de alertas críticos
+- [x] Fazer push de todas as melhorias para GitHub

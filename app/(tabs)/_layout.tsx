@@ -15,7 +15,7 @@ export default function TabLayout() {
   const tabBarHeight = 56 + bottomPadding;
 
   return (
-    <View style={{ flex: 1, flexDirection: 'row', backgroundColor: colors.background }}>
+    <View style={{ flex: 1, flexDirection: 'row', backgroundColor: '#0A0E14' }}>
       {/* Desktop Sidebar */}
       <Sidebar />
 
@@ -23,7 +23,7 @@ export default function TabLayout() {
       <View style={{ flex: 1 }}>
         <Tabs
           screenOptions={{
-            tabBarActiveTintColor: colors.primary,
+            tabBarActiveTintColor: '#00E5FF',
             headerShown: false,
             tabBarButton: HapticTab,
             tabBarStyle: isDesktop
@@ -32,8 +32,8 @@ export default function TabLayout() {
                   paddingTop: 8,
                   paddingBottom: bottomPadding,
                   height: tabBarHeight,
-                  backgroundColor: colors.surface,
-                  borderTopColor: colors.border,
+                  backgroundColor: '#0D1117',
+                  borderTopColor: '#1A3A2A',
                   borderTopWidth: 1,
                 },
           }}

@@ -28,7 +28,7 @@ export function Sidebar() {
   if (!isDesktop || Platform.OS !== 'web') return null;
 
   return (
-    <View style={[styles.sidebar, { backgroundColor: colors.surface, borderRightColor: colors.border }]}>
+    <View style={[styles.sidebar, { backgroundColor: '#0A0E14', borderRightColor: '#1A3A2A' }]}>
       {/* Logo area with image */}
       <View style={styles.logoArea}>
         <Image
@@ -39,7 +39,7 @@ export function Sidebar() {
       </View>
 
       {/* Divider */}
-      <View style={[styles.divider, { backgroundColor: colors.border }]} />
+      <View style={[styles.divider, { backgroundColor: '#1A3A2A' }]} />
 
       {/* Nav Items */}
       <View style={styles.navList}>
@@ -50,7 +50,8 @@ export function Sidebar() {
               key={item.key}
               style={[
                 styles.navItem,
-                isActive && { backgroundColor: colors.primary + '12' },
+                isActive && { backgroundColor: '#00E5FF' + '10', borderColor: '#00E5FF' + '30', borderWidth: 1 },
+                !isActive && { borderWidth: 1, borderColor: 'transparent' },
               ]}
               onPress={() => router.push(item.path as any)}
               activeOpacity={0.7}
@@ -58,16 +59,16 @@ export function Sidebar() {
               <IconSymbol
                 name={item.icon}
                 size={20}
-                color={isActive ? colors.primary : colors.muted}
+                color={isActive ? '#00E5FF' : '#6B8A7A'}
               />
               <Text style={[
                 styles.navLabel,
-                { color: isActive ? colors.primary : colors.muted },
+                { color: isActive ? '#00E5FF' : '#6B8A7A', fontFamily: 'monospace' },
                 isActive && styles.navLabelActive,
               ]}>
                 {item.label}
               </Text>
-              {isActive && <View style={[styles.activeIndicator, { backgroundColor: colors.primary }]} />}
+              {isActive && <View style={[styles.activeIndicator, { backgroundColor: '#00E5FF' }]} />}
             </TouchableOpacity>
           );
         })}
@@ -75,9 +76,9 @@ export function Sidebar() {
 
       {/* Footer */}
       <View style={styles.sidebarFooter}>
-        <View style={[styles.divider, { backgroundColor: colors.border }]} />
-        <Text style={[styles.footerText, { color: colors.muted }]}>ICAPT v5</Text>
-        <Text style={[styles.footerText, { color: colors.muted }]}>ISO 31000 | ISO 27001</Text>
+        <View style={[styles.divider, { backgroundColor: '#1A3A2A' }]} />
+        <Text style={[styles.footerText, { color: '#6B8A7A', fontFamily: 'monospace' }]}>ICAPT v5</Text>
+        <Text style={[styles.footerText, { color: '#6B8A7A', fontFamily: 'monospace' }]}>ISO 31000 | ISO 27001</Text>
       </View>
     </View>
   );
@@ -108,12 +109,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 12,
     paddingVertical: 10,
-    borderRadius: 8,
+    borderRadius: 6,
     gap: 12,
     position: 'relative',
   },
-  navLabel: { fontSize: 14, fontWeight: '500' },
-  navLabelActive: { fontWeight: '600' },
+  navLabel: { fontSize: 13, fontWeight: '500', letterSpacing: 0.5 },
+  navLabelActive: { fontWeight: '700' },
   activeIndicator: {
     position: 'absolute',
     left: 0,
@@ -126,5 +127,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 8,
   },
-  footerText: { fontSize: 10, textAlign: 'center', marginTop: 4 },
+  footerText: { fontSize: 10, textAlign: 'center', marginTop: 4, letterSpacing: 1 },
 });
