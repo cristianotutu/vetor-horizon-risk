@@ -1,14 +1,14 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Risk, generateRiskId, createEmptyRisk } from './models';
-import { RISKS_AULA5 } from './evolution-data';
+import { RISKS_AULA6 } from './evolution-data';
 import { FINANCIAL_DATA } from './financial-data';
 
-const STORAGE_KEY = '@icapt_risks_v12_35risks';
-const INITIALIZED_KEY = '@icapt_initialized_v12_35risks';
+const STORAGE_KEY = '@icapt_risks_v13_aula6_35risks';
+const INITIALIZED_KEY = '@icapt_initialized_v13_aula6_35risks';
 
 // Enrich risks with financial data
-const RISKS_WITH_FINANCIAL = RISKS_AULA5.map(r => ({
+const RISKS_WITH_FINANCIAL = RISKS_AULA6.map(r => ({
   ...r,
   impactoFinanceiro: FINANCIAL_DATA[r.id] || undefined,
 }));

@@ -375,9 +375,11 @@ export default function DashboardScreen() {
                                     {(() => {
                                       const cellFinancial = cellRisks.reduce((sum, r) => sum + (r.impactoFinanceiro?.perdaMediaEsperada || 0), 0);
                                       if (cellFinancial > 0) {
-                                        const formatted = cellFinancial >= 1000000 ? `${(cellFinancial / 1000000).toFixed(1)}M` : `${(cellFinancial / 1000).toFixed(0)}K`;
+                                        const formatted = cellFinancial >= 1000000 ? `${(cellFinancial / 1000000).toFixed(1)}M` : cellFinancial >= 1000 ? `${(cellFinancial / 1000).toFixed(0)}K` : `${cellFinancial.toFixed(0)}`;
                                         return (
-                                          <Text style={[styles.cellFinancialText, { color: bgColor, fontFamily: 'monospace' }]}>R${formatted}</Text>
+                                          <View style={[styles.cellFinancialBadge, { backgroundColor: bgColor + '30', borderColor: bgColor + '60' }]}>
+                                            <Text style={[styles.cellFinancialText, { color: '#FFFFFF', fontFamily: 'monospace' }]}>R$ {formatted}</Text>
+                                          </View>
                                         );
                                       }
                                       return null;
@@ -674,7 +676,8 @@ const styles = StyleSheet.create({
   matrixCellActive: { cursor: 'pointer' as any },
   matrixCellText: { fontSize: 18, fontWeight: '800' },
   cellContentWrap: { alignItems: 'center', gap: 1 },
-  cellFinancialText: { fontSize: 7, fontWeight: '700', letterSpacing: 0.3, opacity: 0.9 },
+  cellFinancialBadge: { paddingHorizontal: 4, paddingVertical: 2, borderRadius: 4, borderWidth: 1, marginTop: 2 },
+  cellFinancialText: { fontSize: 9, fontWeight: '800', letterSpacing: 0.3 },
   cellTapHint: { paddingHorizontal: 6, paddingVertical: 1, borderRadius: 3 },
   cellTapHintText: { fontSize: 7, fontWeight: '700', letterSpacing: 0.5 },
   xAxisTitle: { fontSize: 11, fontWeight: '700', textAlign: 'center', marginTop: 6, marginLeft: 28, letterSpacing: 1 },
