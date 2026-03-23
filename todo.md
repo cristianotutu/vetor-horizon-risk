@@ -131,4 +131,4 @@
 - [x] Atualizar evolution-data.ts com dados corretos de cada aula
 - [x] Atualizar financial-data.ts com dados da Aula 06 (mantido existente)
 - [x] Melhorar visualização da perda na matriz de risco (mais legível)
-- [ ] Push para GitHub e confirmar deploy no Netlify
+- [x] Push para GitHub e confirmar deploy no Netlify
