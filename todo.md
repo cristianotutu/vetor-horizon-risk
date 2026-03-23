@@ -120,3 +120,7 @@
 - [x] Adicionar dados financeiros dos 12 novos riscos no financial-data.ts
 - [x] Fornecer tabela completa com todos os dados dos novos riscos ao usuário
 - [x] Corrigir layout do painel IMPACTO FINANCEIRO CONSOLIDADO — cards cortados no desktop (4 colunas overflow)
+- [x] Remover R036-R037 — total deve ser 35 riscos (R001 a R035)
+- [x] Adicionar valores de impacto financeiro nos quadrantes da matriz de risco
+- [x] Preparar tabela TSV para copiar/colar no Excel
+- [x] Atualizar link público para vetor-horizon-risk.netlify.app

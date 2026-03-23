@@ -1,4 +1,4 @@
-import { ScrollView, Text, View, StyleSheet, useWindowDimensions, Image } from "react-native";
+import { ScrollView, Text, View, StyleSheet, useWindowDimensions, Image, TouchableOpacity, Linking } from "react-native";
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
 import { useRisks } from "@/lib/risk-context";
@@ -152,6 +152,26 @@ export default function SettingsScreen() {
           </View>
         </View>
 
+        {/* Link Público */}
+        <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border, marginTop: 16 }]}>
+          <View style={styles.cardHeaderRow}>
+            <View style={[styles.cardIcon, { backgroundColor: colors.primary + '12' }]}>
+              <Text style={{ fontSize: 20 }}>🌐</Text>
+            </View>
+            <Text style={[styles.cardTitle, { color: colors.foreground }]}>Acesso Público</Text>
+          </View>
+          <Text style={[styles.methodDesc, { color: colors.muted }]}>
+            O painel de riscos está disponível publicamente no endereço abaixo:
+          </Text>
+          <TouchableOpacity
+            onPress={() => Linking.openURL('https://vetor-horizon-risk.netlify.app')}
+            style={[styles.linkCard, { backgroundColor: colors.primary + '10', borderColor: colors.primary + '30' }]}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.linkText, { color: colors.primary }]}>https://vetor-horizon-risk.netlify.app</Text>
+          </TouchableOpacity>
+        </View>
+
         {/* Footer */}
         <View style={styles.footer}>
           <Text style={[styles.footerBrand, { color: colors.foreground }]}>Vetor Horizon</Text>
@@ -221,5 +241,7 @@ const styles = StyleSheet.create({
   footer: { alignItems: 'center', paddingTop: 32, paddingBottom: 20 },
   footerBrand: { fontSize: 18, fontWeight: '800' },
   footerSub: { fontSize: 13, marginTop: 2 },
-  footerVersion: { fontSize: 11, marginTop: 8 },
+  footerVersion: { fontSize: 12, marginTop: 4 },
+  linkCard: { padding: 16, borderRadius: 10, borderWidth: 1, alignItems: 'center' as const },
+  linkText: { fontSize: 15, fontWeight: '600' as const, textDecorationLine: 'underline' as const },
 });

@@ -372,6 +372,16 @@ export default function DashboardScreen() {
                                 {count > 0 ? (
                                   <View style={styles.cellContentWrap}>
                                     <Text style={[styles.matrixCellText, { color: bgColor, fontFamily: 'monospace' }]}>{count}</Text>
+                                    {(() => {
+                                      const cellFinancial = cellRisks.reduce((sum, r) => sum + (r.impactoFinanceiro?.perdaMediaEsperada || 0), 0);
+                                      if (cellFinancial > 0) {
+                                        const formatted = cellFinancial >= 1000000 ? `${(cellFinancial / 1000000).toFixed(1)}M` : `${(cellFinancial / 1000).toFixed(0)}K`;
+                                        return (
+                                          <Text style={[styles.cellFinancialText, { color: bgColor, fontFamily: 'monospace' }]}>R${formatted}</Text>
+                                        );
+                                      }
+                                      return null;
+                                    })()}
                                     <View style={[styles.cellTapHint, { backgroundColor: bgColor + '20', borderWidth: 1, borderColor: bgColor + '40' }]}>
                                       <Text style={[styles.cellTapHintText, { color: bgColor, fontFamily: 'monospace' }]}>ver</Text>
                                     </View>
@@ -663,7 +673,8 @@ const styles = StyleSheet.create({
   matrixCell: { flex: 1, aspectRatio: 1, justifyContent: 'center', alignItems: 'center', borderRadius: 6, marginHorizontal: 2 },
   matrixCellActive: { cursor: 'pointer' as any },
   matrixCellText: { fontSize: 18, fontWeight: '800' },
-  cellContentWrap: { alignItems: 'center', gap: 2 },
+  cellContentWrap: { alignItems: 'center', gap: 1 },
+  cellFinancialText: { fontSize: 7, fontWeight: '700', letterSpacing: 0.3, opacity: 0.9 },
   cellTapHint: { paddingHorizontal: 6, paddingVertical: 1, borderRadius: 3 },
   cellTapHintText: { fontSize: 7, fontWeight: '700', letterSpacing: 0.5 },
   xAxisTitle: { fontSize: 11, fontWeight: '700', textAlign: 'center', marginTop: 6, marginLeft: 28, letterSpacing: 1 },

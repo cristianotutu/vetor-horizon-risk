@@ -391,32 +391,10 @@ export const FINANCIAL_DATA: Record<string, FinancialImpact> = {
     racional: 'Inadimplência B2B de 8-10% sobre carteira de R$ 120M = R$ 9.6-12M. Alta demanda: vendas maiores amplificam exposição. Custos de cobrança judicial: R$ 500K/ano. PDD: 3% do faturamento B2B.',
     categoria: 'Receita',
   },
-  'R036': {
-    perdaAltaDemanda: 14000000,
-    perdaBaixaDemanda: 4500000,
-    perdaMediaEsperada: 7350000,
-    investimentoPreventivo: 1000000,
-    descricaoInvestimento: 'Mapeamento de fornecedores alternativos; política de dual sourcing; avaliação financeira anual de fornecedores; estoque de segurança para itens de fornecedor único; cláusulas de contingência',
-    perdaEvitada: 6350000,
-    roiPrevencao: 635.0,
-    racional: 'Ruptura de fornecedor-chave: perda de vendas de R$ 2M/dia x 7 dias = R$ 14M em alta demanda. Baixa: R$ 640K/dia x 7 = R$ 4.5M. Inclui custos de compra emergencial e perda de clientes.',
-    categoria: 'Receita',
-  },
-  'R037': {
-    perdaAltaDemanda: 10000000,
-    perdaBaixaDemanda: 5000000,
-    perdaMediaEsperada: 6500000,
-    investimentoPreventivo: 1200000,
-    descricaoInvestimento: 'Hedge cambial para compras programadas; diversificação de fornecedores nacionais; cláusulas de reajuste cambial; monitoramento diário de câmbio; reserva cambial para 60 dias; preços dinâmicos com ajuste cambial',
-    perdaEvitada: 5300000,
-    roiPrevencao: 441.7,
-    racional: 'Desvalorização de 15-20% do real: custo de importados sobe R$ 10M em alta demanda (estoque 3x). Baixa: R$ 5M. Compressão de margens de 3-5pp. Inclui custos de hedge e repasse de preços.',
-    categoria: 'Receita',
-  },
 };
 
-// === RESUMO CONSOLIDADO (37 RISCOS) ===
-// Perda média esperada total: R$ 377,570,000
-// Investimento preventivo total: R$ 62,300,000
-// Perda evitada total: R$ 315,270,000
-// ROI da prevenção: 506.1%
+// === RESUMO CONSOLIDADO (35 RISCOS: R001-R035) ===
+// Perda média esperada total: R$ 363,720,000
+// Investimento preventivo total: R$ 60,100,000
+// Perda evitada total: R$ 303,620,000
+// ROI da prevenção: 505.2%
