@@ -124,3 +124,5 @@
 - [x] Adicionar valores de impacto financeiro nos quadrantes da matriz de risco
 - [x] Preparar tabela TSV para copiar/colar no Excel
 - [x] Atualizar link público para vetor-horizon-risk.netlify.app
+- [ ] Push para GitHub cristianotutu/vetor-horizon-risk
+- [ ] Revisar clareza dos 35 riscos alinhados ao estudo de caso DAMACORP e ICAPT v5
