@@ -107,3 +107,7 @@
 - [x] Calcular investimento preventivo e ROI para cada risco (R003-R027)
 - [x] Demonstrar claramente: investir R$ X evita perda de R$ Y
 - [x] Criar componente visual de impacto financeiro (perda vs investimento)
+- [x] Dashboard: enquadrar painel financeiro consolidado (4 cards em grid 2x2, não cortados)
+- [x] Estratégico: criar quadro de Investimento Preventivo clicável
+- [x] Estratégico: criar quadro de Impacto Financeiro clicável
+- [x] Estratégico: ao clicar, listar investimentos priorizados por maior ROI/benefício

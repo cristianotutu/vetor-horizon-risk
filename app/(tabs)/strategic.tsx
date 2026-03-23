@@ -8,6 +8,7 @@ import { getRiskLevel, getGutLevel, Risk } from "@/lib/models";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { GlowCard } from "@/components/ui/glow-card";
 import { StatusIndicator } from "@/components/ui/status-indicator";
+import { FINANCIAL_DATA } from "@/lib/financial-data";
 import Animated, { FadeInDown } from "react-native-reanimated";
 
 // Neon color palette
@@ -59,9 +60,10 @@ export default function StrategicScreen() {
   const router = useRouter();
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;
-  const [selectedRisks, setSelectedRisks] = useState<Risk[]>([]);
+  const [selectedRisks, setSelectedRisks] = useState<any[]>([]);
   const [modalTitle, setModalTitle] = useState('');
   const [showModal, setShowModal] = useState(false);
+  const [modalMode, setModalMode] = useState<'default' | 'investment' | 'impact'>('default');
 
   const stats = useMemo(() => {
     const levels = risks.map(r => getRiskLevel(r.riscoInerente).label);
@@ -96,6 +98,30 @@ export default function StrategicScreen() {
   }), [risks]);
   const byTreatment = useMemo(() => groupBy(risks, r => r.tratamento || 'Não definido'), [risks]);
   const top10 = useMemo(() => [...risks].sort((a, b) => b.gutScore - a.gutScore).slice(0, 10), [risks]);
+
+  // Financial data for strategic view
+  const financialStats = useMemo(() => {
+    const risksWithFinancial = risks.map(r => ({
+      ...r,
+      financial: FINANCIAL_DATA[r.id] || null,
+    })).filter(r => r.financial !== null);
+
+    const totalExposicaoAlta = risksWithFinancial.reduce((s, r) => s + (r.financial?.perdaAltaDemanda || 0), 0);
+    const totalExposicaoBaixa = risksWithFinancial.reduce((s, r) => s + (r.financial?.perdaBaixaDemanda || 0), 0);
+    const totalInvestimento = risksWithFinancial.reduce((s, r) => s + (r.financial?.investimentoPreventivo || 0), 0);
+    const totalPerdaEvitada = risksWithFinancial.reduce((s, r) => s + (r.financial?.perdaEvitada || 0), 0);
+    const roiMedio = totalInvestimento > 0 ? (totalPerdaEvitada / totalInvestimento) * 100 : 0;
+
+    // Sorted by ROI descending (best investments first)
+    const byROI = [...risksWithFinancial]
+      .sort((a, b) => (b.financial?.roiPrevencao || 0) - (a.financial?.roiPrevencao || 0));
+
+    // Sorted by perda alta demanda descending (biggest impact first)
+    const byImpact = [...risksWithFinancial]
+      .sort((a, b) => (b.financial?.perdaAltaDemanda || 0) - (a.financial?.perdaAltaDemanda || 0));
+
+    return { risksWithFinancial, totalExposicaoAlta, totalExposicaoBaixa, totalInvestimento, totalPerdaEvitada, roiMedio, byROI, byImpact };
+  }, [risks]);
   const byResponsible = useMemo(() => {
     const groups = groupBy(risks, r => r.responsavel || 'Não atribuído');
     return Object.entries(groups).map(([name, items]) => ({ name, count: items.length, risks: items })).sort((a, b) => b.count - a.count);
@@ -105,6 +131,7 @@ export default function StrategicScreen() {
     setModalTitle(title);
     setSelectedRisks(riskList);
     setShowModal(true);
+    setModalMode('default');
   };
 
   const GaugeCard = ({ label, value, max, unit, color, subtitle }: { label: string; value: number; max: number; unit: string; color: string; subtitle?: string }) => {
@@ -350,10 +377,16 @@ export default function StrategicScreen() {
     );
   };
 
+  const formatBRL = (v: number) => {
+    if (v >= 1000000) return `R$ ${(v / 1000000).toFixed(1)}M`;
+    if (v >= 1000) return `R$ ${(v / 1000).toFixed(0)}K`;
+    return `R$ ${v.toFixed(0)}`;
+  };
+
   const RiskModal = () => (
     <Modal visible={showModal} transparent animationType="fade" onRequestClose={() => setShowModal(false)}>
       <View style={s.modalOverlay}>
-        <View style={[s.modalContent, { backgroundColor: NEON.card, borderColor: NEON.cardBorder, borderWidth: 1, maxWidth: isDesktop ? 700 : '92%' as any }]}>
+        <View style={[s.modalContent, { backgroundColor: NEON.card, borderColor: NEON.cardBorder, borderWidth: 1, maxWidth: isDesktop ? 800 : '95%' as any }]}>
           <View style={s.modalHeader}>
             <Text style={[s.modalTitle, { color: NEON.text, fontFamily: 'monospace' }]}>{modalTitle}</Text>
             <TouchableOpacity onPress={() => setShowModal(false)} activeOpacity={0.7}>
@@ -361,8 +394,91 @@ export default function StrategicScreen() {
             </TouchableOpacity>
           </View>
           <Text style={[s.modalSubtitle, { color: NEON.cyan, fontFamily: 'monospace' }]}>{selectedRisks.length} RISCOS</Text>
-          <ScrollView style={{ maxHeight: 400 }}>
-            {selectedRisks.map(r => {
+          <ScrollView style={{ maxHeight: 500 }}>
+            {modalMode === 'investment' && selectedRisks.map((r, i) => {
+              const fin = r.financial || FINANCIAL_DATA[r.id];
+              if (!fin) return null;
+              const level = getRiskLevel(r.riscoInerente);
+              return (
+                <TouchableOpacity
+                  key={r.id}
+                  style={[s.modalRiskRow, { borderColor: NEON.cardBorder, flexDirection: 'column', alignItems: 'stretch', gap: 8, paddingVertical: 14 }]}
+                  onPress={() => { setShowModal(false); router.push(`/risk/${r.id}` as any); }}
+                  activeOpacity={0.7}
+                >
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                    <View style={{ width: 28, height: 28, borderRadius: 6, backgroundColor: i < 3 ? '#00FF8815' : NEON.bg, alignItems: 'center', justifyContent: 'center' }}>
+                      <Text style={{ fontSize: 12, fontWeight: '800', color: i < 3 ? '#00FF88' : NEON.muted, fontFamily: 'monospace' }}>#{i + 1}</Text>
+                    </View>
+                    <View style={[s.modalRiskId, { backgroundColor: level.color + '15', borderWidth: 1, borderColor: level.color + '30' }]}>
+                      <Text style={[s.modalRiskIdText, { color: level.color, fontFamily: 'monospace' }]}>{r.id}</Text>
+                    </View>
+                    <View style={{ flex: 1, minWidth: 0 }}>
+                      <Text style={[s.modalRiskDesc, { color: NEON.text }]} numberOfLines={1}>{r.descricaoRisco}</Text>
+                    </View>
+                    <View style={{ alignItems: 'flex-end' }}>
+                      <Text style={{ fontSize: 14, fontWeight: '800', color: '#00FF88', fontFamily: 'monospace' }}>ROI {fin.roiPrevencao.toFixed(0)}%</Text>
+                    </View>
+                  </View>
+                  <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
+                    <View style={{ flex: 1, minWidth: 120, backgroundColor: '#00E5FF08', borderWidth: 1, borderColor: '#00E5FF20', borderRadius: 6, padding: 8 }}>
+                      <Text style={{ fontSize: 9, color: NEON.muted, fontFamily: 'monospace', fontWeight: '700' }}>INVESTIR</Text>
+                      <Text style={{ fontSize: 14, fontWeight: '800', color: '#00E5FF', fontFamily: 'monospace' }}>{formatBRL(fin.investimentoPreventivo)}</Text>
+                    </View>
+                    <View style={{ flex: 1, minWidth: 120, backgroundColor: '#00FF8808', borderWidth: 1, borderColor: '#00FF8820', borderRadius: 6, padding: 8 }}>
+                      <Text style={{ fontSize: 9, color: NEON.muted, fontFamily: 'monospace', fontWeight: '700' }}>PERDA EVITADA</Text>
+                      <Text style={{ fontSize: 14, fontWeight: '800', color: '#00FF88', fontFamily: 'monospace' }}>{formatBRL(fin.perdaEvitada)}</Text>
+                    </View>
+                    <View style={{ flex: 1, minWidth: 120, backgroundColor: '#FF3D3D08', borderWidth: 1, borderColor: '#FF3D3D20', borderRadius: 6, padding: 8 }}>
+                      <Text style={{ fontSize: 9, color: NEON.muted, fontFamily: 'monospace', fontWeight: '700' }}>EXPOSIÇÃO ALTA</Text>
+                      <Text style={{ fontSize: 14, fontWeight: '800', color: '#FF3D3D', fontFamily: 'monospace' }}>{formatBRL(fin.perdaAltaDemanda)}</Text>
+                    </View>
+                  </View>
+                  <Text style={{ fontSize: 10, color: NEON.muted, fontFamily: 'monospace', lineHeight: 14 }} numberOfLines={2}>{fin.descricaoInvestimento}</Text>
+                </TouchableOpacity>
+              );
+            })}
+            {modalMode === 'impact' && selectedRisks.map((r, i) => {
+              const fin = r.financial || FINANCIAL_DATA[r.id];
+              if (!fin) return null;
+              const level = getRiskLevel(r.riscoInerente);
+              return (
+                <TouchableOpacity
+                  key={r.id}
+                  style={[s.modalRiskRow, { borderColor: NEON.cardBorder, flexDirection: 'column', alignItems: 'stretch', gap: 8, paddingVertical: 14 }]}
+                  onPress={() => { setShowModal(false); router.push(`/risk/${r.id}` as any); }}
+                  activeOpacity={0.7}
+                >
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                    <View style={{ width: 28, height: 28, borderRadius: 6, backgroundColor: i < 3 ? '#FF3D3D15' : NEON.bg, alignItems: 'center', justifyContent: 'center' }}>
+                      <Text style={{ fontSize: 12, fontWeight: '800', color: i < 3 ? '#FF3D3D' : NEON.muted, fontFamily: 'monospace' }}>#{i + 1}</Text>
+                    </View>
+                    <View style={[s.modalRiskId, { backgroundColor: level.color + '15', borderWidth: 1, borderColor: level.color + '30' }]}>
+                      <Text style={[s.modalRiskIdText, { color: level.color, fontFamily: 'monospace' }]}>{r.id}</Text>
+                    </View>
+                    <View style={{ flex: 1, minWidth: 0 }}>
+                      <Text style={[s.modalRiskDesc, { color: NEON.text }]} numberOfLines={1}>{r.descricaoRisco}</Text>
+                    </View>
+                  </View>
+                  <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
+                    <View style={{ flex: 1, minWidth: 120, backgroundColor: '#FF3D3D08', borderWidth: 1, borderColor: '#FF3D3D20', borderRadius: 6, padding: 8 }}>
+                      <Text style={{ fontSize: 9, color: NEON.muted, fontFamily: 'monospace', fontWeight: '700' }}>ALTA DEMANDA</Text>
+                      <Text style={{ fontSize: 14, fontWeight: '800', color: '#FF3D3D', fontFamily: 'monospace' }}>{formatBRL(fin.perdaAltaDemanda)}</Text>
+                    </View>
+                    <View style={{ flex: 1, minWidth: 120, backgroundColor: '#FF8C0008', borderWidth: 1, borderColor: '#FF8C0020', borderRadius: 6, padding: 8 }}>
+                      <Text style={{ fontSize: 9, color: NEON.muted, fontFamily: 'monospace', fontWeight: '700' }}>BAIXA DEMANDA</Text>
+                      <Text style={{ fontSize: 14, fontWeight: '800', color: '#FF8C00', fontFamily: 'monospace' }}>{formatBRL(fin.perdaBaixaDemanda)}</Text>
+                    </View>
+                    <View style={{ flex: 1, minWidth: 120, backgroundColor: '#00E5FF08', borderWidth: 1, borderColor: '#00E5FF20', borderRadius: 6, padding: 8 }}>
+                      <Text style={{ fontSize: 9, color: NEON.muted, fontFamily: 'monospace', fontWeight: '700' }}>INVESTIR P/ EVITAR</Text>
+                      <Text style={{ fontSize: 14, fontWeight: '800', color: '#00E5FF', fontFamily: 'monospace' }}>{formatBRL(fin.investimentoPreventivo)}</Text>
+                    </View>
+                  </View>
+                  <Text style={{ fontSize: 10, color: NEON.muted, fontFamily: 'monospace', lineHeight: 14 }} numberOfLines={2}>{fin.racional}</Text>
+                </TouchableOpacity>
+              );
+            })}
+            {modalMode === 'default' && selectedRisks.map(r => {
               const level = getRiskLevel(r.riscoInerente);
               return (
                 <TouchableOpacity
@@ -459,6 +575,81 @@ export default function StrategicScreen() {
             <View style={isDesktop ? s.twoColGrid : { gap: 16 }}>
               <View style={isDesktop ? { flex: 1, minWidth: 0 } : undefined}><HeatMapByType /></View>
               <View style={isDesktop ? { flex: 1, minWidth: 0 } : undefined}><TreatmentChart /></View>
+            </View>
+          </View>
+
+          {/* Financial Investment & Impact */}
+          <View style={[s.section, { paddingHorizontal: isDesktop ? 32 : 16 }]}>
+            <View style={isDesktop ? s.twoColGrid : { gap: 16 }}>
+              {/* Investment Card */}
+              <TouchableOpacity
+                style={[s.card, { backgroundColor: NEON.card, borderColor: '#00E5FF30', flex: isDesktop ? 1 : undefined }]}
+                onPress={() => {
+                  setModalTitle('Investimentos Preventivos — Priorizados por ROI');
+                  setSelectedRisks(financialStats.byROI);
+                  setShowModal(true);
+                  setModalMode('investment');
+                }}
+                activeOpacity={0.7}
+              >
+                <View style={s.cardHeader}>
+                  <IconSymbol name="shield.fill" size={18} color="#00E5FF" />
+                  <Text style={[s.cardTitle, { color: NEON.text }]}>Investimento Preventivo</Text>
+                </View>
+                <View style={{ alignItems: 'center', paddingVertical: 12 }}>
+                  <Text style={{ fontSize: 10, fontWeight: '700', color: NEON.muted, fontFamily: 'monospace', letterSpacing: 1, marginBottom: 4 }}>TOTAL RECOMENDADO</Text>
+                  <Text style={{ fontSize: 32, fontWeight: '800', color: '#00E5FF', fontFamily: 'monospace' }}>R$ {(financialStats.totalInvestimento / 1000000).toFixed(1)}M</Text>
+                  <Text style={{ fontSize: 11, color: NEON.muted, fontFamily: 'monospace', marginTop: 4 }}>Controles + Contingências</Text>
+                </View>
+                <View style={{ borderTopWidth: 1, borderTopColor: NEON.cardBorder, paddingTop: 12, gap: 8 }}>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                    <Text style={{ fontSize: 10, color: NEON.muted, fontFamily: 'monospace' }}>PERDA EVITADA</Text>
+                    <Text style={{ fontSize: 12, fontWeight: '700', color: '#00FF88', fontFamily: 'monospace' }}>R$ {(financialStats.totalPerdaEvitada / 1000000).toFixed(1)}M</Text>
+                  </View>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                    <Text style={{ fontSize: 10, color: NEON.muted, fontFamily: 'monospace' }}>ROI MÉDIO</Text>
+                    <Text style={{ fontSize: 12, fontWeight: '700', color: '#00FF88', fontFamily: 'monospace' }}>{financialStats.roiMedio.toFixed(0)}%</Text>
+                  </View>
+                </View>
+                <View style={{ marginTop: 12, backgroundColor: '#00E5FF10', borderRadius: 6, padding: 8, alignItems: 'center' }}>
+                  <Text style={{ fontSize: 10, color: '#00E5FF', fontFamily: 'monospace', fontWeight: '600' }}>CLIQUE PARA VER PRIORIZAÇÃO →</Text>
+                </View>
+              </TouchableOpacity>
+
+              {/* Impact Card */}
+              <TouchableOpacity
+                style={[s.card, { backgroundColor: NEON.card, borderColor: '#FF3D3D30', flex: isDesktop ? 1 : undefined }]}
+                onPress={() => {
+                  setModalTitle('Impacto Financeiro — Maior Exposição');
+                  setSelectedRisks(financialStats.byImpact);
+                  setShowModal(true);
+                  setModalMode('impact');
+                }}
+                activeOpacity={0.7}
+              >
+                <View style={s.cardHeader}>
+                  <IconSymbol name="exclamationmark.triangle.fill" size={18} color="#FF3D3D" />
+                  <Text style={[s.cardTitle, { color: NEON.text }]}>Impacto Financeiro</Text>
+                </View>
+                <View style={{ alignItems: 'center', paddingVertical: 12 }}>
+                  <Text style={{ fontSize: 10, fontWeight: '700', color: NEON.muted, fontFamily: 'monospace', letterSpacing: 1, marginBottom: 4 }}>EXPOSIÇÃO TOTAL (ALTA)</Text>
+                  <Text style={{ fontSize: 32, fontWeight: '800', color: '#FF3D3D', fontFamily: 'monospace' }}>R$ {(financialStats.totalExposicaoAlta / 1000000).toFixed(1)}M</Text>
+                  <Text style={{ fontSize: 11, color: NEON.muted, fontFamily: 'monospace', marginTop: 4 }}>Black Friday / Natal</Text>
+                </View>
+                <View style={{ borderTopWidth: 1, borderTopColor: NEON.cardBorder, paddingTop: 12, gap: 8 }}>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                    <Text style={{ fontSize: 10, color: NEON.muted, fontFamily: 'monospace' }}>EXPOSIÇÃO (BAIXA)</Text>
+                    <Text style={{ fontSize: 12, fontWeight: '700', color: '#FF8C00', fontFamily: 'monospace' }}>R$ {(financialStats.totalExposicaoBaixa / 1000000).toFixed(1)}M</Text>
+                  </View>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                    <Text style={{ fontSize: 10, color: NEON.muted, fontFamily: 'monospace' }}>MÉDIA PONDERADA</Text>
+                    <Text style={{ fontSize: 12, fontWeight: '700', color: '#FFD600', fontFamily: 'monospace' }}>R$ {((financialStats.totalExposicaoAlta * 0.3 + financialStats.totalExposicaoBaixa * 0.7) / 1000000).toFixed(1)}M</Text>
+                  </View>
+                </View>
+                <View style={{ marginTop: 12, backgroundColor: '#FF3D3D10', borderRadius: 6, padding: 8, alignItems: 'center' }}>
+                  <Text style={{ fontSize: 10, color: '#FF3D3D', fontFamily: 'monospace', fontWeight: '600' }}>CLIQUE PARA VER DETALHES →</Text>
+                </View>
+              </TouchableOpacity>
             </View>
           </View>
 
