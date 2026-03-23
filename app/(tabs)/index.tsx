@@ -70,6 +70,25 @@ export default function DashboardScreen() {
     return Object.entries(map).sort((a, b) => b[1].length - a[1].length);
   }, [risks]);
 
+  const financialSummary = useMemo(() => {
+    let totalExposicaoAlta = 0;
+    let totalExposicaoBaixa = 0;
+    let totalInvestimento = 0;
+    let totalEconomia = 0;
+    let riscosComDados = 0;
+    risks.forEach(r => {
+      if (r.impactoFinanceiro) {
+        riscosComDados++;
+        totalExposicaoAlta += r.impactoFinanceiro.perdaAltaDemanda;
+        totalExposicaoBaixa += r.impactoFinanceiro.perdaBaixaDemanda;
+        totalInvestimento += r.impactoFinanceiro.investimentoPreventivo;
+        totalEconomia += r.impactoFinanceiro.perdaEvitada;
+      }
+    });
+    const roiMedio = totalInvestimento > 0 ? ((totalEconomia / totalInvestimento) * 100) : 0;
+    return { totalExposicaoAlta, totalExposicaoBaixa, totalInvestimento, totalEconomia, roiMedio, riscosComDados };
+  }, [risks]);
+
 
 
   const handleStatPress = useCallback((level: string) => {
@@ -539,6 +558,60 @@ export default function DashboardScreen() {
           </View>
         </View>
 
+        {/* Financial Summary Panel */}
+        {financialSummary.riscosComDados > 0 && (
+          <View style={[styles.section, isDesktop && styles.sectionDesktop, { marginTop: 16 }]}>
+            <Animated.View entering={FadeInDown.duration(500).delay(500)}>
+              <GlowCard variant="default">
+                <View style={styles.cardHeader}>
+                  <Text style={[styles.cardTitle, { color: '#00E5FF', fontFamily: 'monospace' }]}>IMPACTO FINANCEIRO CONSOLIDADO</Text>
+                  <View style={[styles.cardBadge, { backgroundColor: '#FF3D3D15', borderWidth: 1, borderColor: '#FF3D3D30' }]}>
+                    <Text style={[styles.cardBadgeText, { color: '#FF3D3D', fontFamily: 'monospace' }]}>R$ MILHÕES</Text>
+                  </View>
+                </View>
+                <View style={[styles.finGrid, isDesktop && styles.finGridDesktop]}>
+                  <View style={[styles.finCard, { borderColor: '#FF3D3D30', backgroundColor: '#FF3D3D08' }]}>
+                    <Text style={[styles.finLabel, { color: '#6B8A7A', fontFamily: 'monospace' }]}>EXPOSIÇÃO TOTAL{"\n"}(ALTA DEMANDA)</Text>
+                    <Text style={[styles.finValue, { color: '#FF3D3D', fontFamily: 'monospace' }]}>R$ {(financialSummary.totalExposicaoAlta / 1000000).toFixed(1)}M</Text>
+                    <Text style={[styles.finHint, { color: '#FF3D3D80', fontFamily: 'monospace' }]}>Black Friday / Natal</Text>
+                  </View>
+                  <View style={[styles.finCard, { borderColor: '#FF8C0030', backgroundColor: '#FF8C0008' }]}>
+                    <Text style={[styles.finLabel, { color: '#6B8A7A', fontFamily: 'monospace' }]}>EXPOSIÇÃO TOTAL{"\n"}(BAIXA DEMANDA)</Text>
+                    <Text style={[styles.finValue, { color: '#FF8C00', fontFamily: 'monospace' }]}>R$ {(financialSummary.totalExposicaoBaixa / 1000000).toFixed(1)}M</Text>
+                    <Text style={[styles.finHint, { color: '#FF8C0080', fontFamily: 'monospace' }]}>Período normal</Text>
+                  </View>
+                  <View style={[styles.finCard, { borderColor: '#00E5FF30', backgroundColor: '#00E5FF08' }]}>
+                    <Text style={[styles.finLabel, { color: '#6B8A7A', fontFamily: 'monospace' }]}>INVESTIMENTO{"\n"}PREVENTIVO</Text>
+                    <Text style={[styles.finValue, { color: '#00E5FF', fontFamily: 'monospace' }]}>R$ {(financialSummary.totalInvestimento / 1000000).toFixed(1)}M</Text>
+                    <Text style={[styles.finHint, { color: '#00E5FF80', fontFamily: 'monospace' }]}>Controles + Contingências</Text>
+                  </View>
+                  <View style={[styles.finCard, { borderColor: '#00FF8830', backgroundColor: '#00FF8808' }]}>
+                    <Text style={[styles.finLabel, { color: '#6B8A7A', fontFamily: 'monospace' }]}>ECONOMIA{"\n"}POTENCIAL</Text>
+                    <Text style={[styles.finValue, { color: '#00FF88', fontFamily: 'monospace' }]}>R$ {(financialSummary.totalEconomia / 1000000).toFixed(1)}M</Text>
+                    <Text style={[styles.finHint, { color: '#00FF8880', fontFamily: 'monospace' }]}>ROI: {financialSummary.roiMedio.toFixed(0)}%</Text>
+                  </View>
+                </View>
+                <View style={[styles.finBarContainer, { marginTop: 16 }]}>
+                  <Text style={[styles.finBarLabel, { color: '#6B8A7A', fontFamily: 'monospace' }]}>INVESTIR R$ {(financialSummary.totalInvestimento / 1000000).toFixed(1)}M → EVITAR PERDA DE ATÉ R$ {(financialSummary.totalExposicaoAlta / 1000000).toFixed(1)}M</Text>
+                  <View style={[styles.finBar, { backgroundColor: '#111820' }]}>
+                    <View style={[styles.finBarFill, { width: `${Math.min((financialSummary.totalInvestimento / financialSummary.totalExposicaoAlta) * 100, 100)}%`, backgroundColor: '#00E5FF' }]} />
+                  </View>
+                  <View style={styles.finBarLegend}>
+                    <View style={styles.finBarLegendItem}>
+                      <View style={[styles.legendDot, { backgroundColor: '#00E5FF' }]} />
+                      <Text style={[styles.finBarLegendText, { color: '#6B8A7A', fontFamily: 'monospace' }]}>Investimento</Text>
+                    </View>
+                    <View style={styles.finBarLegendItem}>
+                      <View style={[styles.legendDot, { backgroundColor: '#FF3D3D' }]} />
+                      <Text style={[styles.finBarLegendText, { color: '#6B8A7A', fontFamily: 'monospace' }]}>Exposição evitada</Text>
+                    </View>
+                  </View>
+                </View>
+              </GlowCard>
+            </Animated.View>
+          </View>
+        )}
+
         <View style={{ height: 16 }} />
       </ScrollView>
 
@@ -634,4 +707,17 @@ const styles = StyleSheet.create({
   modalRiskArrow: { paddingLeft: 8 },
   levelPill: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 4 },
   levelPillText: { fontSize: 10, fontWeight: '700' },
+  finGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  finGridDesktop: { flexWrap: 'nowrap' },
+  finCard: { flex: 1, minWidth: '40%', borderWidth: 1, borderRadius: 8, padding: 14, alignItems: 'center' },
+  finLabel: { fontSize: 9, fontWeight: '700', letterSpacing: 0.5, textAlign: 'center', marginBottom: 6 },
+  finValue: { fontSize: 22, fontWeight: '800' },
+  finHint: { fontSize: 9, fontWeight: '600', marginTop: 4 },
+  finBarContainer: { borderTopWidth: 1, borderTopColor: '#1A3A2A', paddingTop: 14 },
+  finBarLabel: { fontSize: 10, fontWeight: '700', letterSpacing: 0.5, marginBottom: 8, textAlign: 'center' },
+  finBar: { height: 8, borderRadius: 4, overflow: 'hidden' },
+  finBarFill: { height: '100%', borderRadius: 4 },
+  finBarLegend: { flexDirection: 'row', justifyContent: 'center', gap: 20, marginTop: 8 },
+  finBarLegendItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  finBarLegendText: { fontSize: 9, fontWeight: '600' },
 });

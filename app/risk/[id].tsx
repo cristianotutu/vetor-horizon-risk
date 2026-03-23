@@ -6,6 +6,7 @@ import { useColors } from "@/hooks/use-colors";
 import { useRisks } from "@/lib/risk-context";
 import { getRiskLevel, getGutLevel } from "@/lib/models";
 import { IconSymbol } from "@/components/ui/icon-symbol";
+import { FinancialImpactCard } from "@/components/ui/financial-impact-card";
 
 export default function RiskDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -186,6 +187,13 @@ export default function RiskDetailScreen() {
               </SectionCard>
             </View>
           </View>
+
+          {/* Financial Impact Section */}
+          {risk.impactoFinanceiro && (
+            <View style={{ marginTop: 16 }}>
+              <FinancialImpactCard data={risk.impactoFinanceiro} riskId={risk.id} />
+            </View>
+          )}
 
           <View style={{ height: 40 }} />
         </View>

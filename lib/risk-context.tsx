@@ -2,9 +2,16 @@ import React, { createContext, useContext, useEffect, useState, useCallback } fr
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Risk, generateRiskId, createEmptyRisk } from './models';
 import { RISKS_AULA5 } from './evolution-data';
+import { FINANCIAL_DATA } from './financial-data';
 
-const STORAGE_KEY = '@icapt_risks_v9_aula5_25r';
-const INITIALIZED_KEY = '@icapt_initialized_v9_aula5_25r';
+const STORAGE_KEY = '@icapt_risks_v10_financial';
+const INITIALIZED_KEY = '@icapt_initialized_v10_financial';
+
+// Enrich risks with financial data
+const RISKS_WITH_FINANCIAL = RISKS_AULA5.map(r => ({
+  ...r,
+  impactoFinanceiro: FINANCIAL_DATA[r.id] || undefined,
+}));
 
 interface RiskContextType {
   risks: Risk[];
@@ -38,9 +45,9 @@ export function RiskProvider({ children }: { children: React.ReactNode }) {
     try {
       const initialized = await AsyncStorage.getItem(INITIALIZED_KEY);
       if (!initialized) {
-        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(RISKS_AULA5));
+        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(RISKS_WITH_FINANCIAL));
         await AsyncStorage.setItem(INITIALIZED_KEY, 'true');
-        setRisks(RISKS_AULA5);
+        setRisks(RISKS_WITH_FINANCIAL);
       } else {
         const stored = await AsyncStorage.getItem(STORAGE_KEY);
         if (stored) {
@@ -49,7 +56,7 @@ export function RiskProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (e) {
       console.error('Error loading risks:', e);
-      setRisks(RISKS_AULA5);
+      setRisks(RISKS_WITH_FINANCIAL);
     } finally {
       setLoading(false);
     }

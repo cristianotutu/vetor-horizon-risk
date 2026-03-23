@@ -2,6 +2,32 @@
 // ICAPT Risk Manager - Data Models & Reference Data
 // ============================================================
 
+// --- Financial Impact Model ---
+export interface FinancialImpact {
+  // === EXPECTATIVA DE PERDA ===
+  /** Perda estimada em cenário de ALTA demanda (Black Friday, Natal, datas sazonais) em R$ */
+  perdaAltaDemanda: number;
+  /** Perda estimada em cenário de BAIXA demanda (meses normais) em R$ */
+  perdaBaixaDemanda: number;
+  /** Perda média esperada anual (média ponderada: 30% alta + 70% baixa) em R$ */
+  perdaMediaEsperada: number;
+  // === INVESTIMENTO PREVENTIVO ===
+  /** Investimento recomendado em controles e contingências em R$ */
+  investimentoPreventivo: number;
+  /** Descrição dos controles/contingências a serem implementados */
+  descricaoInvestimento: string;
+  // === ROI DA PREVENÇÃO ===
+  /** Perda evitada = perdaMediaEsperada - investimentoPreventivo em R$ */
+  perdaEvitada: number;
+  /** ROI = (perdaEvitada / investimentoPreventivo) * 100 em % */
+  roiPrevencao: number;
+  // === METADATA ===
+  /** Descrição do racional de cálculo */
+  racional: string;
+  /** Categoria de impacto financeiro */
+  categoria: 'Receita' | 'Operacional' | 'Regulatório' | 'Reputacional' | 'Segurança';
+}
+
 // --- Core Risk Model ---
 export interface Risk {
   id: string; // e.g. "R003"
@@ -37,6 +63,8 @@ export interface Risk {
   reducaoPretendida: number; // 1-5
   riscoResidual: number; // 1-5
   eficaciaTratamento: string;
+  // 8. Impacto Financeiro
+  impactoFinanceiro?: FinancialImpact;
   // Metadata
   createdAt: string;
   updatedAt: string;

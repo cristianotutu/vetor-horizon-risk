@@ -97,3 +97,13 @@
 - [x] Evolução: adicionar gráfico de evolução completa (Aula 3→4→5→Hoje/última aula)
 - [x] Estratégico: métricas interativas com detalhes de riscos para diretores
 - [x] Tabelas: tornar explicativas e interativas com estética neon
+- [x] Definir modelo de dados para expectativa de perda financeira (alta/baixa demanda)
+- [x] Calcular perdas financeiras para cada risco (R003-R027) baseado no faturamento DAMACORP
+- [x] Atualizar evolution-data.ts com dados de perda financeira
+- [x] Exibir expectativa de perda na tela de detalhe do risco
+- [x] Exibir perdas na listagem de riscos e Dashboard
+- [x] Push para GitHub com dados de perda financeira
+- [x] Expandir modelo FinancialImpact com investimento preventivo e ROI da prevenção
+- [x] Calcular investimento preventivo e ROI para cada risco (R003-R027)
+- [x] Demonstrar claramente: investir R$ X evita perda de R$ Y
+- [x] Criar componente visual de impacto financeiro (perda vs investimento)
