@@ -9,9 +9,7 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 import { GlowCard } from "@/components/ui/glow-card";
 import { AnimatedCounter } from "@/components/ui/animated-counter";
 import { PulsingBadge } from "@/components/ui/pulsing-badge";
-import { TickerBar } from "@/components/ui/ticker-bar";
 import { StatusIndicator } from "@/components/ui/status-indicator";
-import { ScanLine } from "@/components/ui/scan-line";
 import Animated, { FadeInDown, FadeInRight } from "react-native-reanimated";
 
 const vetorHorizonLogo = require("@/assets/images/vetor-horizon-logo.png");
@@ -72,16 +70,7 @@ export default function DashboardScreen() {
     return Object.entries(map).sort((a, b) => b[1].length - a[1].length);
   }, [risks]);
 
-  const tickerItems = useMemo(() => {
-    return [...risks]
-      .sort((a, b) => b.riscoInerente - a.riscoInerente)
-      .slice(0, 8)
-      .map(r => ({
-        id: r.id,
-        text: `${r.id} — ${r.descricaoRisco.substring(0, 80)}${r.descricaoRisco.length > 80 ? '...' : ''} [P×I: ${r.riscoInerente}]`,
-        level: (r.riscoInerente >= 20 ? 'critical' : r.riscoInerente >= 12 ? 'high' : r.riscoInerente >= 6 ? 'medium' : 'low') as any,
-      }));
-  }, [risks]);
+
 
   const handleStatPress = useCallback((level: string) => {
     let filtered: Risk[] = [];
@@ -234,7 +223,6 @@ export default function DashboardScreen() {
 
   return (
     <ScreenContainer className="flex-1" edges={isDesktop ? [] : ["top", "left", "right"]}>
-      <ScanLine />
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <Animated.View entering={FadeInDown.duration(400)} style={[styles.header, isDesktop && styles.headerDesktop]}>
@@ -553,9 +541,6 @@ export default function DashboardScreen() {
 
         <View style={{ height: 16 }} />
       </ScrollView>
-
-      {/* Ticker Bar */}
-      <TickerBar items={tickerItems} />
 
       {renderRiskModal()}
     </ScreenContainer>

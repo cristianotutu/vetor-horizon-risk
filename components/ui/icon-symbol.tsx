@@ -43,6 +43,12 @@ const MAPPING = {
   "flag.fill": "flag",
   "target": "gps-fixed",
   "gauge.medium": "speed",
+  "chevron.down": "expand-more",
+  "square.grid.2x2.fill": "grid-view",
+  "clock.fill": "schedule",
+  "doc.text.fill": "description",
+  "person.fill": "person",
+  "globe": "public",
 } as IconMapping;
 
 /**

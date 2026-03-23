@@ -1,13 +1,16 @@
-import { ScrollView, Text, View, TouchableOpacity, StyleSheet, useWindowDimensions, Modal, FlatList } from "react-native";
+import { ScrollView, Text, View, TouchableOpacity, StyleSheet, useWindowDimensions, Modal, FlatList, Platform } from "react-native";
 import { useState, useCallback, useMemo } from "react";
 import { useRouter } from "expo-router";
 import { ScreenContainer } from "@/components/screen-container";
-import { useColors } from "@/hooks/use-colors";
 import { IconSymbol } from "@/components/ui/icon-symbol";
+import { GlowCard } from "@/components/ui/glow-card";
+import { AnimatedCounter } from "@/components/ui/animated-counter";
+import { StatusIndicator } from "@/components/ui/status-indicator";
 import { RISKS_AULA3, RISKS_AULA4, RISKS_AULA5, EVOLUTION_3_TO_4, EVOLUTION_4_TO_5 } from "@/lib/evolution-data";
 import { getRiskLevel, getGutLevel, Risk } from "@/lib/models";
+import Animated, { FadeInDown } from "react-native-reanimated";
 
-type ViewMode = 'summary' | 'comparison' | 'matrix';
+type ViewMode = 'overview' | 'comparison' | 'matrix';
 type CompareMode = '3v4' | '4v5' | '3v5';
 type FilterState = { title: string; risks: Risk[]; source?: string } | null;
 
@@ -17,7 +20,7 @@ const a3Map = new Map(RISKS_AULA3.map(r => [normalizeId(r.id), r]));
 const a4Map = new Map(RISKS_AULA4.map(r => [normalizeId(r.id), r]));
 const a5Map = new Map(RISKS_AULA5.map(r => [normalizeId(r.id), r]));
 
-const AULA_COLORS = { '3': '#3B82F6', '4': '#8B5CF6', '5': '#10B981' };
+const AULA_COLORS = { '3': '#3B82F6', '4': '#8B5CF6', '5': '#00FF88', 'hoje': '#00E5FF' };
 
 function getAulaData(n: '3' | '4' | '5') {
   if (n === '3') return { risks: RISKS_AULA3, map: a3Map, label: 'Aula 3', color: AULA_COLORS['3'] };
@@ -28,7 +31,6 @@ function getAulaData(n: '3' | '4' | '5') {
 function getEvolution(mode: CompareMode) {
   if (mode === '3v4') return EVOLUTION_3_TO_4;
   if (mode === '4v5') return EVOLUTION_4_TO_5;
-  // 3v5: compute dynamically
   const a3Ids = new Set(RISKS_AULA3.map(r => normalizeId(r.id)));
   return RISKS_AULA5.map(r => {
     const rid = normalizeId(r.id);
@@ -47,14 +49,28 @@ function getEvolution(mode: CompareMode) {
   });
 }
 
+// Compute stats for each aula
+function getAulaStats(risks: Risk[]) {
+  const critico = risks.filter(r => r.riscoInerente >= 20).length;
+  const alto = risks.filter(r => r.riscoInerente >= 12 && r.riscoInerente < 20).length;
+  const medio = risks.filter(r => r.riscoInerente >= 6 && r.riscoInerente < 12).length;
+  const baixo = risks.filter(r => r.riscoInerente < 6).length;
+  const avgPxI = risks.length > 0 ? risks.reduce((s, r) => s + r.riscoInerente, 0) / risks.length : 0;
+  const avgGUT = risks.length > 0 ? risks.reduce((s, r) => s + r.gutScore, 0) / risks.length : 0;
+  const maxGUT = risks.length > 0 ? Math.max(...risks.map(r => r.gutScore)) : 0;
+  const comControles = risks.filter(r => r.controles && r.controles.length > 5).length;
+  const comKRI = risks.filter(r => r.kri && r.kri.length > 3).length;
+  return { total: risks.length, critico, alto, medio, baixo, avgPxI, avgGUT, maxGUT, comControles, comKRI };
+}
+
 export default function EvolutionScreen() {
-  const colors = useColors();
   const router = useRouter();
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;
-  const [viewMode, setViewMode] = useState<ViewMode>('summary');
+  const [viewMode, setViewMode] = useState<ViewMode>('overview');
   const [compareMode, setCompareMode] = useState<CompareMode>('3v5');
   const [activeFilter, setActiveFilter] = useState<FilterState>(null);
+  const [expandedRisk, setExpandedRisk] = useState<string | null>(null);
 
   const fromAula = compareMode[0] as '3' | '4' | '5';
   const toAula = compareMode[2] as '3' | '4' | '5';
@@ -65,6 +81,10 @@ export default function EvolutionScreen() {
   const newRisks = evolution.filter(e => e.type === 'new');
   const modifiedRisks = evolution.filter(e => e.type === 'modified');
   const unchangedRisks = evolution.filter(e => e.type === 'unchanged');
+
+  const stats3 = useMemo(() => getAulaStats(RISKS_AULA3), []);
+  const stats4 = useMemo(() => getAulaStats(RISKS_AULA4), []);
+  const stats5 = useMemo(() => getAulaStats(RISKS_AULA5), []);
 
   const handleRiskPress = useCallback((riskId: string) => {
     setActiveFilter(null);
@@ -88,19 +108,20 @@ export default function EvolutionScreen() {
     }
   }, [evolution, toData]);
 
+  // ---- RENDER MODAL ----
   const renderRiskModal = () => {
     if (!activeFilter) return null;
     return (
       <Modal visible={!!activeFilter} transparent animationType="fade" onRequestClose={() => setActiveFilter(null)}>
         <TouchableOpacity style={s.modalOverlay} activeOpacity={1} onPress={() => setActiveFilter(null)}>
-          <TouchableOpacity activeOpacity={1} style={[s.modalContent, { backgroundColor: colors.background, borderColor: colors.border, maxWidth: isDesktop ? 700 : width - 32, maxHeight: '80%' }]} onPress={() => {}}>
-            <View style={[s.modalHeader, { borderBottomColor: colors.border }]}>
+          <TouchableOpacity activeOpacity={1} style={[s.modalContent, { maxWidth: isDesktop ? 700 : width - 32 }]} onPress={() => {}}>
+            <View style={s.modalHeader}>
               <View style={{ flex: 1 }}>
-                <Text style={[s.modalTitle, { color: colors.foreground }]}>{activeFilter.title}</Text>
-                <Text style={[s.modalSub, { color: colors.muted }]}>Clique em um risco para ver detalhes</Text>
+                <Text style={s.modalTitle}>{activeFilter.title}</Text>
+                <Text style={s.modalSub}>Clique em um risco para ver detalhes</Text>
               </View>
-              <TouchableOpacity onPress={() => setActiveFilter(null)} style={[s.closeBtn, { backgroundColor: colors.surface }]} activeOpacity={0.7}>
-                <Text style={[s.closeBtnText, { color: colors.muted }]}>✕</Text>
+              <TouchableOpacity onPress={() => setActiveFilter(null)} style={s.closeBtn} activeOpacity={0.7}>
+                <Text style={s.closeBtnText}>✕</Text>
               </TouchableOpacity>
             </View>
             <FlatList
@@ -111,27 +132,22 @@ export default function EvolutionScreen() {
                 const level = getRiskLevel(item.riscoInerente);
                 const gutLevel = getGutLevel(item.gutScore);
                 return (
-                  <TouchableOpacity style={[s.modalCard, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={() => handleRiskPress(normalizeId(item.id))} activeOpacity={0.7}>
+                  <TouchableOpacity style={s.modalCard} onPress={() => handleRiskPress(normalizeId(item.id))} activeOpacity={0.7}>
                     <View style={s.modalCardHeader}>
-                      <View style={[s.modalIdBadge, { backgroundColor: colors.primary + '15' }]}>
-                        <Text style={[s.modalIdText, { color: colors.primary }]}>{item.id}</Text>
-                      </View>
+                      <Text style={[s.modalIdText, { color: '#00E5FF' }]}>{item.id}</Text>
                       <View style={s.modalBadges}>
-                        <View style={[s.pill, { backgroundColor: level.color + '15' }]}>
+                        <View style={[s.pill, { backgroundColor: level.color + '20', borderColor: level.color + '40' }]}>
                           <Text style={[s.pillText, { color: level.color }]}>P×I {item.riscoInerente}</Text>
                         </View>
-                        <View style={[s.pill, { backgroundColor: gutLevel.color + '15' }]}>
+                        <View style={[s.pill, { backgroundColor: gutLevel.color + '20', borderColor: gutLevel.color + '40' }]}>
                           <Text style={[s.pillText, { color: gutLevel.color }]}>GUT {item.gutScore}</Text>
-                        </View>
-                        <View style={[s.pill, { backgroundColor: level.color + '15' }]}>
-                          <Text style={[s.pillText, { color: level.color }]}>{level.label}</Text>
                         </View>
                       </View>
                     </View>
-                    <Text style={[s.modalDesc, { color: colors.foreground }]} numberOfLines={3}>{item.descricaoRisco}</Text>
+                    <Text style={s.modalDesc} numberOfLines={3}>{item.descricaoRisco}</Text>
                     <View style={s.modalFooter}>
-                      <Text style={[s.modalMeta, { color: colors.muted }]}>{item.fonteDeRisco} | {item.tratamento}</Text>
-                      <IconSymbol name="chevron.right" size={14} color={colors.primary} />
+                      <Text style={s.modalMeta}>{item.fonteDeRisco} | {item.tratamento}</Text>
+                      <IconSymbol name="chevron.right" size={14} color="#00E5FF" />
                     </View>
                   </TouchableOpacity>
                 );
@@ -143,187 +159,230 @@ export default function EvolutionScreen() {
     );
   };
 
-  const renderCompareSelector = () => (
-    <View style={[s.compareSelectorRow, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-      {([
-        { key: '3v4' as CompareMode, label: 'Aula 3 → 4' },
-        { key: '4v5' as CompareMode, label: 'Aula 4 → 5' },
-        { key: '3v5' as CompareMode, label: 'Aula 3 → 5' },
-      ]).map(item => (
-        <TouchableOpacity
-          key={item.key}
-          style={[s.compareSelectorBtn, compareMode === item.key && { backgroundColor: colors.primary + '18' }]}
-          onPress={() => setCompareMode(item.key)}
-          activeOpacity={0.7}
-        >
-          <Text style={[s.compareSelectorLabel, { color: compareMode === item.key ? colors.primary : colors.muted }]}>{item.label}</Text>
-        </TouchableOpacity>
-      ))}
-    </View>
-  );
+  // ---- EVOLUTION CHART (Bar Chart) ----
+  const renderEvolutionChart = () => {
+    const aulaData = [
+      { label: 'Aula 3', color: AULA_COLORS['3'], stats: stats3 },
+      { label: 'Aula 4', color: AULA_COLORS['4'], stats: stats4 },
+      { label: 'Aula 5', color: AULA_COLORS['5'], stats: stats5 },
+      { label: 'Hoje', color: AULA_COLORS['hoje'], stats: stats5 },
+    ];
+    const maxTotal = Math.max(...aulaData.map(a => a.stats.total));
+    const maxGUT = Math.max(...aulaData.map(a => a.stats.maxGUT));
+    const chartHeight = 200;
 
-  const renderViewToggle = () => (
-    <View style={[s.toggleRow, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-      {([
-        { key: 'summary' as ViewMode, label: 'Resumo', icon: 'info.circle.fill' as const },
-        { key: 'comparison' as ViewMode, label: 'Comparativo', icon: 'chart.line.uptrend.xyaxis' as const },
-        { key: 'matrix' as ViewMode, label: 'Matrizes', icon: 'tablecells' as const },
-      ]).map(item => (
-        <TouchableOpacity
-          key={item.key}
-          style={[s.toggleBtn, viewMode === item.key && { backgroundColor: colors.primary + '18' }]}
-          onPress={() => setViewMode(item.key)}
-          activeOpacity={0.7}
-        >
-          <IconSymbol name={item.icon} size={16} color={viewMode === item.key ? colors.primary : colors.muted} />
-          <Text style={[s.toggleLabel, { color: viewMode === item.key ? colors.primary : colors.muted }]}>{item.label}</Text>
-        </TouchableOpacity>
-      ))}
-    </View>
-  );
+    return (
+      <Animated.View entering={FadeInDown.duration(500).delay(200)}>
+        <GlowCard variant="default">
+          <View style={s.cardHeader}>
+            <Text style={s.cardTitle}>EVOLUÇÃO DO PROJETO</Text>
+            <StatusIndicator status="monitoring" label="TIMELINE" />
+          </View>
 
-  const renderSummaryView = () => (
-    <View style={s.section}>
-      <View style={[s.statsRow, isDesktop && s.statsRowDesktop]}>
-        <View style={[s.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <View style={[s.statIcon, { backgroundColor: fromData.color + '20' }]}>
-            <IconSymbol name="list.bullet" size={20} color={fromData.color} />
-          </View>
-          <Text style={[s.statNumber, { color: colors.foreground }]}>{fromData.risks.length}</Text>
-          <Text style={[s.statLabel, { color: colors.muted }]}>Riscos {fromData.label}</Text>
-        </View>
-        <View style={[s.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <View style={[s.statIcon, { backgroundColor: toData.color + '20' }]}>
-            <IconSymbol name="list.bullet" size={20} color={toData.color} />
-          </View>
-          <Text style={[s.statNumber, { color: colors.foreground }]}>{toData.risks.length}</Text>
-          <Text style={[s.statLabel, { color: colors.muted }]}>Riscos {toData.label}</Text>
-        </View>
-        <TouchableOpacity style={[s.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={() => handleStatGroupPress('new', `Novos na ${toData.label} (${newRisks.length})`)} activeOpacity={0.7}>
-          <View style={[s.statIcon, { backgroundColor: '#10B98120' }]}>
-            <IconSymbol name="plus.circle.fill" size={20} color="#10B981" />
-          </View>
-          <Text style={[s.statNumber, { color: '#10B981' }]}>{newRisks.length}</Text>
-          <Text style={[s.statLabel, { color: colors.muted }]}>Novos</Text>
-          <Text style={[s.tapHint, { color: '#10B981' }]}>Clique para ver</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[s.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={() => handleStatGroupPress('modified', `Revisados (${modifiedRisks.length})`)} activeOpacity={0.7}>
-          <View style={[s.statIcon, { backgroundColor: '#F59E0B20' }]}>
-            <IconSymbol name="pencil" size={20} color="#F59E0B" />
-          </View>
-          <Text style={[s.statNumber, { color: '#F59E0B' }]}>{modifiedRisks.length}</Text>
-          <Text style={[s.statLabel, { color: colors.muted }]}>Revisados</Text>
-          <Text style={[s.tapHint, { color: '#F59E0B' }]}>Clique para ver</Text>
-        </TouchableOpacity>
-      </View>
-
-      {newRisks.length > 0 && (
-        <View style={s.groupSection}>
-          <View style={s.groupHeader}>
-            <View style={[s.badge, { backgroundColor: '#10B98120' }]}>
-              <Text style={[s.badgeText, { color: '#10B981' }]}>NOVOS</Text>
+          {/* Bar Chart - Total de Riscos */}
+          <Text style={s.chartSubtitle}>Total de Riscos por Fase</Text>
+          <View style={s.chartContainer}>
+            <View style={s.chartYAxis}>
+              {[maxTotal, Math.round(maxTotal * 0.75), Math.round(maxTotal * 0.5), Math.round(maxTotal * 0.25), 0].map((v, i) => (
+                <Text key={i} style={s.chartYLabel}>{v}</Text>
+              ))}
             </View>
-            <Text style={[s.groupTitle, { color: colors.foreground }]}>Riscos adicionados na {toData.label}</Text>
-          </View>
-          {newRisks.map(ev => {
-            const risk = toData.map.get(ev.riskId);
-            if (!risk) return null;
-            const level = getRiskLevel(risk.riscoInerente);
-            const gutLevel = getGutLevel(risk.gutScore);
-            return (
-              <TouchableOpacity key={ev.riskId} style={[s.riskCard, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={() => handleRiskPress(normalizeId(risk.id))} activeOpacity={0.7}>
-                <View style={s.riskCardHeader}>
-                  <View style={[s.riskIdBadge, { backgroundColor: '#10B98118' }]}>
-                    <Text style={[s.riskIdText, { color: '#10B981' }]}>{risk.id}</Text>
-                  </View>
-                  <View style={[s.levelBadge, { backgroundColor: level.color + '18' }]}>
-                    <Text style={[s.levelText, { color: level.color }]}>{level.label}</Text>
-                  </View>
-                  <View style={[s.pill, { backgroundColor: gutLevel.color + '15', marginLeft: 4 }]}>
-                    <Text style={[s.pillText, { color: gutLevel.color }]}>GUT {risk.gutScore}</Text>
-                  </View>
-                  <Text style={[s.riskScore, { color: colors.muted }]}>P{risk.probabilidade}xI{risk.impacto}={risk.riscoInerente}</Text>
-                  <IconSymbol name="chevron.right" size={14} color={colors.primary} style={{ marginLeft: 'auto' } as any} />
-                </View>
-                <Text style={[s.riskTitle, { color: colors.foreground }]} numberOfLines={2}>{risk.descricaoRisco}</Text>
-                <Text style={[s.riskMeta, { color: colors.muted }]}>{risk.fonteDeRisco} | {risk.tipoRisco}</Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-      )}
-
-      {modifiedRisks.length > 0 && (
-        <View style={s.groupSection}>
-          <View style={s.groupHeader}>
-            <View style={[s.badge, { backgroundColor: '#F59E0B20' }]}>
-              <Text style={[s.badgeText, { color: '#F59E0B' }]}>REVISADOS</Text>
-            </View>
-            <Text style={[s.groupTitle, { color: colors.foreground }]}>Riscos alterados entre {fromData.label} e {toData.label}</Text>
-          </View>
-          {modifiedRisks.map(ev => {
-            const risk = toData.map.get(ev.riskId);
-            if (!risk) return null;
-            const level = getRiskLevel(risk.riscoInerente);
-            return (
-              <TouchableOpacity key={ev.riskId} style={[s.riskCard, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={() => handleRiskPress(normalizeId(risk.id))} activeOpacity={0.7}>
-                <View style={s.riskCardHeader}>
-                  <View style={[s.riskIdBadge, { backgroundColor: '#F59E0B18' }]}>
-                    <Text style={[s.riskIdText, { color: '#F59E0B' }]}>{risk.id}</Text>
-                  </View>
-                  <View style={[s.levelBadge, { backgroundColor: level.color + '18' }]}>
-                    <Text style={[s.levelText, { color: level.color }]}>{level.label}</Text>
-                  </View>
-                  <IconSymbol name="chevron.right" size={14} color={colors.primary} style={{ marginLeft: 'auto' } as any} />
-                </View>
-                <Text style={[s.riskTitle, { color: colors.foreground }]} numberOfLines={2}>{risk.descricaoRisco}</Text>
-                <View style={s.changesContainer}>
-                  <Text style={[s.changesLabel, { color: colors.muted }]}>Alterações:</Text>
-                  <View style={s.changesList}>
-                    {ev.changes.map((c, i) => (
-                      <View key={i} style={[s.changeChip, { backgroundColor: '#F59E0B12', borderColor: '#F59E0B30' }]}>
-                        <Text style={[s.changeChipText, { color: '#F59E0B' }]}>{c}</Text>
+            <View style={s.chartBars}>
+              {aulaData.map((aula, idx) => {
+                const barHeight = maxTotal > 0 ? (aula.stats.total / maxTotal) * chartHeight : 0;
+                return (
+                  <View key={idx} style={s.chartBarCol}>
+                    <View style={[s.chartBarWrapper, { height: chartHeight }]}>
+                      <View style={[s.chartBar, {
+                        height: barHeight,
+                        backgroundColor: aula.color + '30',
+                        borderColor: aula.color,
+                        borderWidth: 1,
+                        ...(Platform.OS === 'web' ? {
+                          shadowColor: aula.color,
+                          shadowOffset: { width: 0, height: 0 },
+                          shadowOpacity: 0.5,
+                          shadowRadius: 8,
+                        } : {}),
+                      }]}>
+                        <Text style={[s.chartBarValue, { color: aula.color }]}>{aula.stats.total}</Text>
                       </View>
-                    ))}
+                    </View>
+                    <Text style={[s.chartBarLabel, { color: aula.color }]}>{aula.label}</Text>
                   </View>
+                );
+              })}
+            </View>
+          </View>
+
+          {/* Stacked Distribution */}
+          <Text style={[s.chartSubtitle, { marginTop: 24 }]}>Distribuição por Nível de Risco</Text>
+          {aulaData.map((aula, idx) => (
+            <View key={idx} style={s.stackedRow}>
+              <Text style={[s.stackedLabel, { color: aula.color }]}>{aula.label}</Text>
+              <View style={s.stackedBarTrack}>
+                {aula.stats.total > 0 && (
+                  <>
+                    <View style={[s.stackedSegment, { flex: aula.stats.critico, backgroundColor: '#FF3D3D' }]} />
+                    <View style={[s.stackedSegment, { flex: aula.stats.alto, backgroundColor: '#FF8C00' }]} />
+                    <View style={[s.stackedSegment, { flex: aula.stats.medio, backgroundColor: '#FFD600' }]} />
+                    <View style={[s.stackedSegment, { flex: aula.stats.baixo, backgroundColor: '#00FF88' }]} />
+                  </>
+                )}
+              </View>
+              <Text style={s.stackedTotal}>{aula.stats.total}</Text>
+            </View>
+          ))}
+          <View style={s.legendRow}>
+            {[
+              { label: 'Crítico', color: '#FF3D3D' },
+              { label: 'Alto', color: '#FF8C00' },
+              { label: 'Médio', color: '#FFD600' },
+              { label: 'Baixo', color: '#00FF88' },
+            ].map(item => (
+              <View key={item.label} style={s.legendItem}>
+                <View style={[s.legendDot, { backgroundColor: item.color }]} />
+                <Text style={s.legendText}>{item.label}</Text>
+              </View>
+            ))}
+          </View>
+
+          {/* GUT Evolution Line */}
+          <Text style={[s.chartSubtitle, { marginTop: 24 }]}>Evolução do GUT Médio</Text>
+          <View style={s.gutLineContainer}>
+            {aulaData.map((aula, idx) => (
+              <View key={idx} style={s.gutLineCol}>
+                <Text style={[s.gutLineValue, { color: aula.color }]}>{aula.stats.avgGUT.toFixed(0)}</Text>
+                <View style={[s.gutLineDot, { backgroundColor: aula.color, borderColor: aula.color }]} />
+                {idx < aulaData.length - 1 && <View style={[s.gutLineConnector, { backgroundColor: '#1A3A2A' }]} />}
+                <Text style={[s.gutLineLabel, { color: aula.color }]}>{aula.label}</Text>
+              </View>
+            ))}
+          </View>
+
+          {/* Maturity Indicators */}
+          <Text style={[s.chartSubtitle, { marginTop: 24 }]}>Indicadores de Maturidade</Text>
+          <View style={s.maturityGrid}>
+            <View style={s.maturityItem}>
+              <Text style={s.maturityLabel}>Controles Definidos</Text>
+              <View style={s.maturityBarTrack}>
+                <View style={[s.maturityBarFill, { width: `${(stats5.comControles / stats5.total) * 100}%`, backgroundColor: '#00FF88' }]} />
+              </View>
+              <Text style={[s.maturityValue, { color: '#00FF88' }]}>{stats5.comControles}/{stats5.total}</Text>
+            </View>
+            <View style={s.maturityItem}>
+              <Text style={s.maturityLabel}>KRI Definidos</Text>
+              <View style={s.maturityBarTrack}>
+                <View style={[s.maturityBarFill, { width: `${(stats5.comKRI / stats5.total) * 100}%`, backgroundColor: '#00E5FF' }]} />
+              </View>
+              <Text style={[s.maturityValue, { color: '#00E5FF' }]}>{stats5.comKRI}/{stats5.total}</Text>
+            </View>
+            <View style={s.maturityItem}>
+              <Text style={s.maturityLabel}>P×I Médio</Text>
+              <View style={s.maturityBarTrack}>
+                <View style={[s.maturityBarFill, { width: `${(stats5.avgPxI / 25) * 100}%`, backgroundColor: '#FFD600' }]} />
+              </View>
+              <Text style={[s.maturityValue, { color: '#FFD600' }]}>{stats5.avgPxI.toFixed(1)}/25</Text>
+            </View>
+          </View>
+        </GlowCard>
+      </Animated.View>
+    );
+  };
+
+  // ---- OVERVIEW VIEW ----
+  const renderOverviewView = () => (
+    <View style={s.section}>
+      {/* Evolution Chart */}
+      {renderEvolutionChart()}
+
+      {/* Timeline */}
+      <Animated.View entering={FadeInDown.duration(500).delay(300)}>
+        <GlowCard variant="default">
+          <Text style={s.cardTitle}>TIMELINE DO PROJETO</Text>
+          <View style={{ marginTop: 16 }}>
+            {[
+              { aula: '3', title: 'Identificação Inicial', desc: `${stats3.total} riscos identificados e classificados na Forma 3`, color: AULA_COLORS['3'], details: `${stats3.critico} críticos, ${stats3.alto} altos, ${stats3.medio} médios, ${stats3.baixo} baixos` },
+              { aula: '4', title: 'Revisão e Expansão', desc: `${stats4.total} riscos com avaliação GUT revisada pela Vetor Horizon`, color: AULA_COLORS['4'], details: `+${stats4.total - stats3.total} novos riscos, GUT médio: ${stats4.avgGUT.toFixed(0)}` },
+              { aula: '5', title: 'Maturidade e Detalhamento', desc: `${stats5.total} riscos com controles, KRI e eficácia detalhados`, color: AULA_COLORS['5'], details: `${stats5.comControles} com controles, ${stats5.comKRI} com KRI` },
+              { aula: 'hoje', title: 'Apresentação Final', desc: 'Entrega do relatório completo ao Board da DAMACORP', color: AULA_COLORS['hoje'], details: `${stats5.total} riscos monitorados, modelo ICAPT v5 completo` },
+            ].map((item, idx) => (
+              <TouchableOpacity
+                key={idx}
+                style={s.timelineItem}
+                onPress={() => setExpandedRisk(expandedRisk === item.aula ? null : item.aula)}
+                activeOpacity={0.7}
+              >
+                <View style={s.timelineDotCol}>
+                  <View style={[s.timelineDot, { backgroundColor: item.color, borderColor: item.color }]} />
+                  {idx < 3 && <View style={[s.timelineLine, { backgroundColor: '#1A3A2A' }]} />}
+                </View>
+                <View style={s.timelineContent}>
+                  <View style={s.timelineHeader}>
+                    <View style={[s.timelineBadge, { backgroundColor: item.color + '20', borderColor: item.color + '40' }]}>
+                      <Text style={[s.timelineBadgeText, { color: item.color }]}>
+                        {item.aula === 'hoje' ? 'HOJE' : `AULA ${item.aula}`}
+                      </Text>
+                    </View>
+                    <Text style={s.timelineTitle}>{item.title}</Text>
+                  </View>
+                  <Text style={s.timelineDesc}>{item.desc}</Text>
+                  {expandedRisk === item.aula && (
+                    <View style={[s.timelineExpanded, { borderColor: item.color + '30' }]}>
+                      <Text style={[s.timelineExpandedText, { color: item.color }]}>{item.details}</Text>
+                    </View>
+                  )}
                 </View>
               </TouchableOpacity>
-            );
-          })}
-        </View>
-      )}
+            ))}
+          </View>
+        </GlowCard>
+      </Animated.View>
 
-      {unchangedRisks.length > 0 && (
-        <View style={s.groupSection}>
-          <View style={s.groupHeader}>
-            <View style={[s.badge, { backgroundColor: '#6B728020' }]}>
-              <Text style={[s.badgeText, { color: '#6B7280' }]}>SEM ALTERAÇÃO</Text>
-            </View>
-            <Text style={[s.groupTitle, { color: colors.foreground }]}>{unchangedRisks.length} riscos mantidos</Text>
-          </View>
-          <View style={[s.unchangedGrid, isDesktop && s.unchangedGridDesktop]}>
-            {unchangedRisks.map(ev => {
-              const risk = toData.map.get(ev.riskId);
-              if (!risk) return null;
-              const level = getRiskLevel(risk.riscoInerente);
-              return (
-                <TouchableOpacity key={ev.riskId} style={[s.unchangedCard, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={() => handleRiskPress(normalizeId(risk.id))} activeOpacity={0.7}>
-                  <View style={s.unchangedHeader}>
-                    <Text style={[s.unchangedId, { color: colors.foreground }]}>{risk.id}</Text>
-                    <View style={[s.miniLevel, { backgroundColor: level.color + '18' }]}>
-                      <Text style={[s.miniLevelText, { color: level.color }]}>{risk.riscoInerente}</Text>
-                    </View>
-                  </View>
-                  <Text style={[s.unchangedDesc, { color: colors.muted }]} numberOfLines={2}>{risk.descricaoRisco}</Text>
-                </TouchableOpacity>
-              );
-            })}
+      {/* Summary Stats */}
+      <Animated.View entering={FadeInDown.duration(500).delay(400)}>
+        <View style={[s.statsGrid, isDesktop && s.statsGridDesktop]}>
+          <TouchableOpacity style={{ flex: 1 }} onPress={() => handleStatGroupPress('new', `Novos na ${toData.label} (${newRisks.length})`)} activeOpacity={0.7}>
+            <GlowCard variant="default">
+              <View style={s.statInner}>
+                <View style={[s.statIconBg, { backgroundColor: '#00FF8820' }]}>
+                  <IconSymbol name="plus.circle.fill" size={20} color="#00FF88" />
+                </View>
+                <AnimatedCounter value={newRisks.length} color="#00FF88" fontSize={32} />
+                <Text style={s.statLabel}>NOVOS RISCOS</Text>
+                <Text style={s.statHint}>CLIQUE PARA VER →</Text>
+              </View>
+            </GlowCard>
+          </TouchableOpacity>
+          <TouchableOpacity style={{ flex: 1 }} onPress={() => handleStatGroupPress('modified', `Revisados (${modifiedRisks.length})`)} activeOpacity={0.7}>
+            <GlowCard variant="default">
+              <View style={s.statInner}>
+                <View style={[s.statIconBg, { backgroundColor: '#FFD60020' }]}>
+                  <IconSymbol name="pencil" size={20} color="#FFD600" />
+                </View>
+                <AnimatedCounter value={modifiedRisks.length} color="#FFD600" fontSize={32} />
+                <Text style={s.statLabel}>REVISADOS</Text>
+                <Text style={[s.statHint, { color: '#FFD60080' }]}>CLIQUE PARA VER →</Text>
+              </View>
+            </GlowCard>
+          </TouchableOpacity>
+          <View style={{ flex: 1 }}>
+            <GlowCard variant="default">
+              <View style={s.statInner}>
+                <View style={[s.statIconBg, { backgroundColor: '#6B8A7A20' }]}>
+                  <IconSymbol name="checkmark.circle.fill" size={20} color="#6B8A7A" />
+                </View>
+                <AnimatedCounter value={unchangedRisks.length} color="#6B8A7A" fontSize={32} />
+                <Text style={s.statLabel}>MANTIDOS</Text>
+              </View>
+            </GlowCard>
           </View>
         </View>
-      )}
+      </Animated.View>
     </View>
   );
 
+  // ---- COMPARISON VIEW ----
   const renderComparisonView = () => {
     const allIds = Array.from(new Set([
       ...fromData.risks.map(r => normalizeId(r.id)),
@@ -333,17 +392,17 @@ export default function EvolutionScreen() {
     return (
       <View style={s.section}>
         {isDesktop && (
-          <View style={[s.tableHeader, { backgroundColor: colors.primary + '08', borderColor: colors.border }]}>
-            <Text style={[s.thCell, s.thId, { color: colors.foreground }]}>ID</Text>
-            <Text style={[s.thCell, s.thDesc, { color: colors.foreground }]}>Descrição</Text>
-            <Text style={[s.thCell, s.thVal, { color: colors.foreground }]}>{fromData.label} (PxI)</Text>
-            <Text style={[s.thCell, s.thVal, { color: colors.foreground }]}>{toData.label} (PxI)</Text>
-            <Text style={[s.thCell, s.thVal, { color: colors.foreground }]}>GUT {fromAula}</Text>
-            <Text style={[s.thCell, s.thVal, { color: colors.foreground }]}>GUT {toAula}</Text>
-            <Text style={[s.thCell, s.thStatus, { color: colors.foreground }]}>Status</Text>
+          <View style={s.tableHeader}>
+            <Text style={[s.thCell, s.thId]}>ID</Text>
+            <Text style={[s.thCell, s.thDesc]}>DESCRIÇÃO</Text>
+            <Text style={[s.thCell, s.thVal]}>{fromData.label} (PxI)</Text>
+            <Text style={[s.thCell, s.thVal]}>{toData.label} (PxI)</Text>
+            <Text style={[s.thCell, s.thVal]}>GUT {fromAula}</Text>
+            <Text style={[s.thCell, s.thVal]}>GUT {toAula}</Text>
+            <Text style={[s.thCell, s.thStatus]}>DELTA</Text>
           </View>
         )}
-        {allIds.map(rid => {
+        {allIds.map((rid, idx) => {
           const rFrom = fromData.map.get(rid);
           const rTo = toData.map.get(rid);
           const ev = evolution.find(e => e.riskId === rid);
@@ -352,76 +411,93 @@ export default function EvolutionScreen() {
 
           const isNew = !rFrom;
           const isModified = ev?.type === 'modified';
-          const statusColor = isNew ? '#10B981' : isModified ? '#F59E0B' : '#6B7280';
-          const statusLabel = isNew ? 'Novo' : isModified ? 'Revisado' : 'Igual';
+          const statusColor = isNew ? '#00FF88' : isModified ? '#FFD600' : '#6B8A7A';
+          const statusLabel = isNew ? 'NOVO' : isModified ? 'REVISADO' : 'IGUAL';
           const levelFrom = rFrom ? getRiskLevel(rFrom.riscoInerente) : null;
           const levelTo = rTo ? getRiskLevel(rTo.riscoInerente) : null;
 
+          const pxiDelta = rFrom && rTo ? rTo.riscoInerente - rFrom.riscoInerente : null;
+          const gutDelta = rFrom && rTo ? rTo.gutScore - rFrom.gutScore : null;
+
           if (isDesktop) {
             return (
-              <TouchableOpacity key={rid} style={[s.tableRow, { borderColor: colors.border }]} onPress={() => handleRiskPress(rid)} activeOpacity={0.6}>
+              <TouchableOpacity key={rid} style={[s.tableRow, idx % 2 === 0 && { backgroundColor: '#0A0E1480' }]} onPress={() => handleRiskPress(rid)} activeOpacity={0.6}>
                 <View style={[s.tdCell, s.thId]}>
-                  <Text style={[s.tdId, { color: colors.primary }]}>{rid}</Text>
+                  <Text style={s.tdId}>{rid}</Text>
                 </View>
                 <View style={[s.tdCell, s.thDesc, { minWidth: 0 }]}>
-                  <Text style={[s.tdDesc, { color: colors.foreground }]} numberOfLines={2}>{risk.descricaoRisco}</Text>
+                  <Text style={s.tdDesc} numberOfLines={2}>{risk.descricaoRisco}</Text>
                 </View>
                 <View style={[s.tdCell, s.thVal]}>
                   {rFrom ? (
-                    <View style={[s.scoreBox, { backgroundColor: (levelFrom?.color || '#6B7280') + '18' }]}>
+                    <View style={[s.scoreBox, { backgroundColor: (levelFrom?.color || '#6B8A7A') + '20', borderColor: (levelFrom?.color || '#6B8A7A') + '40' }]}>
                       <Text style={[s.scoreBoxText, { color: levelFrom?.color }]}>{rFrom.riscoInerente}</Text>
                     </View>
-                  ) : <Text style={[s.naText, { color: colors.muted }]}>-</Text>}
+                  ) : <Text style={s.naText}>—</Text>}
                 </View>
                 <View style={[s.tdCell, s.thVal]}>
                   {rTo ? (
-                    <View style={[s.scoreBox, { backgroundColor: (levelTo?.color || '#6B7280') + '18' }]}>
+                    <View style={[s.scoreBox, { backgroundColor: (levelTo?.color || '#6B8A7A') + '20', borderColor: (levelTo?.color || '#6B8A7A') + '40' }]}>
                       <Text style={[s.scoreBoxText, { color: levelTo?.color }]}>{rTo.riscoInerente}</Text>
                     </View>
-                  ) : <Text style={[s.naText, { color: colors.muted }]}>-</Text>}
+                  ) : <Text style={s.naText}>—</Text>}
                 </View>
                 <View style={[s.tdCell, s.thVal]}>
-                  <Text style={[s.gutText, { color: colors.foreground }]}>{rFrom ? rFrom.gutScore : '-'}</Text>
+                  <Text style={s.gutText}>{rFrom ? rFrom.gutScore : '—'}</Text>
                 </View>
                 <View style={[s.tdCell, s.thVal]}>
-                  <Text style={[s.gutText, { color: colors.foreground }]}>{rTo ? rTo.gutScore : '-'}</Text>
+                  <Text style={s.gutText}>{rTo ? rTo.gutScore : '—'}</Text>
                 </View>
                 <View style={[s.tdCell, s.thStatus]}>
-                  <View style={[s.statusBadge, { backgroundColor: statusColor + '18' }]}>
+                  <View style={[s.statusBadge, { backgroundColor: statusColor + '20', borderColor: statusColor + '40' }]}>
                     <Text style={[s.statusText, { color: statusColor }]}>{statusLabel}</Text>
                   </View>
+                  {pxiDelta !== null && pxiDelta !== 0 && (
+                    <Text style={[s.deltaText, { color: pxiDelta > 0 ? '#FF3D3D' : '#00FF88' }]}>
+                      {pxiDelta > 0 ? `+${pxiDelta}` : pxiDelta}
+                    </Text>
+                  )}
                 </View>
               </TouchableOpacity>
             );
           }
 
           return (
-            <TouchableOpacity key={rid} style={[s.compCard, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={() => handleRiskPress(rid)} activeOpacity={0.7}>
+            <TouchableOpacity key={rid} style={s.compCard} onPress={() => handleRiskPress(rid)} activeOpacity={0.7}>
               <View style={s.compCardHeader}>
-                <Text style={[s.compId, { color: colors.primary }]}>{rid}</Text>
+                <Text style={s.compId}>{rid}</Text>
                 <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
-                  <View style={[s.statusBadge, { backgroundColor: statusColor + '18' }]}>
+                  <View style={[s.statusBadge, { backgroundColor: statusColor + '20', borderColor: statusColor + '40' }]}>
                     <Text style={[s.statusText, { color: statusColor }]}>{statusLabel}</Text>
                   </View>
-                  <IconSymbol name="chevron.right" size={14} color={colors.primary} />
+                  <IconSymbol name="chevron.right" size={14} color="#00E5FF" />
                 </View>
               </View>
-              <Text style={[s.compDesc, { color: colors.muted }]} numberOfLines={2}>{risk.descricaoRisco}</Text>
+              <Text style={s.compDesc} numberOfLines={2}>{risk.descricaoRisco}</Text>
               <View style={s.compScores}>
                 <View style={s.compScoreCol}>
-                  <Text style={[s.compScoreLabel, { color: colors.muted }]}>{fromData.label}</Text>
-                  <Text style={[s.compScoreVal, { color: levelFrom?.color || colors.muted }]}>
-                    {rFrom ? `PxI ${rFrom.riscoInerente} | GUT ${rFrom.gutScore}` : '-'}
+                  <Text style={s.compScoreLabel}>{fromData.label}</Text>
+                  <Text style={[s.compScoreVal, { color: levelFrom?.color || '#6B8A7A' }]}>
+                    {rFrom ? `PxI ${rFrom.riscoInerente} | GUT ${rFrom.gutScore}` : '—'}
                   </Text>
                 </View>
-                <IconSymbol name="arrow.right" size={16} color={colors.muted} />
+                <Text style={{ color: '#6B8A7A', fontSize: 16 }}>→</Text>
                 <View style={s.compScoreCol}>
-                  <Text style={[s.compScoreLabel, { color: colors.muted }]}>{toData.label}</Text>
-                  <Text style={[s.compScoreVal, { color: levelTo?.color || colors.muted }]}>
-                    {rTo ? `PxI ${rTo.riscoInerente} | GUT ${rTo.gutScore}` : '-'}
+                  <Text style={s.compScoreLabel}>{toData.label}</Text>
+                  <Text style={[s.compScoreVal, { color: levelTo?.color || '#6B8A7A' }]}>
+                    {rTo ? `PxI ${rTo.riscoInerente} | GUT ${rTo.gutScore}` : '—'}
                   </Text>
                 </View>
               </View>
+              {ev && ev.changes.length > 0 && (
+                <View style={s.changesList}>
+                  {ev.changes.map((c, i) => (
+                    <View key={i} style={[s.changeChip, { borderColor: statusColor + '40' }]}>
+                      <Text style={[s.changeChipText, { color: statusColor }]}>{c}</Text>
+                    </View>
+                  ))}
+                </View>
+              )}
             </TouchableOpacity>
           );
         })}
@@ -429,6 +505,7 @@ export default function EvolutionScreen() {
     );
   };
 
+  // ---- MATRIX VIEW ----
   const renderMatrixView = () => {
     const renderMatrix = (risks: Risk[], label: string, color: string, source: string) => {
       const matrix: string[][][] = Array.from({ length: 5 }, () => Array.from({ length: 5 }, () => [] as string[]));
@@ -441,28 +518,28 @@ export default function EvolutionScreen() {
       const labelW = isDesktop ? 28 : 18;
       const getCellColor = (prob: number, imp: number) => {
         const score = prob * imp;
-        if (score >= 20) return '#EF4444';
-        if (score >= 12) return '#F97316';
-        if (score >= 6) return '#F59E0B';
-        return '#86EFAC';
+        if (score >= 20) return '#FF3D3D';
+        if (score >= 12) return '#FF8C00';
+        if (score >= 6) return '#FFD600';
+        return '#00FF88';
       };
       return (
         <View style={s.matrixContainer}>
           <View style={s.matrixHeaderRow}>
-            <View style={[s.matrixBadge, { backgroundColor: color + '18' }]}>
+            <View style={[s.matrixBadge, { backgroundColor: color + '20', borderColor: color + '40' }]}>
               <Text style={[s.matrixBadgeText, { color }]}>{label}</Text>
             </View>
-            <Text style={[s.matrixCount, { color: colors.muted }]}>{risks.length} riscos</Text>
+            <Text style={s.matrixCount}>{risks.length} riscos</Text>
           </View>
           <View style={s.matrixWrap}>
             <View style={[s.yAxisLabel, { width: labelW }]}>
-              <Text style={[s.axisText, { color: colors.muted, transform: [{ rotate: '-90deg' }] }]}>Prob.</Text>
+              <Text style={[s.axisText, { transform: [{ rotate: '-90deg' }] }]}>Prob.</Text>
             </View>
             <View>
               {matrix.map((row, rowIdx) => (
                 <View key={rowIdx} style={s.matrixRow}>
                   <View style={[s.matrixLabel, { width: labelW }]}>
-                    <Text style={[s.matrixLabelText, { color: colors.muted }]}>{5 - rowIdx}</Text>
+                    <Text style={s.matrixLabelText}>{5 - rowIdx}</Text>
                   </View>
                   {row.map((cell, colIdx) => {
                     const prob = 5 - rowIdx;
@@ -472,13 +549,18 @@ export default function EvolutionScreen() {
                     return (
                       <TouchableOpacity
                         key={colIdx}
-                        style={[s.matrixCell, { width: cellSize, height: cellSize, backgroundColor: cellColor + (hasRisks ? '30' : '12'), borderColor: hasRisks ? cellColor + '60' : colors.border, borderWidth: hasRisks ? 2 : 1 }]}
+                        style={[s.matrixCell, {
+                          width: cellSize, height: cellSize,
+                          backgroundColor: cellColor + (hasRisks ? '25' : '08'),
+                          borderColor: hasRisks ? cellColor + '60' : '#1A3A2A',
+                          borderWidth: hasRisks ? 2 : 1,
+                        }]}
                         onPress={() => handleCellPress(prob, imp, cell, source)}
                         activeOpacity={hasRisks ? 0.6 : 1}
                       >
                         {hasRisks ? (
                           <View style={s.cellContent}>
-                            {cell.map(id => <Text key={id} style={[s.cellId, { color: colors.foreground }]}>{id}</Text>)}
+                            {cell.map(id => <Text key={id} style={s.cellId}>{id}</Text>)}
                           </View>
                         ) : null}
                       </TouchableOpacity>
@@ -490,12 +572,12 @@ export default function EvolutionScreen() {
                 <View style={{ width: labelW }} />
                 {[1, 2, 3, 4, 5].map(n => (
                   <View key={n} style={[s.matrixLabel, { width: cellSize }]}>
-                    <Text style={[s.matrixLabelText, { color: colors.muted }]}>{n}</Text>
+                    <Text style={s.matrixLabelText}>{n}</Text>
                   </View>
                 ))}
               </View>
               <View style={s.xAxisLabel}>
-                <Text style={[s.axisText, { color: colors.muted }]}>Impacto</Text>
+                <Text style={s.axisText}>Impacto</Text>
               </View>
             </View>
           </View>
@@ -513,164 +595,232 @@ export default function EvolutionScreen() {
     );
   };
 
+  // ---- MAIN RENDER ----
   return (
-    <ScreenContainer className="bg-background">
-      <ScrollView contentContainerStyle={[s.scrollContent, isDesktop && s.scrollContentDesktop]}>
-        <View style={s.header}>
-          <Text style={[s.headerTitle, { color: colors.foreground }]}>Visão Evolutiva</Text>
-          <Text style={[s.headerSub, { color: colors.muted }]}>
-            Acompanhe a evolução do estudo de riscos: Aula 3 ({RISKS_AULA3.length}) → Aula 4 ({RISKS_AULA4.length}) → Aula 5 ({RISKS_AULA5.length} riscos)
-          </Text>
+    <ScreenContainer className="flex-1" edges={isDesktop ? [] : ["top", "left", "right"]}>
+      <ScrollView contentContainerStyle={[s.scrollContent, isDesktop && s.scrollContentDesktop]} showsVerticalScrollIndicator={false}>
+        {/* Header */}
+        <Animated.View entering={FadeInDown.duration(400)} style={s.header}>
+          <View style={s.headerLeft}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+              <Text style={s.pageTitle}>Evolução do Projeto</Text>
+              <StatusIndicator status="monitoring" label="LIVE" />
+            </View>
+            <Text style={s.pageSubtitle}>
+              Aula 3 ({RISKS_AULA3.length}) → Aula 4 ({RISKS_AULA4.length}) → Aula 5 ({RISKS_AULA5.length}) → Hoje
+            </Text>
+          </View>
+        </Animated.View>
+
+        {/* View Mode Selector */}
+        <View style={s.viewSelector}>
+          {([
+            { key: 'overview' as ViewMode, label: 'Visão Geral', icon: 'chart.line.uptrend.xyaxis' as const },
+            { key: 'comparison' as ViewMode, label: 'Comparativo', icon: 'tablecells' as const },
+            { key: 'matrix' as ViewMode, label: 'Matrizes', icon: 'square.grid.2x2.fill' as const },
+          ]).map(item => (
+            <TouchableOpacity
+              key={item.key}
+              style={[s.viewSelectorBtn, viewMode === item.key && s.viewSelectorBtnActive]}
+              onPress={() => setViewMode(item.key)}
+              activeOpacity={0.7}
+            >
+              <IconSymbol name={item.icon} size={16} color={viewMode === item.key ? '#00E5FF' : '#6B8A7A'} />
+              <Text style={[s.viewSelectorLabel, viewMode === item.key && s.viewSelectorLabelActive]}>{item.label}</Text>
+            </TouchableOpacity>
+          ))}
         </View>
 
-        {/* Timeline 3 aulas */}
-        <View style={[s.timeline, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <View style={s.timelineItem}>
-            <View style={[s.timelineDot, { backgroundColor: AULA_COLORS['3'] }]} />
-            <View style={s.timelineContent}>
-              <Text style={[s.timelineTitle, { color: colors.foreground }]}>Aula 3 - Identificação Inicial</Text>
-              <Text style={[s.timelineDesc, { color: colors.muted }]}>{RISKS_AULA3.length} riscos identificados e classificados</Text>
-            </View>
+        {/* Compare Selector (for comparison and matrix views) */}
+        {(viewMode === 'comparison' || viewMode === 'matrix') && (
+          <View style={s.compareSelector}>
+            {([
+              { key: '3v4' as CompareMode, label: 'Aula 3 → 4' },
+              { key: '4v5' as CompareMode, label: 'Aula 4 → 5' },
+              { key: '3v5' as CompareMode, label: 'Aula 3 → 5' },
+            ]).map(item => (
+              <TouchableOpacity
+                key={item.key}
+                style={[s.compareSelectorBtn, compareMode === item.key && s.compareSelectorBtnActive]}
+                onPress={() => setCompareMode(item.key)}
+                activeOpacity={0.7}
+              >
+                <Text style={[s.compareSelectorLabel, compareMode === item.key && s.compareSelectorLabelActive]}>{item.label}</Text>
+              </TouchableOpacity>
+            ))}
           </View>
-          <View style={[s.timelineLine, { backgroundColor: colors.border }]} />
-          <View style={s.timelineItem}>
-            <View style={[s.timelineDot, { backgroundColor: AULA_COLORS['4'] }]} />
-            <View style={s.timelineContent}>
-              <Text style={[s.timelineTitle, { color: colors.foreground }]}>Aula 4 - Revisão e Expansão</Text>
-              <Text style={[s.timelineDesc, { color: colors.muted }]}>{RISKS_AULA4.length} riscos com GUT revisado pela Vetor Horizon</Text>
-            </View>
-          </View>
-          <View style={[s.timelineLine, { backgroundColor: colors.border }]} />
-          <View style={s.timelineItem}>
-            <View style={[s.timelineDot, { backgroundColor: AULA_COLORS['5'] }]} />
-            <View style={s.timelineContent}>
-              <Text style={[s.timelineTitle, { color: colors.foreground }]}>Aula 5 - Maturidade e Detalhamento</Text>
-              <Text style={[s.timelineDesc, { color: colors.muted }]}>{RISKS_AULA5.length} riscos com controles, KRI e eficácia detalhados</Text>
-            </View>
-          </View>
-        </View>
+        )}
 
-        {renderCompareSelector()}
-        {renderViewToggle()}
-
-        {viewMode === 'summary' && renderSummaryView()}
+        {viewMode === 'overview' && renderOverviewView()}
         {viewMode === 'comparison' && renderComparisonView()}
         {viewMode === 'matrix' && renderMatrixView()}
+
+        <View style={{ height: 40 }} />
       </ScrollView>
       {renderRiskModal()}
     </ScreenContainer>
   );
 }
 
+const MONO = Platform.OS === 'web' ? 'monospace' : undefined;
+
 const s = StyleSheet.create({
-  scrollContent: { padding: 16, paddingBottom: 100 },
-  scrollContentDesktop: { padding: 32, maxWidth: 1280, alignSelf: 'center', width: '100%' },
-  header: { marginBottom: 20 },
-  headerTitle: { fontSize: 26, fontWeight: '700', letterSpacing: -0.5 },
-  headerSub: { fontSize: 14, marginTop: 4 },
-  timeline: { borderRadius: 12, borderWidth: 1, padding: 16, marginBottom: 16 },
-  timelineItem: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
-  timelineDot: { width: 12, height: 12, borderRadius: 6, marginTop: 4 },
-  timelineLine: { width: 2, height: 16, marginLeft: 5, marginVertical: 2 },
-  timelineContent: { flex: 1 },
-  timelineTitle: { fontSize: 14, fontWeight: '600' },
-  timelineDesc: { fontSize: 12, marginTop: 2 },
-  compareSelectorRow: { flexDirection: 'row', borderRadius: 10, borderWidth: 1, padding: 4, marginBottom: 10, gap: 4 },
+  scrollContent: { flexGrow: 1, paddingBottom: 20 },
+  scrollContentDesktop: { maxWidth: 1280, alignSelf: 'center' as any, width: '100%' as any },
+  header: { paddingHorizontal: 24, paddingTop: 16, paddingBottom: 12 },
+  headerLeft: { flex: 1 },
+  pageTitle: { fontSize: 26, fontWeight: '800', letterSpacing: 1, color: '#E0F0E0', fontFamily: MONO },
+  pageSubtitle: { fontSize: 12, marginTop: 4, letterSpacing: 0.5, color: '#6B8A7A', fontFamily: MONO },
+
+  // View Selector
+  viewSelector: { flexDirection: 'row', marginHorizontal: 24, marginBottom: 12, backgroundColor: '#0D1117', borderRadius: 10, borderWidth: 1, borderColor: '#1A3A2A', padding: 4, gap: 4 },
+  viewSelectorBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 10, borderRadius: 8, gap: 6 },
+  viewSelectorBtnActive: { backgroundColor: '#00E5FF15' },
+  viewSelectorLabel: { fontSize: 12, fontWeight: '600', color: '#6B8A7A', fontFamily: MONO },
+  viewSelectorLabelActive: { color: '#00E5FF' },
+
+  // Compare Selector
+  compareSelector: { flexDirection: 'row', marginHorizontal: 24, marginBottom: 16, backgroundColor: '#0D1117', borderRadius: 10, borderWidth: 1, borderColor: '#1A3A2A', padding: 4, gap: 4 },
   compareSelectorBtn: { flex: 1, alignItems: 'center', paddingVertical: 8, borderRadius: 8 },
-  compareSelectorLabel: { fontSize: 13, fontWeight: '600' },
-  toggleRow: { flexDirection: 'row', borderRadius: 10, borderWidth: 1, padding: 4, marginBottom: 20, gap: 4 },
-  toggleBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 8, borderRadius: 8, gap: 6 },
-  toggleLabel: { fontSize: 13, fontWeight: '600' },
-  section: { gap: 16 },
-  statsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  statsRowDesktop: { flexWrap: 'nowrap' },
-  statCard: { flex: 1, minWidth: 130, borderRadius: 12, borderWidth: 1, padding: 14, alignItems: 'center', gap: 6 },
-  statIcon: { width: 36, height: 36, borderRadius: 9, justifyContent: 'center', alignItems: 'center' },
-  statNumber: { fontSize: 26, fontWeight: '700' },
-  statLabel: { fontSize: 11, fontWeight: '500' },
-  tapHint: { fontSize: 10, fontWeight: '600', opacity: 0.8 },
-  groupSection: { marginTop: 8 },
-  groupHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 },
-  badge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6 },
-  badgeText: { fontSize: 11, fontWeight: '700', letterSpacing: 0.5 },
-  groupTitle: { fontSize: 14, fontWeight: '600' },
-  riskCard: { borderRadius: 12, borderWidth: 1, padding: 14, marginBottom: 10 },
-  riskCardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8, flexWrap: 'wrap' },
-  riskIdBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
-  riskIdText: { fontSize: 12, fontWeight: '700' },
-  levelBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
-  levelText: { fontSize: 11, fontWeight: '600' },
-  riskScore: { fontSize: 12, marginLeft: 'auto' },
-  riskTitle: { fontSize: 13, fontWeight: '500', lineHeight: 18, marginBottom: 4 },
-  riskMeta: { fontSize: 11 },
-  changesContainer: { marginTop: 8 },
-  changesLabel: { fontSize: 11, fontWeight: '600', marginBottom: 4 },
-  changesList: { flexDirection: 'row', flexWrap: 'wrap', gap: 4 },
-  changeChip: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, borderWidth: 1 },
-  changeChipText: { fontSize: 10, fontWeight: '600' },
-  unchangedGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  unchangedGridDesktop: {},
-  unchangedCard: { borderRadius: 10, borderWidth: 1, padding: 12, minWidth: 200, flex: 1, maxWidth: 300 },
-  unchangedHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
-  unchangedId: { fontSize: 13, fontWeight: '700' },
-  miniLevel: { width: 24, height: 24, borderRadius: 6, justifyContent: 'center', alignItems: 'center' },
-  miniLevelText: { fontSize: 11, fontWeight: '700' },
-  unchangedDesc: { fontSize: 11, lineHeight: 15 },
-  tableHeader: { flexDirection: 'row', borderWidth: 1, borderRadius: 8, padding: 10, marginBottom: 4 },
-  thCell: { fontWeight: '700', fontSize: 12 },
+  compareSelectorBtnActive: { backgroundColor: '#00E5FF15' },
+  compareSelectorLabel: { fontSize: 12, fontWeight: '600', color: '#6B8A7A', fontFamily: MONO },
+  compareSelectorLabelActive: { color: '#00E5FF' },
+
+  section: { paddingHorizontal: 24, gap: 16 },
+
+  // Card Header
+  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
+  cardTitle: { fontSize: 14, fontWeight: '700', letterSpacing: 1, color: '#00E5FF', fontFamily: MONO },
+
+  // Chart
+  chartSubtitle: { fontSize: 11, fontWeight: '600', letterSpacing: 0.5, color: '#6B8A7A', fontFamily: MONO, marginBottom: 12 },
+  chartContainer: { flexDirection: 'row', alignItems: 'flex-end', gap: 8 },
+  chartYAxis: { justifyContent: 'space-between', height: 200, paddingBottom: 4 },
+  chartYLabel: { fontSize: 9, color: '#6B8A7A', fontFamily: MONO, textAlign: 'right' },
+  chartBars: { flex: 1, flexDirection: 'row', justifyContent: 'space-around', alignItems: 'flex-end' },
+  chartBarCol: { alignItems: 'center', flex: 1 },
+  chartBarWrapper: { justifyContent: 'flex-end', width: '100%', paddingHorizontal: 4 },
+  chartBar: { borderRadius: 6, alignItems: 'center', justifyContent: 'center', minHeight: 30 },
+  chartBarValue: { fontSize: 16, fontWeight: '800', fontFamily: MONO },
+  chartBarLabel: { fontSize: 10, fontWeight: '700', fontFamily: MONO, marginTop: 6 },
+
+  // Stacked Bar
+  stackedRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
+  stackedLabel: { width: 50, fontSize: 10, fontWeight: '700', fontFamily: MONO },
+  stackedBarTrack: { flex: 1, height: 20, backgroundColor: '#111820', borderRadius: 4, flexDirection: 'row', overflow: 'hidden' },
+  stackedSegment: { height: '100%' },
+  stackedTotal: { width: 24, fontSize: 11, fontWeight: '700', color: '#E0F0E0', fontFamily: MONO, textAlign: 'right' },
+
+  // Legend
+  legendRow: { flexDirection: 'row', justifyContent: 'center', gap: 16, marginTop: 12 },
+  legendItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  legendDot: { width: 8, height: 8, borderRadius: 4 },
+  legendText: { fontSize: 9, color: '#6B8A7A', fontFamily: MONO },
+
+  // GUT Line
+  gutLineContainer: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', paddingVertical: 16 },
+  gutLineCol: { alignItems: 'center', flex: 1 },
+  gutLineValue: { fontSize: 22, fontWeight: '800', fontFamily: MONO },
+  gutLineDot: { width: 12, height: 12, borderRadius: 6, borderWidth: 2, marginVertical: 6 },
+  gutLineConnector: { position: 'absolute', right: -20, top: 32, width: 40, height: 2 },
+  gutLineLabel: { fontSize: 10, fontWeight: '600', fontFamily: MONO },
+
+  // Maturity
+  maturityGrid: { gap: 12 },
+  maturityItem: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  maturityLabel: { width: 120, fontSize: 10, fontWeight: '600', color: '#6B8A7A', fontFamily: MONO },
+  maturityBarTrack: { flex: 1, height: 8, backgroundColor: '#111820', borderRadius: 4, overflow: 'hidden' },
+  maturityBarFill: { height: '100%', borderRadius: 4 },
+  maturityValue: { width: 50, fontSize: 11, fontWeight: '700', fontFamily: MONO, textAlign: 'right' },
+
+  // Stats Grid
+  statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  statsGridDesktop: { flexWrap: 'nowrap' },
+  statInner: { alignItems: 'center', gap: 6 },
+  statIconBg: { width: 40, height: 40, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
+  statLabel: { fontSize: 10, fontWeight: '700', letterSpacing: 1, color: '#6B8A7A', fontFamily: MONO },
+  statHint: { fontSize: 9, fontWeight: '600', color: '#00FF8880', fontFamily: MONO },
+
+  // Timeline
+  timelineItem: { flexDirection: 'row', gap: 12, marginBottom: 4 },
+  timelineDotCol: { alignItems: 'center', width: 20 },
+  timelineDot: { width: 14, height: 14, borderRadius: 7, borderWidth: 2, marginTop: 2 },
+  timelineLine: { width: 2, flex: 1, minHeight: 20 },
+  timelineContent: { flex: 1, paddingBottom: 16 },
+  timelineHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
+  timelineBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, borderWidth: 1 },
+  timelineBadgeText: { fontSize: 10, fontWeight: '700', fontFamily: MONO, letterSpacing: 0.5 },
+  timelineTitle: { fontSize: 14, fontWeight: '600', color: '#E0F0E0' },
+  timelineDesc: { fontSize: 12, color: '#6B8A7A', lineHeight: 17 },
+  timelineExpanded: { marginTop: 8, padding: 10, borderRadius: 8, borderWidth: 1, backgroundColor: '#111820' },
+  timelineExpandedText: { fontSize: 11, fontFamily: MONO, lineHeight: 16 },
+
+  // Comparison Table
+  tableHeader: { flexDirection: 'row', borderWidth: 1, borderRadius: 8, padding: 10, marginBottom: 4, backgroundColor: '#111820', borderColor: '#1A3A2A' },
+  thCell: { fontWeight: '700', fontSize: 11, color: '#00E5FF', fontFamily: MONO },
   thId: { width: 60 },
   thDesc: { flex: 1, paddingHorizontal: 8 },
   thVal: { width: 85, textAlign: 'center' },
-  thStatus: { width: 80, textAlign: 'center' },
-  tableRow: { flexDirection: 'row', borderBottomWidth: 1, paddingVertical: 10, alignItems: 'center' },
+  thStatus: { width: 90, textAlign: 'center', alignItems: 'center' },
+  tableRow: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#1A3A2A', paddingVertical: 10, alignItems: 'center' },
   tdCell: { justifyContent: 'center' },
-  tdId: { fontSize: 13, fontWeight: '700' },
-  tdDesc: { fontSize: 12, lineHeight: 16 },
-  scoreBox: { borderRadius: 6, padding: 6, alignItems: 'center' },
-  scoreBoxText: { fontSize: 15, fontWeight: '700' },
-  naText: { fontSize: 14, textAlign: 'center' },
-  gutText: { fontSize: 14, fontWeight: '600', textAlign: 'center' },
-  statusBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, alignSelf: 'center' },
-  statusText: { fontSize: 11, fontWeight: '600' },
-  compCard: { borderRadius: 12, borderWidth: 1, padding: 14, marginBottom: 8 },
+  tdId: { fontSize: 13, fontWeight: '700', color: '#00E5FF', fontFamily: MONO },
+  tdDesc: { fontSize: 12, lineHeight: 16, color: '#E0F0E0' },
+  scoreBox: { borderRadius: 6, padding: 6, alignItems: 'center', borderWidth: 1 },
+  scoreBoxText: { fontSize: 15, fontWeight: '700', fontFamily: MONO },
+  naText: { fontSize: 14, textAlign: 'center', color: '#6B8A7A' },
+  gutText: { fontSize: 14, fontWeight: '600', textAlign: 'center', color: '#E0F0E0', fontFamily: MONO },
+  statusBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, borderWidth: 1 },
+  statusText: { fontSize: 10, fontWeight: '700', fontFamily: MONO, letterSpacing: 0.5 },
+  deltaText: { fontSize: 10, fontWeight: '700', fontFamily: MONO, marginTop: 4 },
+
+  // Mobile Comparison Card
+  compCard: { borderRadius: 12, borderWidth: 1, borderColor: '#1A3A2A', backgroundColor: '#0D1117', padding: 14, marginBottom: 8 },
   compCardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
-  compId: { fontSize: 14, fontWeight: '700' },
-  compDesc: { fontSize: 12, lineHeight: 16, marginBottom: 8 },
+  compId: { fontSize: 14, fontWeight: '700', color: '#00E5FF', fontFamily: MONO },
+  compDesc: { fontSize: 12, lineHeight: 16, marginBottom: 8, color: '#6B8A7A' },
   compScores: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around', gap: 8 },
   compScoreCol: { alignItems: 'center' },
-  compScoreLabel: { fontSize: 10, fontWeight: '600', marginBottom: 2 },
-  compScoreVal: { fontSize: 12, fontWeight: '700' },
+  compScoreLabel: { fontSize: 10, fontWeight: '600', marginBottom: 2, color: '#6B8A7A', fontFamily: MONO },
+  compScoreVal: { fontSize: 12, fontWeight: '700', fontFamily: MONO },
+  changesList: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 8 },
+  changeChip: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, borderWidth: 1, backgroundColor: '#111820' },
+  changeChipText: { fontSize: 10, fontWeight: '600', fontFamily: MONO },
+
+  // Matrix
   matrixGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 24 },
-  matrixContainer: { flex: 1, minWidth: 340 },
+  matrixContainer: { flex: 1, minWidth: 340, marginBottom: 16 },
   matrixHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 },
-  matrixBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6 },
-  matrixBadgeText: { fontSize: 13, fontWeight: '700' },
-  matrixCount: { fontSize: 12 },
+  matrixBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6, borderWidth: 1 },
+  matrixBadgeText: { fontSize: 13, fontWeight: '700', fontFamily: MONO },
+  matrixCount: { fontSize: 12, color: '#6B8A7A', fontFamily: MONO },
   matrixWrap: { flexDirection: 'row', alignItems: 'center' },
   yAxisLabel: { justifyContent: 'center', alignItems: 'center', height: 200 },
-  axisText: { fontSize: 10, fontWeight: '600' },
+  axisText: { fontSize: 10, fontWeight: '600', color: '#6B8A7A', fontFamily: MONO },
   matrixRow: { flexDirection: 'row' },
   matrixLabel: { justifyContent: 'center', alignItems: 'center', height: 52 },
-  matrixLabelText: { fontSize: 11, fontWeight: '600' },
+  matrixLabelText: { fontSize: 11, fontWeight: '600', color: '#6B8A7A', fontFamily: MONO },
   matrixCell: { borderRadius: 4, margin: 1, justifyContent: 'center', alignItems: 'center', padding: 2 },
   cellContent: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 1, alignItems: 'center' },
-  cellId: { fontSize: 8, fontWeight: '700' },
+  cellId: { fontSize: 8, fontWeight: '700', color: '#E0F0E0', fontFamily: MONO },
   xAxisLabel: { alignItems: 'center', marginTop: 4 },
-  pill: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
-  pillText: { fontSize: 11, fontWeight: '700' },
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: 16 },
-  modalContent: { borderRadius: 16, borderWidth: 1, width: '100%', overflow: 'hidden' },
-  modalHeader: { flexDirection: 'row', alignItems: 'center', padding: 20, borderBottomWidth: 1, gap: 12 },
-  modalTitle: { fontSize: 18, fontWeight: '700' },
-  modalSub: { fontSize: 12, marginTop: 2 },
-  closeBtn: { width: 36, height: 36, borderRadius: 18, justifyContent: 'center', alignItems: 'center' },
-  closeBtnText: { fontSize: 18, fontWeight: '600' },
-  modalCard: { borderRadius: 12, borderWidth: 1, padding: 16, marginBottom: 10 },
+
+  pill: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, borderWidth: 1 },
+  pillText: { fontSize: 11, fontWeight: '700', fontFamily: MONO },
+
+  // Modal
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', alignItems: 'center', padding: 16 },
+  modalContent: { borderRadius: 16, borderWidth: 1, borderColor: '#1A3A2A', backgroundColor: '#0D1117', width: '100%' as any, overflow: 'hidden', maxHeight: '80%' as any },
+  modalHeader: { flexDirection: 'row', alignItems: 'center', padding: 20, borderBottomWidth: 1, borderBottomColor: '#1A3A2A', gap: 12 },
+  modalTitle: { fontSize: 18, fontWeight: '700', color: '#E0F0E0' },
+  modalSub: { fontSize: 12, marginTop: 2, color: '#6B8A7A' },
+  closeBtn: { width: 36, height: 36, borderRadius: 18, justifyContent: 'center', alignItems: 'center', backgroundColor: '#111820' },
+  closeBtnText: { fontSize: 18, fontWeight: '600', color: '#6B8A7A' },
+  modalCard: { borderRadius: 12, borderWidth: 1, borderColor: '#1A3A2A', backgroundColor: '#111820', padding: 16, marginBottom: 10 },
   modalCardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, flexWrap: 'wrap', gap: 8 },
-  modalIdBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
-  modalIdText: { fontSize: 14, fontWeight: '800' },
+  modalIdText: { fontSize: 14, fontWeight: '800', fontFamily: MONO },
   modalBadges: { flexDirection: 'row', gap: 6, flexWrap: 'wrap' },
-  modalDesc: { fontSize: 13, lineHeight: 19, marginBottom: 8 },
+  modalDesc: { fontSize: 13, lineHeight: 19, marginBottom: 8, color: '#E0F0E0' },
   modalFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  modalMeta: { fontSize: 11, flex: 1 },
+  modalMeta: { fontSize: 11, flex: 1, color: '#6B8A7A', fontFamily: MONO },
 });

@@ -91,3 +91,9 @@
 - [x] Melhorar telas Evolução, Estratégico e Tabelas com novos componentes
 - [x] Adicionar ticker de alertas críticos
 - [x] Fazer push de todas as melhorias para GitHub
+- [x] Dashboard: remover ticker/linha deslizante
+- [x] Dashboard: melhorar interatividade geral
+- [x] Riscos: melhorar interatividade da listagem
+- [x] Evolução: adicionar gráfico de evolução completa (Aula 3→4→5→Hoje/última aula)
+- [x] Estratégico: métricas interativas com detalhes de riscos para diretores
+- [x] Tabelas: tornar explicativas e interativas com estética neon

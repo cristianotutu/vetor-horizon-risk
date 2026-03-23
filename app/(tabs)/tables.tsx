@@ -1,316 +1,613 @@
-import { ScrollView, Text, View, StyleSheet, useWindowDimensions, TouchableOpacity } from "react-native";
+import { ScrollView, Text, View, StyleSheet, useWindowDimensions, TouchableOpacity, Platform } from "react-native";
 import { ScreenContainer } from "@/components/screen-container";
-import { useColors } from "@/hooks/use-colors";
+import { GlowCard } from "@/components/ui/glow-card";
+import { StatusIndicator } from "@/components/ui/status-indicator";
+import { IconSymbol } from "@/components/ui/icon-symbol";
 import { TABELA_IMPACTO_DETALHADA, NIVEIS_PROBABILIDADE, TABELA_GUT, getMatrixColor } from "@/lib/models";
 import { useState } from "react";
+import Animated, { FadeInDown } from "react-native-reanimated";
 
 type TabKey = 'matrix' | 'impacto' | 'probabilidade' | 'gut';
 
+const MONO = Platform.OS === 'web' ? 'monospace' : undefined;
+
+const NEON = {
+  bg: '#0A0E14',
+  card: '#0D1117',
+  cardBorder: '#1A3A2A',
+  cyan: '#00E5FF',
+  green: '#00FF88',
+  text: '#E0F0E0',
+  muted: '#6B8A7A',
+  headerBg: '#111820',
+};
+
+function getLevelColor(nivel: number): string {
+  switch (nivel) {
+    case 5: return '#FF3D3D';
+    case 4: return '#FF8C00';
+    case 3: return '#FFD600';
+    case 2: return '#00FF88';
+    case 1: return '#00E5FF';
+    default: return '#6B8A7A';
+  }
+}
+
 export default function TablesScreen() {
-  const colors = useColors();
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;
   const [activeTab, setActiveTab] = useState<TabKey>('matrix');
+  const [selectedCell, setSelectedCell] = useState<{ prob: number; imp: number } | null>(null);
+  const [expandedLevel, setExpandedLevel] = useState<number | null>(null);
 
-  const tabs: { key: TabKey; label: string }[] = [
-    { key: 'matrix', label: 'Matriz 5×5' },
-    { key: 'impacto', label: 'Impacto' },
-    { key: 'probabilidade', label: 'Probabilidade' },
-    { key: 'gut', label: 'GUT' },
+  const tabs: { key: TabKey; label: string; icon: any; desc: string }[] = [
+    { key: 'matrix', label: 'Matriz 5×5', icon: 'square.grid.2x2.fill', desc: 'Probabilidade × Impacto' },
+    { key: 'impacto', label: 'Impacto', icon: 'exclamationmark.triangle.fill', desc: '6 dimensões de impacto' },
+    { key: 'probabilidade', label: 'Probabilidade', icon: 'chart.bar.fill', desc: '5 níveis de probabilidade' },
+    { key: 'gut', label: 'GUT', icon: 'gauge.medium', desc: 'Gravidade × Urgência × Tendência' },
   ];
 
   return (
     <ScreenContainer className="flex-1" edges={isDesktop ? [] : ["top", "left", "right"]}>
-      {/* Header */}
-      <View style={[styles.header, isDesktop && styles.headerDesktop]}>
-        <Text style={[styles.pageTitle, { color: colors.foreground }]}>Tabelas de Referência</Text>
-        <Text style={[styles.pageSubtitle, { color: colors.muted }]}>Critérios para avaliação e priorização de riscos</Text>
-      </View>
+      <ScrollView contentContainerStyle={[s.scrollContent, isDesktop && s.scrollContentDesktop]} showsVerticalScrollIndicator={false}>
+        {/* Header */}
+        <Animated.View entering={FadeInDown.duration(400)} style={s.header}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+            <Text style={s.pageTitle}>Tabelas de Referência</Text>
+            <StatusIndicator status="monitoring" label="ICAPT v5" />
+          </View>
+          <Text style={s.pageSubtitle}>Critérios para avaliação e priorização de riscos — ISO 31000 | ISO 27001</Text>
+        </Animated.View>
 
-      {/* Tab Selector */}
-      <View style={[styles.tabBar, isDesktop && styles.tabBarDesktop]}>
-        {tabs.map(tab => (
-          <TouchableOpacity
-            key={tab.key}
-            style={[
-              styles.tab,
-              activeTab === tab.key && { borderBottomColor: colors.primary, borderBottomWidth: 2 },
-            ]}
-            onPress={() => setActiveTab(tab.key)}
-            activeOpacity={0.7}
-          >
-            <Text style={[
-              styles.tabText,
-              { color: activeTab === tab.key ? colors.primary : colors.muted },
-              activeTab === tab.key && { fontWeight: '700' },
-            ]}>{tab.label}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+        {/* Tab Selector */}
+        <Animated.View entering={FadeInDown.duration(400).delay(100)}>
+          <View style={s.tabBar}>
+            {tabs.map(tab => (
+              <TouchableOpacity
+                key={tab.key}
+                style={[s.tab, activeTab === tab.key && s.tabActive]}
+                onPress={() => setActiveTab(tab.key)}
+                activeOpacity={0.7}
+              >
+                <IconSymbol name={tab.icon} size={16} color={activeTab === tab.key ? NEON.cyan : NEON.muted} />
+                <Text style={[s.tabText, activeTab === tab.key && s.tabTextActive]}>{tab.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </Animated.View>
 
-      <ScrollView contentContainerStyle={[styles.content, isDesktop && styles.contentDesktop]} showsVerticalScrollIndicator={false}>
-        {activeTab === 'matrix' && <MatrixTab colors={colors} isDesktop={isDesktop} />}
-        {activeTab === 'impacto' && <ImpactoTab colors={colors} isDesktop={isDesktop} />}
-        {activeTab === 'probabilidade' && <ProbabilidadeTab colors={colors} isDesktop={isDesktop} />}
-        {activeTab === 'gut' && <GutTab colors={colors} isDesktop={isDesktop} />}
+        {/* Active Tab Description */}
+        <Animated.View entering={FadeInDown.duration(400).delay(150)} style={s.tabDescContainer}>
+          <Text style={s.tabDesc}>{tabs.find(t => t.key === activeTab)?.desc}</Text>
+        </Animated.View>
+
+        {/* Content */}
+        {activeTab === 'matrix' && <MatrixTab isDesktop={isDesktop} selectedCell={selectedCell} setSelectedCell={setSelectedCell} />}
+        {activeTab === 'impacto' && <ImpactoTab isDesktop={isDesktop} expandedLevel={expandedLevel} setExpandedLevel={setExpandedLevel} />}
+        {activeTab === 'probabilidade' && <ProbabilidadeTab isDesktop={isDesktop} />}
+        {activeTab === 'gut' && <GutTab isDesktop={isDesktop} expandedLevel={expandedLevel} setExpandedLevel={setExpandedLevel} />}
+
         <View style={{ height: 40 }} />
       </ScrollView>
     </ScreenContainer>
   );
 }
 
-function MatrixTab({ colors, isDesktop }: { colors: any; isDesktop: boolean }) {
+function MatrixTab({ isDesktop, selectedCell, setSelectedCell }: { isDesktop: boolean; selectedCell: { prob: number; imp: number } | null; setSelectedCell: (c: { prob: number; imp: number } | null) => void }) {
+  const score = selectedCell ? selectedCell.prob * selectedCell.imp : null;
+  const scoreLevel = score !== null ? (score >= 20 ? 'Crítico' : score >= 12 ? 'Alto' : score >= 6 ? 'Médio' : 'Baixo') : '';
+  const scoreColor = score !== null ? (score >= 20 ? '#FF3D3D' : score >= 12 ? '#FF8C00' : score >= 6 ? '#FFD600' : '#00FF88') : '#6B8A7A';
+
   return (
-    <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-      <Text style={[styles.cardTitle, { color: colors.foreground }]}>Matriz de Risco (Probabilidade × Impacto)</Text>
-      <Text style={[styles.cardDesc, { color: colors.muted }]}>
-        A matriz 5×5 classifica os riscos conforme a combinação de probabilidade e impacto. O resultado (P×I) define o nível de risco inerente.
-      </Text>
-      <View style={[styles.matrixWrapper, isDesktop && { maxWidth: 500, alignSelf: 'center' }]}>
-        <View style={styles.matrixYAxis}>
-          <Text style={[styles.axisTitle, { color: colors.muted }]}>Probabilidade</Text>
-        </View>
-        <View style={styles.matrixContent}>
-          {[5, 4, 3, 2, 1].map(prob => (
-            <View key={prob} style={styles.matrixRow}>
-              <View style={styles.matrixRowLabel}>
-                <Text style={[styles.matrixLabelText, { color: colors.muted }]}>{prob}</Text>
-              </View>
-              {[1, 2, 3, 4, 5].map(imp => {
-                const score = prob * imp;
-                const bgColor = getMatrixColor(prob, imp);
-                return (
-                  <View key={imp} style={[styles.matrixCell, { backgroundColor: bgColor + '25', borderColor: bgColor + '60' }]}>
-                    <Text style={[styles.matrixCellText, { color: bgColor }]}>{score}</Text>
-                  </View>
-                );
-              })}
+    <View style={s.section}>
+      <Animated.View entering={FadeInDown.duration(500).delay(200)}>
+        <GlowCard variant="default">
+          <View style={s.cardHeader}>
+            <Text style={s.cardTitle}>MATRIZ DE RISCO (P × I)</Text>
+            <StatusIndicator status="active" label="5×5" />
+          </View>
+          <Text style={s.cardDesc}>
+            Clique em qualquer célula para ver o detalhamento do score. O resultado (P×I) define o nível de risco inerente de 1 a 25.
+          </Text>
+
+          {/* Interactive Matrix */}
+          <View style={[s.matrixWrapper, isDesktop && { maxWidth: 500, alignSelf: 'center' as any }]}>
+            <View style={s.matrixYAxis}>
+              <Text style={[s.axisTitle, { transform: [{ rotate: '-90deg' }] }]}>Probabilidade</Text>
             </View>
-          ))}
-          <View style={styles.matrixRow}>
-            <View style={styles.matrixRowLabel} />
-            {[1, 2, 3, 4, 5].map(n => (
-              <View key={n} style={[styles.matrixCell, { borderWidth: 0 }]}>
-                <Text style={[styles.matrixLabelText, { color: colors.muted }]}>{n}</Text>
+            <View style={s.matrixContent}>
+              {[5, 4, 3, 2, 1].map(prob => (
+                <View key={prob} style={s.matrixRow}>
+                  <View style={s.matrixRowLabel}>
+                    <Text style={s.matrixLabelText}>{prob}</Text>
+                  </View>
+                  {[1, 2, 3, 4, 5].map(imp => {
+                    const cellScore = prob * imp;
+                    const bgColor = getMatrixColor(prob, imp);
+                    const isSelected = selectedCell?.prob === prob && selectedCell?.imp === imp;
+                    return (
+                      <TouchableOpacity
+                        key={imp}
+                        style={[
+                          s.matrixCell,
+                          {
+                            backgroundColor: bgColor + (isSelected ? '50' : '20'),
+                            borderColor: isSelected ? bgColor : bgColor + '40',
+                            borderWidth: isSelected ? 2.5 : 1,
+                          },
+                          isSelected && Platform.OS === 'web' && {
+                            shadowColor: bgColor,
+                            shadowOffset: { width: 0, height: 0 },
+                            shadowOpacity: 0.8,
+                            shadowRadius: 12,
+                          },
+                        ]}
+                        onPress={() => setSelectedCell(isSelected ? null : { prob, imp })}
+                        activeOpacity={0.6}
+                      >
+                        <Text style={[s.matrixCellText, { color: bgColor }]}>{cellScore}</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              ))}
+              <View style={s.matrixRow}>
+                <View style={s.matrixRowLabel} />
+                {[1, 2, 3, 4, 5].map(n => (
+                  <View key={n} style={[s.matrixCell, { borderWidth: 0, backgroundColor: 'transparent' }]}>
+                    <Text style={s.matrixLabelText}>{n}</Text>
+                  </View>
+                ))}
+              </View>
+              <Text style={s.xAxisTitle}>Impacto</Text>
+            </View>
+          </View>
+
+          {/* Selected Cell Detail */}
+          {selectedCell && score !== null && (
+            <Animated.View entering={FadeInDown.duration(300)}>
+              <View style={[s.cellDetail, { borderColor: scoreColor + '40' }]}>
+                <View style={s.cellDetailHeader}>
+                  <View style={[s.cellDetailBadge, { backgroundColor: scoreColor + '20', borderColor: scoreColor + '40' }]}>
+                    <Text style={[s.cellDetailBadgeText, { color: scoreColor }]}>{scoreLevel}</Text>
+                  </View>
+                  <Text style={s.cellDetailScore}>Score: <Text style={{ color: scoreColor }}>{score}</Text></Text>
+                </View>
+                <View style={s.cellDetailGrid}>
+                  <View style={s.cellDetailItem}>
+                    <Text style={s.cellDetailLabel}>PROBABILIDADE</Text>
+                    <Text style={[s.cellDetailValue, { color: NEON.cyan }]}>{selectedCell.prob}</Text>
+                    <Text style={s.cellDetailDesc}>{getProbLabel(selectedCell.prob)}</Text>
+                  </View>
+                  <Text style={s.cellDetailOperator}>×</Text>
+                  <View style={s.cellDetailItem}>
+                    <Text style={s.cellDetailLabel}>IMPACTO</Text>
+                    <Text style={[s.cellDetailValue, { color: NEON.cyan }]}>{selectedCell.imp}</Text>
+                    <Text style={s.cellDetailDesc}>{getImpLabel(selectedCell.imp)}</Text>
+                  </View>
+                  <Text style={s.cellDetailOperator}>=</Text>
+                  <View style={s.cellDetailItem}>
+                    <Text style={s.cellDetailLabel}>RISCO INERENTE</Text>
+                    <Text style={[s.cellDetailValue, { color: scoreColor }]}>{score}</Text>
+                    <Text style={[s.cellDetailDesc, { color: scoreColor }]}>{scoreLevel}</Text>
+                  </View>
+                </View>
+                <Text style={s.cellDetailAction}>
+                  {score >= 20 ? '⚠ Ação urgente: escalar ao Board imediatamente' :
+                   score >= 12 ? '⚡ Prioridade alta: implementar controles em até 30 dias' :
+                   score >= 6 ? '📋 Atenção: monitorar e definir plano de ação' :
+                   '✓ Risco aceitável: monitoramento regular'}
+                </Text>
+              </View>
+            </Animated.View>
+          )}
+
+          {/* Legend */}
+          <View style={s.legendGrid}>
+            {[
+              { range: '1 – 5', label: 'Baixo', color: '#00FF88', desc: 'Risco aceitável, monitoramento regular' },
+              { range: '6 – 11', label: 'Médio', color: '#FFD600', desc: 'Requer atenção e plano de ação' },
+              { range: '12 – 19', label: 'Alto', color: '#FF8C00', desc: 'Prioridade alta, ação imediata necessária' },
+              { range: '20 – 25', label: 'Crítico', color: '#FF3D3D', desc: 'Risco inaceitável, ação urgente' },
+            ].map(item => (
+              <View key={item.label} style={[s.legendCard, { borderColor: item.color + '30' }]}>
+                <View style={[s.legendColorBar, { backgroundColor: item.color }]} />
+                <View style={s.legendCardContent}>
+                  <Text style={[s.legendRange, { color: item.color }]}>{item.range}</Text>
+                  <Text style={[s.legendLabel, { color: NEON.text }]}>{item.label}</Text>
+                  <Text style={s.legendDesc}>{item.desc}</Text>
+                </View>
               </View>
             ))}
           </View>
-          <Text style={[styles.xAxisTitle, { color: colors.muted }]}>Impacto</Text>
-        </View>
-      </View>
-      {/* Legend */}
-      <View style={styles.legendGrid}>
-        {[
-          { range: '1 – 5', label: 'Baixo', color: '#86EFAC', desc: 'Risco aceitável, monitoramento regular' },
-          { range: '6 – 11', label: 'Médio', color: '#F59E0B', desc: 'Requer atenção e plano de ação' },
-          { range: '12 – 19', label: 'Alto', color: '#F97316', desc: 'Prioridade alta, ação imediata necessária' },
-          { range: '20 – 25', label: 'Crítico', color: '#EF4444', desc: 'Risco inaceitável, ação urgente' },
-        ].map(item => (
-          <View key={item.label} style={[styles.legendCard, { borderColor: item.color + '40' }]}>
-            <View style={[styles.legendColorBar, { backgroundColor: item.color }]} />
-            <View style={styles.legendCardContent}>
-              <Text style={[styles.legendRange, { color: colors.foreground }]}>{item.range}</Text>
-              <Text style={[styles.legendLabel, { color: item.color }]}>{item.label}</Text>
-              <Text style={[styles.legendDesc, { color: colors.muted }]}>{item.desc}</Text>
-            </View>
-          </View>
-        ))}
-      </View>
+        </GlowCard>
+      </Animated.View>
     </View>
   );
 }
 
-function ImpactoTab({ colors, isDesktop }: { colors: any; isDesktop: boolean }) {
+function ImpactoTab({ isDesktop, expandedLevel, setExpandedLevel }: { isDesktop: boolean; expandedLevel: number | null; setExpandedLevel: (n: number | null) => void }) {
+  const dimensions = ['financeiro', 'reputacao', 'operacional', 'legal', 'ambiental', 'social'] as const;
+  const dimLabels: Record<string, string> = {
+    financeiro: 'Financeiro',
+    reputacao: 'Reputação',
+    operacional: 'Operacional',
+    legal: 'Legal',
+    ambiental: 'Ambiental',
+    social: 'Social',
+  };
+  const dimIcons: Record<string, string> = {
+    financeiro: '💰',
+    reputacao: '📢',
+    operacional: '⚙️',
+    legal: '⚖️',
+    ambiental: '🌍',
+    social: '👥',
+  };
+
   return (
-    <View>
-      <Text style={[styles.sectionIntro, { color: colors.muted }]}>
-        A tabela de impacto avalia as consequências de um risco em 6 dimensões: financeiro, reputação, operacional, legal, ambiental e social.
-      </Text>
-      {isDesktop ? (
-        <View style={[styles.tableCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          {/* Desktop Table */}
-          <View style={[styles.tableHeaderRow, { borderBottomColor: colors.border }]}>
-            <Text style={[styles.thCell, { width: 80 }]}>Nível</Text>
-            <Text style={[styles.thCell, { flex: 1 }]}>Financeiro</Text>
-            <Text style={[styles.thCell, { flex: 1 }]}>Reputação</Text>
-            <Text style={[styles.thCell, { flex: 1 }]}>Operacional</Text>
-            <Text style={[styles.thCell, { flex: 1 }]}>Legal</Text>
-            <Text style={[styles.thCell, { flex: 1 }]}>Ambiental</Text>
-            <Text style={[styles.thCell, { flex: 1 }]}>Social</Text>
+    <View style={s.section}>
+      <Animated.View entering={FadeInDown.duration(500).delay(200)}>
+        <GlowCard variant="default">
+          <View style={s.cardHeader}>
+            <Text style={s.cardTitle}>TABELA DE IMPACTO</Text>
+            <StatusIndicator status="monitoring" label="6 DIMENSÕES" />
           </View>
-          {TABELA_IMPACTO_DETALHADA.map((item, idx) => (
-            <View key={item.nivel} style={[styles.tableRow, { borderBottomColor: colors.border }, idx % 2 === 0 && { backgroundColor: colors.background + '60' }]}>
-              <View style={{ width: 80, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <View style={[styles.levelDot, { backgroundColor: getLevelColor(item.nivel) }]} />
-                <Text style={[styles.tdCell, { fontWeight: '700', color: getLevelColor(item.nivel) }]}>{item.nivel} - {item.rotulo}</Text>
-              </View>
-              <Text style={[styles.tdCell, { flex: 1, color: colors.foreground }]}>{item.financeiro}</Text>
-              <Text style={[styles.tdCell, { flex: 1, color: colors.foreground }]}>{item.reputacao}</Text>
-              <Text style={[styles.tdCell, { flex: 1, color: colors.foreground }]}>{item.operacional}</Text>
-              <Text style={[styles.tdCell, { flex: 1, color: colors.foreground }]}>{item.legal}</Text>
-              <Text style={[styles.tdCell, { flex: 1, color: colors.foreground }]}>{item.ambiental}</Text>
-              <Text style={[styles.tdCell, { flex: 1, color: colors.foreground }]}>{item.social}</Text>
-            </View>
-          ))}
-        </View>
-      ) : (
-        // Mobile cards
-        TABELA_IMPACTO_DETALHADA.map(item => (
-          <View key={item.nivel} style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border, marginBottom: 12 }]}>
-            <View style={styles.impactHeader}>
-              <View style={[styles.levelBadge, { backgroundColor: getLevelColor(item.nivel) + '20' }]}>
-                <Text style={[styles.levelBadgeText, { color: getLevelColor(item.nivel) }]}>{item.nivel}</Text>
-              </View>
-              <Text style={[styles.impactTitle, { color: colors.foreground }]}>{item.rotulo}</Text>
-            </View>
-            <DetailRow label="Financeiro" value={item.financeiro} colors={colors} />
-            <DetailRow label="Reputação" value={item.reputacao} colors={colors} />
-            <DetailRow label="Operacional" value={item.operacional} colors={colors} />
-            <DetailRow label="Legal" value={item.legal} colors={colors} />
-            <DetailRow label="Ambiental" value={item.ambiental} colors={colors} />
-            <DetailRow label="Social" value={item.social} colors={colors} />
-          </View>
-        ))
-      )}
+          <Text style={s.cardDesc}>
+            Clique em cada nível para expandir os critérios de avaliação em 6 dimensões: financeiro, reputação, operacional, legal, ambiental e social.
+          </Text>
+
+          {TABELA_IMPACTO_DETALHADA.map((item) => {
+            const isExpanded = expandedLevel === item.nivel;
+            const color = getLevelColor(item.nivel);
+            return (
+              <TouchableOpacity
+                key={item.nivel}
+                style={[s.impactCard, { borderColor: isExpanded ? color + '60' : NEON.cardBorder, backgroundColor: isExpanded ? color + '08' : NEON.card }]}
+                onPress={() => setExpandedLevel(isExpanded ? null : item.nivel)}
+                activeOpacity={0.7}
+              >
+                <View style={s.impactCardHeader}>
+                  <View style={[s.impactLevelBadge, { backgroundColor: color + '20', borderColor: color + '40' }]}>
+                    <Text style={[s.impactLevelText, { color }]}>{item.nivel}</Text>
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[s.impactTitle, { color: NEON.text }]}>{item.rotulo}</Text>
+                    <Text style={[s.impactHint, { color: NEON.muted }]}>
+                      {isExpanded ? 'Clique para recolher' : 'Clique para expandir detalhes'}
+                    </Text>
+                  </View>
+                  <View style={[s.impactBarMini, { backgroundColor: NEON.cardBorder }]}>
+                    <View style={[s.impactBarMiniFill, { width: `${(item.nivel / 5) * 100}%`, backgroundColor: color }]} />
+                  </View>
+                  <IconSymbol name={isExpanded ? 'chevron.down' : 'chevron.right'} size={16} color={NEON.muted} />
+                </View>
+
+                {isExpanded && (
+                  <Animated.View entering={FadeInDown.duration(300)} style={s.impactDetails}>
+                    {dimensions.map(dim => (
+                      <View key={dim} style={[s.impactDetailRow, { borderColor: NEON.cardBorder }]}>
+                        <View style={s.impactDetailLabel}>
+                          <Text style={s.impactDetailIcon}>{dimIcons[dim]}</Text>
+                          <Text style={[s.impactDetailLabelText, { color: NEON.cyan }]}>{dimLabels[dim]}</Text>
+                        </View>
+                        <Text style={[s.impactDetailValue, { color: NEON.text }]}>{(item as any)[dim]}</Text>
+                      </View>
+                    ))}
+                  </Animated.View>
+                )}
+              </TouchableOpacity>
+            );
+          })}
+        </GlowCard>
+      </Animated.View>
     </View>
   );
 }
 
-function ProbabilidadeTab({ colors, isDesktop }: { colors: any; isDesktop: boolean }) {
+function ProbabilidadeTab({ isDesktop }: { isDesktop: boolean }) {
   return (
-    <View>
-      <Text style={[styles.sectionIntro, { color: colors.muted }]}>
-        A tabela de probabilidade classifica a chance de ocorrência de um risco em 5 níveis.
-      </Text>
-      <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-        {NIVEIS_PROBABILIDADE.map((item, idx) => (
-          <View key={item.nivel} style={[styles.probRow, idx < NIVEIS_PROBABILIDADE.length - 1 && { borderBottomWidth: 1, borderBottomColor: colors.border }]}>
-            <View style={[styles.levelBadge, { backgroundColor: getLevelColor(item.nivel) + '20' }]}>
-              <Text style={[styles.levelBadgeText, { color: getLevelColor(item.nivel) }]}>{item.nivel}</Text>
-            </View>
-            <View style={styles.probContent}>
-              <Text style={[styles.probTitle, { color: colors.foreground }]}>{item.rotulo}</Text>
-              <Text style={[styles.probDesc, { color: colors.muted }]}>{item.descricao}</Text>
-            </View>
+    <View style={s.section}>
+      <Animated.View entering={FadeInDown.duration(500).delay(200)}>
+        <GlowCard variant="default">
+          <View style={s.cardHeader}>
+            <Text style={s.cardTitle}>NÍVEIS DE PROBABILIDADE</Text>
+            <StatusIndicator status="monitoring" label="5 NÍVEIS" />
           </View>
-        ))}
-      </View>
-    </View>
-  );
-}
+          <Text style={s.cardDesc}>
+            A probabilidade classifica a chance de ocorrência de um risco em 5 níveis, de "Raro" (1) a "Quase Certo" (5).
+          </Text>
 
-function GutTab({ colors, isDesktop }: { colors: any; isDesktop: boolean }) {
-  return (
-    <View>
-      <Text style={[styles.sectionIntro, { color: colors.muted }]}>
-        A matriz GUT (Gravidade × Urgência × Tendência) prioriza riscos pelo produto dos três fatores. Score máximo: 125.
-      </Text>
-      {isDesktop ? (
-        <View style={[styles.tableCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <View style={[styles.tableHeaderRow, { borderBottomColor: colors.border }]}>
-            <Text style={[styles.thCell, { width: 60 }]}>Nível</Text>
-            <Text style={[styles.thCell, { flex: 1 }]}>Gravidade (G)</Text>
-            <Text style={[styles.thCell, { flex: 1 }]}>Urgência (U)</Text>
-            <Text style={[styles.thCell, { flex: 1 }]}>Tendência (T)</Text>
-          </View>
-          {TABELA_GUT.map((item, idx) => (
-            <View key={item.nivel} style={[styles.tableRow, { borderBottomColor: colors.border }, idx % 2 === 0 && { backgroundColor: colors.background + '60' }]}>
-              <View style={{ width: 60, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <View style={[styles.levelDot, { backgroundColor: getLevelColor(item.nivel) }]} />
-                <Text style={[styles.tdCell, { fontWeight: '700', color: getLevelColor(item.nivel) }]}>{item.nivel}</Text>
+          {NIVEIS_PROBABILIDADE.map((item, idx) => {
+            const color = getLevelColor(item.nivel);
+            const pct = (item.nivel / 5) * 100;
+            return (
+              <Animated.View key={item.nivel} entering={FadeInDown.duration(400).delay(200 + idx * 80)}>
+                <View style={[s.probCard, { borderColor: NEON.cardBorder }]}>
+                  <View style={s.probCardHeader}>
+                    <View style={[s.probLevelBadge, { backgroundColor: color + '20', borderColor: color + '40' }]}>
+                      <Text style={[s.probLevelText, { color }]}>{item.nivel}</Text>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[s.probTitle, { color: NEON.text }]}>{item.rotulo}</Text>
+                      <Text style={[s.probDesc, { color: NEON.muted }]}>{item.descricao}</Text>
+                    </View>
+                  </View>
+                  <View style={s.probBarContainer}>
+                    <View style={[s.probBarTrack, { backgroundColor: NEON.cardBorder }]}>
+                      <View style={[s.probBarFill, { width: `${pct}%`, backgroundColor: color }]} />
+                    </View>
+                    <Text style={[s.probBarPct, { color }]}>{pct}%</Text>
+                  </View>
+                </View>
+              </Animated.View>
+            );
+          })}
+
+          {/* Formula Explanation */}
+          <View style={s.formulaCard}>
+            <Text style={s.formulaTitle}>COMO CALCULAR O RISCO INERENTE</Text>
+            <View style={s.formulaRow}>
+              <View style={s.formulaBox}>
+                <Text style={[s.formulaBoxLabel, { color: NEON.cyan }]}>P</Text>
+                <Text style={s.formulaBoxDesc}>Probabilidade</Text>
+                <Text style={s.formulaBoxRange}>1 – 5</Text>
               </View>
-              <Text style={[styles.tdCell, { flex: 1, color: colors.foreground }]}>{item.gravidade}</Text>
-              <Text style={[styles.tdCell, { flex: 1, color: colors.foreground }]}>{item.urgencia}</Text>
-              <Text style={[styles.tdCell, { flex: 1, color: colors.foreground }]}>{item.tendencia}</Text>
-            </View>
-          ))}
-        </View>
-      ) : (
-        TABELA_GUT.map(item => (
-          <View key={item.nivel} style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border, marginBottom: 12 }]}>
-            <View style={styles.impactHeader}>
-              <View style={[styles.levelBadge, { backgroundColor: getLevelColor(item.nivel) + '20' }]}>
-                <Text style={[styles.levelBadgeText, { color: getLevelColor(item.nivel) }]}>{item.nivel}</Text>
+              <Text style={s.formulaOperator}>×</Text>
+              <View style={s.formulaBox}>
+                <Text style={[s.formulaBoxLabel, { color: NEON.cyan }]}>I</Text>
+                <Text style={s.formulaBoxDesc}>Impacto</Text>
+                <Text style={s.formulaBoxRange}>1 – 5</Text>
               </View>
-              <Text style={[styles.impactTitle, { color: colors.foreground }]}>Nível {item.nivel}</Text>
+              <Text style={s.formulaOperator}>=</Text>
+              <View style={s.formulaBox}>
+                <Text style={[s.formulaBoxLabel, { color: NEON.green }]}>RI</Text>
+                <Text style={s.formulaBoxDesc}>Risco Inerente</Text>
+                <Text style={s.formulaBoxRange}>1 – 25</Text>
+              </View>
             </View>
-            <DetailRow label="Gravidade (G)" value={item.gravidade} colors={colors} />
-            <DetailRow label="Urgência (U)" value={item.urgencia} colors={colors} />
-            <DetailRow label="Tendência (T)" value={item.tendencia} colors={colors} />
           </View>
-        ))
-      )}
+        </GlowCard>
+      </Animated.View>
     </View>
   );
 }
 
-function DetailRow({ label, value, colors }: { label: string; value: string; colors: any }) {
+function GutTab({ isDesktop, expandedLevel, setExpandedLevel }: { isDesktop: boolean; expandedLevel: number | null; setExpandedLevel: (n: number | null) => void }) {
   return (
-    <View style={styles.detailRow}>
-      <Text style={[styles.detailLabel, { color: colors.primary }]}>{label}</Text>
-      <Text style={[styles.detailValue, { color: colors.foreground }]}>{value}</Text>
+    <View style={s.section}>
+      <Animated.View entering={FadeInDown.duration(500).delay(200)}>
+        <GlowCard variant="default">
+          <View style={s.cardHeader}>
+            <Text style={s.cardTitle}>MATRIZ GUT</Text>
+            <StatusIndicator status="monitoring" label="G×U×T" />
+          </View>
+          <Text style={s.cardDesc}>
+            A matriz GUT (Gravidade × Urgência × Tendência) prioriza riscos pelo produto dos três fatores. Score máximo: 125. Clique em cada nível para ver os critérios.
+          </Text>
+
+          {TABELA_GUT.map((item) => {
+            const isExpanded = expandedLevel === item.nivel;
+            const color = getLevelColor(item.nivel);
+            const gutScore = item.nivel * item.nivel * item.nivel;
+            return (
+              <TouchableOpacity
+                key={item.nivel}
+                style={[s.gutCard, { borderColor: isExpanded ? color + '60' : NEON.cardBorder, backgroundColor: isExpanded ? color + '08' : NEON.card }]}
+                onPress={() => setExpandedLevel(isExpanded ? null : item.nivel)}
+                activeOpacity={0.7}
+              >
+                <View style={s.gutCardHeader}>
+                  <View style={[s.gutLevelBadge, { backgroundColor: color + '20', borderColor: color + '40' }]}>
+                    <Text style={[s.gutLevelText, { color }]}>{item.nivel}</Text>
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[s.gutTitle, { color: NEON.text }]}>Nível {item.nivel}</Text>
+                    <Text style={[s.gutHint, { color: NEON.muted }]}>
+                      Score máximo: {gutScore} ({item.nivel}×{item.nivel}×{item.nivel})
+                    </Text>
+                  </View>
+                  <View style={[s.gutScoreBadge, { backgroundColor: color + '20', borderColor: color + '40' }]}>
+                    <Text style={[s.gutScoreText, { color }]}>{gutScore}</Text>
+                  </View>
+                  <IconSymbol name={isExpanded ? 'chevron.down' : 'chevron.right'} size={16} color={NEON.muted} />
+                </View>
+
+                {isExpanded && (
+                  <Animated.View entering={FadeInDown.duration(300)} style={s.gutDetails}>
+                    <View style={[s.gutDetailRow, { borderColor: NEON.cardBorder }]}>
+                      <View style={s.gutDetailLabel}>
+                        <Text style={s.gutDetailIcon}>🔴</Text>
+                        <Text style={[s.gutDetailLabelText, { color: '#FF3D3D' }]}>Gravidade (G)</Text>
+                      </View>
+                      <Text style={[s.gutDetailValue, { color: NEON.text }]}>{item.gravidade}</Text>
+                    </View>
+                    <View style={[s.gutDetailRow, { borderColor: NEON.cardBorder }]}>
+                      <View style={s.gutDetailLabel}>
+                        <Text style={s.gutDetailIcon}>⏰</Text>
+                        <Text style={[s.gutDetailLabelText, { color: '#FFD600' }]}>Urgência (U)</Text>
+                      </View>
+                      <Text style={[s.gutDetailValue, { color: NEON.text }]}>{item.urgencia}</Text>
+                    </View>
+                    <View style={[s.gutDetailRow, { borderColor: NEON.cardBorder, borderBottomWidth: 0 }]}>
+                      <View style={s.gutDetailLabel}>
+                        <Text style={s.gutDetailIcon}>📈</Text>
+                        <Text style={[s.gutDetailLabelText, { color: '#00E5FF' }]}>Tendência (T)</Text>
+                      </View>
+                      <Text style={[s.gutDetailValue, { color: NEON.text }]}>{item.tendencia}</Text>
+                    </View>
+                  </Animated.View>
+                )}
+              </TouchableOpacity>
+            );
+          })}
+
+          {/* GUT Formula */}
+          <View style={s.formulaCard}>
+            <Text style={s.formulaTitle}>FÓRMULA GUT</Text>
+            <View style={s.formulaRow}>
+              <View style={s.formulaBox}>
+                <Text style={[s.formulaBoxLabel, { color: '#FF3D3D' }]}>G</Text>
+                <Text style={s.formulaBoxDesc}>Gravidade</Text>
+                <Text style={s.formulaBoxRange}>1 – 5</Text>
+              </View>
+              <Text style={s.formulaOperator}>×</Text>
+              <View style={s.formulaBox}>
+                <Text style={[s.formulaBoxLabel, { color: '#FFD600' }]}>U</Text>
+                <Text style={s.formulaBoxDesc}>Urgência</Text>
+                <Text style={s.formulaBoxRange}>1 – 5</Text>
+              </View>
+              <Text style={s.formulaOperator}>×</Text>
+              <View style={s.formulaBox}>
+                <Text style={[s.formulaBoxLabel, { color: '#00E5FF' }]}>T</Text>
+                <Text style={s.formulaBoxDesc}>Tendência</Text>
+                <Text style={s.formulaBoxRange}>1 – 5</Text>
+              </View>
+              <Text style={s.formulaOperator}>=</Text>
+              <View style={s.formulaBox}>
+                <Text style={[s.formulaBoxLabel, { color: NEON.green }]}>GUT</Text>
+                <Text style={s.formulaBoxDesc}>Score</Text>
+                <Text style={s.formulaBoxRange}>1 – 125</Text>
+              </View>
+            </View>
+          </View>
+        </GlowCard>
+      </Animated.View>
     </View>
   );
 }
 
-function getLevelColor(nivel: number): string {
-  switch (nivel) {
-    case 5: return '#EF4444';
-    case 4: return '#F97316';
-    case 3: return '#F59E0B';
-    case 2: return '#38A169';
-    case 1: return '#48BB78';
-    default: return '#9CA3AF';
+function getProbLabel(n: number): string {
+  switch (n) {
+    case 1: return 'Raro';
+    case 2: return 'Improvável';
+    case 3: return 'Possível';
+    case 4: return 'Provável';
+    case 5: return 'Quase Certo';
+    default: return '';
   }
 }
 
-const styles = StyleSheet.create({
-  header: { paddingHorizontal: 24, paddingTop: 16, paddingBottom: 8 },
-  headerDesktop: { paddingHorizontal: 32, paddingTop: 28 },
-  pageTitle: { fontSize: 26, fontWeight: '800', letterSpacing: -0.5 },
-  pageSubtitle: { fontSize: 14, marginTop: 4 },
-  tabBar: { flexDirection: 'row', paddingHorizontal: 24, borderBottomWidth: 1, borderBottomColor: '#E2E8F0', marginBottom: 4 },
-  tabBarDesktop: { paddingHorizontal: 32 },
-  tab: { paddingVertical: 12, paddingHorizontal: 16, marginRight: 4, borderBottomWidth: 2, borderBottomColor: 'transparent' },
-  tabText: { fontSize: 14, fontWeight: '500' },
-  content: { paddingHorizontal: 24, paddingTop: 16, flexGrow: 1 },
-  contentDesktop: { paddingHorizontal: 32 },
-  sectionIntro: { fontSize: 14, lineHeight: 20, marginBottom: 16 },
-  card: { borderWidth: 1, borderRadius: 14, padding: 20 },
-  cardTitle: { fontSize: 18, fontWeight: '700', marginBottom: 8 },
-  cardDesc: { fontSize: 14, lineHeight: 20, marginBottom: 20 },
-  matrixWrapper: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
+function getImpLabel(n: number): string {
+  switch (n) {
+    case 1: return 'Insignificante';
+    case 2: return 'Baixo';
+    case 3: return 'Moderado';
+    case 4: return 'Significativo';
+    case 5: return 'Catastrófico';
+    default: return '';
+  }
+}
+
+const s = StyleSheet.create({
+  scrollContent: { flexGrow: 1, paddingBottom: 20 },
+  scrollContentDesktop: { maxWidth: 1280, alignSelf: 'center' as any, width: '100%' as any },
+  header: { paddingHorizontal: 24, paddingTop: 16, paddingBottom: 12 },
+  pageTitle: { fontSize: 26, fontWeight: '800', letterSpacing: 1, color: '#E0F0E0', fontFamily: MONO },
+  pageSubtitle: { fontSize: 12, marginTop: 4, letterSpacing: 0.5, color: '#6B8A7A', fontFamily: MONO },
+
+  // Tabs
+  tabBar: { flexDirection: 'row', marginHorizontal: 24, backgroundColor: '#0D1117', borderRadius: 10, borderWidth: 1, borderColor: '#1A3A2A', padding: 4, gap: 4, marginBottom: 12 },
+  tab: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 10, borderRadius: 8, gap: 6 },
+  tabActive: { backgroundColor: '#00E5FF15' },
+  tabText: { fontSize: 12, fontWeight: '600', color: '#6B8A7A', fontFamily: MONO },
+  tabTextActive: { color: '#00E5FF' },
+  tabDescContainer: { paddingHorizontal: 24, marginBottom: 8 },
+  tabDesc: { fontSize: 11, color: '#6B8A7A', fontFamily: MONO, letterSpacing: 0.5 },
+
+  section: { paddingHorizontal: 24, gap: 16 },
+
+  // Card
+  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  cardTitle: { fontSize: 14, fontWeight: '700', letterSpacing: 1, color: '#00E5FF', fontFamily: MONO },
+  cardDesc: { fontSize: 12, lineHeight: 18, color: '#6B8A7A', marginBottom: 16 },
+
+  // Matrix
+  matrixWrapper: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
   matrixYAxis: { width: 24, alignItems: 'center', justifyContent: 'center' },
-  axisTitle: { fontSize: 11, fontWeight: '700', transform: [{ rotate: '-90deg' }], width: 90 },
+  axisTitle: { fontSize: 10, fontWeight: '700', color: '#6B8A7A', fontFamily: MONO, width: 90 },
   matrixContent: { flex: 1 },
   matrixRow: { flexDirection: 'row', marginBottom: 4 },
   matrixRowLabel: { width: 28, justifyContent: 'center', alignItems: 'center' },
-  matrixLabelText: { fontSize: 13, fontWeight: '600' },
-  matrixCell: { flex: 1, aspectRatio: 1, justifyContent: 'center', alignItems: 'center', borderRadius: 8, borderWidth: 1.5, marginHorizontal: 2 },
-  matrixCellText: { fontSize: 16, fontWeight: '800' },
-  xAxisTitle: { fontSize: 11, fontWeight: '700', textAlign: 'center', marginTop: 6, marginLeft: 28 },
-  legendGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginTop: 20 },
-  legendCard: { flex: 1, minWidth: 200, borderWidth: 1, borderRadius: 10, overflow: 'hidden', flexDirection: 'row' },
+  matrixLabelText: { fontSize: 13, fontWeight: '600', color: '#6B8A7A', fontFamily: MONO },
+  matrixCell: { flex: 1, aspectRatio: 1, justifyContent: 'center', alignItems: 'center', borderRadius: 8, marginHorizontal: 2 },
+  matrixCellText: { fontSize: 16, fontWeight: '800', fontFamily: MONO },
+  xAxisTitle: { fontSize: 10, fontWeight: '700', textAlign: 'center', marginTop: 6, marginLeft: 28, color: '#6B8A7A', fontFamily: MONO },
+
+  // Cell Detail
+  cellDetail: { borderRadius: 12, borderWidth: 1, backgroundColor: '#111820', padding: 16, marginBottom: 16 },
+  cellDetailHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  cellDetailBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6, borderWidth: 1 },
+  cellDetailBadgeText: { fontSize: 12, fontWeight: '700', fontFamily: MONO },
+  cellDetailScore: { fontSize: 14, fontWeight: '700', color: '#E0F0E0', fontFamily: MONO },
+  cellDetailGrid: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center' },
+  cellDetailItem: { alignItems: 'center', flex: 1 },
+  cellDetailLabel: { fontSize: 9, fontWeight: '700', letterSpacing: 0.5, color: '#6B8A7A', fontFamily: MONO },
+  cellDetailValue: { fontSize: 28, fontWeight: '800', fontFamily: MONO, marginVertical: 4 },
+  cellDetailDesc: { fontSize: 10, color: '#6B8A7A', fontFamily: MONO },
+  cellDetailOperator: { fontSize: 20, fontWeight: '700', color: '#6B8A7A', fontFamily: MONO },
+  cellDetailAction: { fontSize: 11, color: '#E0F0E0', marginTop: 12, textAlign: 'center', fontFamily: MONO, lineHeight: 16 },
+
+  // Legend
+  legendGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 16 },
+  legendCard: { flex: 1, minWidth: 160, borderWidth: 1, borderRadius: 10, overflow: 'hidden', flexDirection: 'row', backgroundColor: '#111820' },
   legendColorBar: { width: 4 },
-  legendCardContent: { padding: 12, flex: 1 },
-  legendRange: { fontSize: 14, fontWeight: '700' },
-  legendLabel: { fontSize: 13, fontWeight: '600', marginTop: 2 },
-  legendDesc: { fontSize: 12, marginTop: 4, lineHeight: 16 },
-  tableCard: { borderWidth: 1, borderRadius: 14, overflow: 'hidden' },
-  tableHeaderRow: { flexDirection: 'row', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 2, alignItems: 'center' },
-  thCell: { fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5, color: '#718096', paddingRight: 8 },
-  tableRow: { flexDirection: 'row', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, alignItems: 'flex-start' },
-  tdCell: { fontSize: 12, lineHeight: 17, paddingRight: 8 },
-  levelDot: { width: 8, height: 8, borderRadius: 4 },
-  impactHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 },
-  levelBadge: { width: 34, height: 34, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
-  levelBadgeText: { fontSize: 16, fontWeight: '800' },
-  impactTitle: { fontSize: 17, fontWeight: '700' },
-  detailRow: { marginBottom: 8 },
-  detailLabel: { fontSize: 12, fontWeight: '700', marginBottom: 2 },
-  detailValue: { fontSize: 13, lineHeight: 18 },
-  probRow: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 14 },
-  probContent: { flex: 1 },
-  probTitle: { fontSize: 15, fontWeight: '700' },
-  probDesc: { fontSize: 13, marginTop: 2 },
+  legendCardContent: { padding: 10, flex: 1 },
+  legendRange: { fontSize: 12, fontWeight: '700', fontFamily: MONO },
+  legendLabel: { fontSize: 12, fontWeight: '600', marginTop: 2 },
+  legendDesc: { fontSize: 10, marginTop: 4, lineHeight: 14, color: '#6B8A7A' },
+
+  // Impact Cards
+  impactCard: { borderRadius: 12, borderWidth: 1, padding: 14, marginBottom: 8, backgroundColor: '#0D1117' },
+  impactCardHeader: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  impactLevelBadge: { width: 40, height: 40, borderRadius: 10, justifyContent: 'center', alignItems: 'center', borderWidth: 1 },
+  impactLevelText: { fontSize: 18, fontWeight: '800', fontFamily: MONO },
+  impactTitle: { fontSize: 14, fontWeight: '700' },
+  impactHint: { fontSize: 10, marginTop: 2, fontFamily: MONO },
+  impactBarMini: { width: 60, height: 4, borderRadius: 2, marginRight: 8 },
+  impactBarMiniFill: { height: 4, borderRadius: 2 },
+  impactDetails: { marginTop: 12, gap: 0 },
+  impactDetailRow: { paddingVertical: 10, borderBottomWidth: 1 },
+  impactDetailLabel: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
+  impactDetailIcon: { fontSize: 14 },
+  impactDetailLabelText: { fontSize: 11, fontWeight: '700', fontFamily: MONO, letterSpacing: 0.5 },
+  impactDetailValue: { fontSize: 12, lineHeight: 17, paddingLeft: 26 },
+
+  // Probability Cards
+  probCard: { borderRadius: 12, borderWidth: 1, padding: 14, marginBottom: 8, backgroundColor: '#0D1117' },
+  probCardHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 8 },
+  probLevelBadge: { width: 40, height: 40, borderRadius: 10, justifyContent: 'center', alignItems: 'center', borderWidth: 1 },
+  probLevelText: { fontSize: 18, fontWeight: '800', fontFamily: MONO },
+  probTitle: { fontSize: 14, fontWeight: '700' },
+  probDesc: { fontSize: 12, marginTop: 2, lineHeight: 17, color: '#6B8A7A' },
+  probBarContainer: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  probBarTrack: { flex: 1, height: 6, borderRadius: 3 },
+  probBarFill: { height: 6, borderRadius: 3 },
+  probBarPct: { fontSize: 12, fontWeight: '700', fontFamily: MONO, width: 40, textAlign: 'right' },
+
+  // GUT Cards
+  gutCard: { borderRadius: 12, borderWidth: 1, padding: 14, marginBottom: 8, backgroundColor: '#0D1117' },
+  gutCardHeader: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  gutLevelBadge: { width: 40, height: 40, borderRadius: 10, justifyContent: 'center', alignItems: 'center', borderWidth: 1 },
+  gutLevelText: { fontSize: 18, fontWeight: '800', fontFamily: MONO },
+  gutTitle: { fontSize: 14, fontWeight: '700' },
+  gutHint: { fontSize: 10, marginTop: 2, fontFamily: MONO, color: '#6B8A7A' },
+  gutScoreBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6, borderWidth: 1, marginRight: 4 },
+  gutScoreText: { fontSize: 14, fontWeight: '800', fontFamily: MONO },
+  gutDetails: { marginTop: 12, gap: 0 },
+  gutDetailRow: { paddingVertical: 10, borderBottomWidth: 1 },
+  gutDetailLabel: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
+  gutDetailIcon: { fontSize: 14 },
+  gutDetailLabelText: { fontSize: 11, fontWeight: '700', fontFamily: MONO, letterSpacing: 0.5 },
+  gutDetailValue: { fontSize: 12, lineHeight: 17, paddingLeft: 26 },
+
+  // Formula
+  formulaCard: { marginTop: 20, padding: 16, borderRadius: 12, borderWidth: 1, borderColor: '#1A3A2A', backgroundColor: '#111820' },
+  formulaTitle: { fontSize: 11, fontWeight: '700', letterSpacing: 1, color: '#00E5FF', fontFamily: MONO, textAlign: 'center', marginBottom: 16 },
+  formulaRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8 },
+  formulaBox: { alignItems: 'center', padding: 10, borderRadius: 8, borderWidth: 1, borderColor: '#1A3A2A', backgroundColor: '#0D1117', minWidth: 60 },
+  formulaBoxLabel: { fontSize: 20, fontWeight: '800', fontFamily: MONO },
+  formulaBoxDesc: { fontSize: 8, color: '#6B8A7A', fontFamily: MONO, marginTop: 2 },
+  formulaBoxRange: { fontSize: 9, color: '#6B8A7A', fontFamily: MONO, marginTop: 1 },
+  formulaOperator: { fontSize: 18, fontWeight: '700', color: '#6B8A7A', fontFamily: MONO },
 });
