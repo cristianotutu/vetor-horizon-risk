@@ -4,14 +4,13 @@ import { ScreenContainer } from "@/components/screen-container";
 import { useRisks } from "@/lib/risk-context";
 import { getRiskLevel, getMatrixColor, getGutLevel, Risk } from "@/lib/models";
 import { useColors } from "@/hooks/use-colors";
-import { useMemo, useState, useCallback, useEffect } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { GlowCard } from "@/components/ui/glow-card";
 import { AnimatedCounter } from "@/components/ui/animated-counter";
 import { PulsingBadge } from "@/components/ui/pulsing-badge";
 import { StatusIndicator } from "@/components/ui/status-indicator";
 import Animated, { FadeInDown, FadeInRight } from "react-native-reanimated";
-import { useWizard } from "@/components/wizard-overlay";
 import { StyleSheet } from "react-native";
 
 const vetorHorizonLogo = require("@/assets/images/vetor-horizon-logo.png");
@@ -28,9 +27,7 @@ export default function DashboardScreen() {
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;
   const [activeFilter, setActiveFilter] = useState<FilterState>(null);
-  const { triggerWizard } = useWizard();
 
-  useEffect(() => { if (!loading) triggerWizard('dashboard'); }, [loading]);
   const [hoveredCell, setHoveredCell] = useState<string | null>(null);
 
   const stats = useMemo(() => {
@@ -452,7 +449,8 @@ export default function DashboardScreen() {
                     <Text style={{ color: '#FF3D3D80', fontSize: 8, fontWeight: '700', fontFamily: MONO, textAlign: 'center', marginBottom: 4, letterSpacing: 2 }}>ANTES DOS CONTROLES</Text>
                     {renderMatrix5x5(matrixInerente, 'inerente')}
                   </View>
-                </View>                {/* Arrow → */}
+                </View>
+                {/* Arrow → */}
                 <View style={{ justifyContent: 'center', alignItems: 'center', paddingHorizontal: isDesktop ? 12 : 0, paddingVertical: isDesktop ? 0 : 6 }}>
                   <View style={{ backgroundColor: '#00FF8815', borderRadius: 24, width: 44, height: 44, justifyContent: 'center', alignItems: 'center', borderWidth: 1.5, borderColor: '#00FF885050', shadowColor: '#FFD600', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.3, shadowRadius: 8 }}>
                     <Text style={{ color: '#FFD600', fontSize: 22, fontWeight: '900' }}>{isDesktop ? '→' : '↓'}</Text>

@@ -5,13 +5,12 @@ import { useRisks } from "@/lib/risk-context";
 import { getRiskLevel, getGutLevel, TIPOS_DE_RISCO } from "@/lib/models";
 import type { Risk } from "@/lib/models";
 import { useColors } from "@/hooks/use-colors";
-import { useState, useMemo, useCallback, useEffect} from "react";
+import { useState, useMemo, useCallback} from "react";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { GlowCard } from "@/components/ui/glow-card";
 import { PulsingBadge } from "@/components/ui/pulsing-badge";
 import { StatusIndicator } from "@/components/ui/status-indicator";
 import Animated, { FadeInDown } from "react-native-reanimated";
-import { useWizard } from "@/components/wizard-overlay";
 
 const LEVEL_COLORS: Record<string, string> = {
   'Crítico': '#FF3D3D',
@@ -30,8 +29,6 @@ const BADGE_LEVEL_MAP: Record<string, 'critical' | 'high' | 'medium' | 'low'> = 
 export default function RisksScreen() {
   const { risks, loading } = useRisks();
 
-  const { triggerWizard } = useWizard();
-  useEffect(() => { triggerWizard('risks'); }, []);
   const router = useRouter();
   const colors = useColors();
   const { width } = useWindowDimensions();
@@ -264,15 +261,15 @@ export default function RisksScreen() {
 }
 
 const styles = StyleSheet.create({
-  header: { paddingHorizontal: 16, paddingTop: 10, paddingBottom: 8, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  headerDesktop: { paddingHorizontal: 24, paddingTop: 16 },
+  header: { paddingHorizontal: 12, paddingTop: 8, paddingBottom: 6, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+  headerDesktop: { paddingHorizontal: 16, paddingTop: 10 },
   headerLeft: { flex: 1 },
   pageTitle: { fontSize: 22, fontWeight: '800', letterSpacing: 1 },
   pageSubtitle: { fontSize: 12, marginTop: 2, letterSpacing: 0.5 },
   addButton: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 8 },
   addButtonText: { fontSize: 12, fontWeight: '700', letterSpacing: 1 },
-  filtersArea: { paddingHorizontal: 16, marginBottom: 12 },
-  filtersAreaDesktop: { paddingHorizontal: 24 },
+  filtersArea: { paddingHorizontal: 12, marginBottom: 8 },
+  filtersAreaDesktop: { paddingHorizontal: 16 },
   searchBox: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderRadius: 8, paddingHorizontal: 14, paddingVertical: 10, gap: 10, marginBottom: 12 },
   searchInput: { flex: 1, fontSize: 13 },
   filterChips: { flexDirection: 'row', gap: 8, paddingBottom: 4 },
@@ -280,19 +277,19 @@ const styles = StyleSheet.create({
   chipDot: { width: 6, height: 6, borderRadius: 3 },
   chipText: { fontSize: 11, fontWeight: '600', letterSpacing: 0.5 },
   chipDivider: { width: 1, marginHorizontal: 4, alignSelf: 'stretch' },
-  tableArea: { paddingHorizontal: 16 },
-  tableAreaDesktop: { paddingHorizontal: 24 },
+  tableArea: { paddingHorizontal: 6 },
+  tableAreaDesktop: { paddingHorizontal: 8 },
   tableCard: { borderWidth: 1, borderRadius: 10, overflow: 'hidden' },
-  tableHeaderRow: { flexDirection: 'row', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 2, alignItems: 'center' },
-  thCell: { fontSize: 10, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, fontFamily: 'monospace' },
-  thId: { width: 56 },
-  thDesc: { flex: 3, paddingRight: 12 },
-  thType: { flex: 1.5, paddingRight: 8 },
-  thScore: { width: 70, alignItems: 'center' },
-  thResp: { flex: 1, paddingRight: 8 },
-  thTrat: { flex: 1 },
-  tableRow: { flexDirection: 'row', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, alignItems: 'center' },
-  tdCell: { fontSize: 13 },
+  tableHeaderRow: { flexDirection: 'row', paddingHorizontal: 10, paddingVertical: 10, borderBottomWidth: 2, alignItems: 'center' },
+  thCell: { fontSize: 10, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5, fontFamily: 'monospace' },
+  thId: { width: 48 },
+  thDesc: { flex: 5, paddingRight: 6 },
+  thType: { flex: 1.5, paddingRight: 4 },
+  thScore: { width: 50, alignItems: 'center' },
+  thResp: { flex: 1.2, paddingRight: 4 },
+  thTrat: { flex: 1.2 },
+  tableRow: { flexDirection: 'row', paddingHorizontal: 10, paddingVertical: 10, borderBottomWidth: 1, alignItems: 'center' },
+  tdCell: { fontSize: 12 },
   tdCellCenter: { justifyContent: 'center', alignItems: 'center' },
   scoreNum: { fontSize: 14, fontWeight: '700' },
   levelPill: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 4 },

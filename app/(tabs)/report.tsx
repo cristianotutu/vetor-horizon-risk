@@ -1,11 +1,10 @@
 import { View, Text, ScrollView, TouchableOpacity, useWindowDimensions, StyleSheet, Platform } from "react-native";
-import { useState, useMemo, useCallback, useEffect} from "react";
+import { useState, useMemo, useCallback} from "react";
 import { ScreenContainer } from "@/components/screen-container";
 import { useRisks } from "@/lib/risk-context";
 import { getRiskLevel, getGutLevel, Risk } from "@/lib/models";
 import { GlowCard } from "@/components/ui/glow-card";
 import Animated, { FadeInDown } from "react-native-reanimated";
-import { useWizard } from "@/components/wizard-overlay";
 
 // ─── DESIGN TOKENS ────────────────────────────────────────────
 const C = {
@@ -39,8 +38,6 @@ function pct(part: number, total: number): string {
 export default function ReportScreen() {
   const { risks } = useRisks();
 
-  const { triggerWizard } = useWizard();
-  useEffect(() => { triggerWizard('report'); }, []);
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -738,11 +735,11 @@ export default function ReportScreen() {
         {/* Slide Content */}
         <ScrollView
           style={{ flex: 1 }}
-          contentContainerStyle={{ padding: isDesktop ? 24 : 12, paddingBottom: 80 }}
+          contentContainerStyle={{ padding: isDesktop ? 16 : 10, paddingBottom: 60 }}
         >
           <Animated.View entering={FadeInDown.duration(300)} key={currentSlide}>
             {/* Slide Header */}
-            <View style={{ marginBottom: 16 }}>
+            <View style={{ marginBottom: 12 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                 <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: slides[currentSlide].color + '15', borderWidth: 1, borderColor: slides[currentSlide].color + '30', alignItems: 'center', justifyContent: 'center' }}>
                   <Text style={{ color: slides[currentSlide].color, fontSize: 12, fontWeight: '800', fontFamily: 'monospace' }}>{currentSlide + 1}</Text>

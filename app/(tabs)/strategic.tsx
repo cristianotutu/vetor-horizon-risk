@@ -1,5 +1,5 @@
 import { ScrollView, Text, View, TouchableOpacity, StyleSheet, useWindowDimensions, Modal, Platform } from "react-native";
-import { useState, useMemo, useEffect} from "react";
+import { useState, useMemo} from "react";
 import { useRouter } from "expo-router";
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
@@ -10,7 +10,6 @@ import { GlowCard } from "@/components/ui/glow-card";
 import { StatusIndicator } from "@/components/ui/status-indicator";
 import { FINANCIAL_DATA } from "@/lib/financial-data";
 import Animated, { FadeInDown } from "react-native-reanimated";
-import { useWizard } from "@/components/wizard-overlay";
 
 // Neon color palette
 const NEON = {
@@ -58,8 +57,6 @@ function treatmentColor(t: string): string {
 export default function StrategicScreen() {
   const { risks } = useRisks();
 
-  const { triggerWizard } = useWizard();
-  useEffect(() => { triggerWizard('strategic'); }, []);
   const colors = useColors();
   const router = useRouter();
   const { width } = useWindowDimensions();
@@ -511,7 +508,7 @@ export default function StrategicScreen() {
       <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
         <View style={[s.container, { maxWidth: isDesktop ? 1280 : undefined, alignSelf: 'center', width: '100%' }]}>
           {/* Header */}
-          <Animated.View entering={FadeInDown.duration(400)} style={[s.header, { paddingHorizontal: isDesktop ? 32 : 16 }]}>
+          <Animated.View entering={FadeInDown.duration(400)} style={[s.header, { paddingHorizontal: isDesktop ? 20 : 12 }]}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
               <Text style={[s.headerTitle, { color: NEON.text, fontFamily: Platform.OS === 'web' ? 'monospace' : undefined }]}>Visão Estratégica</Text>
               <StatusIndicator status="active" showLabel={false} />
@@ -520,7 +517,7 @@ export default function StrategicScreen() {
           </Animated.View>
 
           {/* Executive KPIs */}
-          <View style={[s.section, { paddingHorizontal: isDesktop ? 32 : 16 }]}>
+          <View style={[s.section, { paddingHorizontal: isDesktop ? 20 : 10 }]}>
             <View style={isDesktop ? s.kpiGridDesktop : s.kpiGridMobile}>
               <GaugeCard label="EXPOSIÇÃO TOTAL" value={stats.exposurePct} max={100} unit="%" color={stats.exposurePct > 60 ? '#FF3D3D' : stats.exposurePct > 40 ? '#FF8C00' : '#00FF88'} subtitle={`${stats.exposureScore} de ${stats.maxExposure} pontos`} />
               <GaugeCard label="GUT MÉDIO" value={stats.avgGut} max={125} unit=" pts" color={getGutLevel(stats.avgGut).color} subtitle={getGutLevel(stats.avgGut).label} />
@@ -530,7 +527,7 @@ export default function StrategicScreen() {
           </View>
 
           {/* Risk Level Summary Bar */}
-          <View style={[s.section, { paddingHorizontal: isDesktop ? 32 : 16 }]}>
+          <View style={[s.section, { paddingHorizontal: isDesktop ? 20 : 10 }]}>
             <View style={[s.card, { backgroundColor: NEON.card, borderColor: NEON.cardBorder }]}>
               <View style={s.cardHeader}>
                 <IconSymbol name="gauge.medium" size={18} color={NEON.cyan} />
@@ -573,16 +570,16 @@ export default function StrategicScreen() {
           </View>
 
           {/* Main Content Grid */}
-          <View style={[s.section, { paddingHorizontal: isDesktop ? 24 : 12 }]}>
-            <View style={isDesktop ? s.twoColGrid : { gap: 12 }}>
+          <View style={[s.section, { paddingHorizontal: isDesktop ? 16 : 8 }]}>
+            <View style={isDesktop ? s.twoColGrid : { gap: 10 }}>
               <View style={isDesktop ? { flex: 1, minWidth: 0 } : undefined}><HeatMapByType /></View>
               <View style={isDesktop ? { flex: 1, minWidth: 0 } : undefined}><TreatmentChart /></View>
             </View>
           </View>
 
           {/* Financial Investment & Impact */}
-          <View style={[s.section, { paddingHorizontal: isDesktop ? 24 : 12 }]}>
-            <View style={{ marginBottom: 16 }}>
+          <View style={[s.section, { paddingHorizontal: isDesktop ? 16 : 8 }]}>
+            <View style={{ marginBottom: 12 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                 <View style={{ width: 4, height: 24, borderRadius: 2, backgroundColor: '#00E5FF' }} />
                 <Text style={{ fontSize: 18, fontWeight: '800', color: NEON.text, letterSpacing: 1, fontFamily: Platform.OS === 'web' ? 'monospace' : undefined }}>Análise Financeira</Text>
@@ -662,10 +659,10 @@ export default function StrategicScreen() {
             </View>
           </View>
 
-          <View style={[s.section, { paddingHorizontal: isDesktop ? 24 : 12 }]}><InternalExternalSection /></View>
-          <View style={[s.section, { paddingHorizontal: isDesktop ? 24 : 12 }]}><TPRMSection /></View>
+          <View style={[s.section, { paddingHorizontal: isDesktop ? 16 : 8 }]}><InternalExternalSection /></View>
+          <View style={[s.section, { paddingHorizontal: isDesktop ? 16 : 8 }]}><TPRMSection /></View>
 
-          <View style={[s.section, { paddingHorizontal: isDesktop ? 24 : 12 }]}>
+          <View style={[s.section, { paddingHorizontal: isDesktop ? 16 : 8 }]}>
             <View style={isDesktop ? s.twoColGrid : { gap: 16 }}>
               <View style={isDesktop ? { flex: 1, minWidth: 0 } : undefined}><Top10Section /></View>
               <View style={isDesktop ? { flex: 1, minWidth: 0 } : undefined}><ResponsibleSection /></View>
@@ -679,22 +676,22 @@ export default function StrategicScreen() {
 }
 
 const s = StyleSheet.create({
-  container: { paddingTop: 4 },
-  header: { paddingVertical: 10 },
+  container: { paddingTop: 2 },
+  header: { paddingVertical: 6 },
   headerTitle: { fontSize: 22, fontWeight: '800', letterSpacing: 1 },
   headerSubtitle: { fontSize: 12, marginTop: 2, letterSpacing: 1 },
-  section: { marginBottom: 12 },
-  kpiGridDesktop: { flexDirection: 'row', gap: 16 },
-  kpiGridMobile: { gap: 12 },
-  gaugeCard: { flex: 1, borderRadius: 10, borderWidth: 1, padding: 12 },
+  section: { marginBottom: 8 },
+  kpiGridDesktop: { flexDirection: 'row', gap: 12 },
+  kpiGridMobile: { gap: 8 },
+  gaugeCard: { flex: 1, borderRadius: 10, borderWidth: 1, padding: 10 },
   gaugeLabel: { fontSize: 10, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, fontFamily: 'monospace' },
   gaugeValue: { fontSize: 26, fontWeight: '800', marginTop: 2, fontFamily: 'monospace' },
   gaugeUnit: { fontSize: 16, fontWeight: '600' },
   gaugeBarBg: { height: 4, borderRadius: 2, marginTop: 8 },
   gaugeBarFill: { height: 4, borderRadius: 2 },
   gaugeSubtitle: { fontSize: 10, marginTop: 4, fontFamily: 'monospace' },
-  card: { borderRadius: 10, borderWidth: 1, padding: 14 },
-  cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 },
+  card: { borderRadius: 10, borderWidth: 1, padding: 12 },
+  cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
   cardTitle: { fontSize: 14, fontWeight: '700', flex: 1, letterSpacing: 0.5 },
   heatRow: { marginBottom: 12 },
   heatLabelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },

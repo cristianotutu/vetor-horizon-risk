@@ -163,3 +163,11 @@
 - [x] Corrigir visão evolutiva (tela Evolução)
 - [x] Eliminar espaços vazios em todas as telas
 - [x] Redesenhar 3 matrizes: maiores, mais atrativas, melhor aproveitamento de espaço no desktop
+- [x] Corrigir evolução: dados corretos por aula (16→22→25→35) em todas as views
+- [x] Corrigir matrizes evolutivas no Comparativo e Matrizes
+- [x] Otimizar tabela de Riscos: colunas alinhadas, texto não cortado
+- [x] Aproveitar espaço no Estratégico
+- [x] Aproveitar espaço no Relatório Executivo
+- [x] Aproveitar espaço nas Tabelas de Referência (matriz maior)
+- [x] Remover cargo dos consultores no Sobre
+- [x] Wizard mostrar apenas 1 vez (já tem tutorial no Sobre)

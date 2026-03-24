@@ -4,9 +4,8 @@ import { GlowCard } from "@/components/ui/glow-card";
 import { StatusIndicator } from "@/components/ui/status-indicator";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { TABELA_IMPACTO_DETALHADA, NIVEIS_PROBABILIDADE, TABELA_GUT, getMatrixColor } from "@/lib/models";
-import { useState, useEffect} from "react";
+import { useState} from "react";
 import Animated, { FadeInDown } from "react-native-reanimated";
-import { useWizard } from "@/components/wizard-overlay";
 
 type TabKey = 'matrix' | 'impacto' | 'probabilidade' | 'gut';
 
@@ -36,8 +35,6 @@ function getLevelColor(nivel: number): string {
 
 export default function TablesScreen() {
 
-  const { triggerWizard } = useWizard();
-  useEffect(() => { triggerWizard('tables'); }, []);
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;
   const [activeTab, setActiveTab] = useState<TabKey>('matrix');
@@ -506,25 +503,25 @@ function getImpLabel(n: number): string {
 const s = StyleSheet.create({
   scrollContent: { flexGrow: 1, paddingBottom: 12 },
   scrollContentDesktop: { maxWidth: 1280, alignSelf: 'center' as any, width: '100%' as any },
-  header: { paddingHorizontal: 16, paddingTop: 10, paddingBottom: 8 },
+  header: { paddingHorizontal: 12, paddingTop: 8, paddingBottom: 6 },
   pageTitle: { fontSize: 22, fontWeight: '800', letterSpacing: 1, color: '#E0F0E0', fontFamily: MONO },
   pageSubtitle: { fontSize: 12, marginTop: 2, letterSpacing: 0.5, color: '#6B8A7A', fontFamily: MONO },
 
   // Tabs
-  tabBar: { flexDirection: 'row', marginHorizontal: 24, backgroundColor: '#0D1117', borderRadius: 10, borderWidth: 1, borderColor: '#1A3A2A', padding: 4, gap: 4, marginBottom: 12 },
+  tabBar: { flexDirection: 'row', marginHorizontal: 12, backgroundColor: '#0D1117', borderRadius: 10, borderWidth: 1, borderColor: '#1A3A2A', padding: 4, gap: 4, marginBottom: 10 },
   tab: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 10, borderRadius: 8, gap: 6 },
   tabActive: { backgroundColor: '#00E5FF15' },
   tabText: { fontSize: 12, fontWeight: '600', color: '#6B8A7A', fontFamily: MONO },
   tabTextActive: { color: '#00E5FF' },
-  tabDescContainer: { paddingHorizontal: 24, marginBottom: 8 },
+  tabDescContainer: { paddingHorizontal: 12, marginBottom: 6 },
   tabDesc: { fontSize: 11, color: '#6B8A7A', fontFamily: MONO, letterSpacing: 0.5 },
 
-  section: { paddingHorizontal: 24, gap: 16 },
+  section: { paddingHorizontal: 10, gap: 12 },
 
   // Card
-  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
   cardTitle: { fontSize: 14, fontWeight: '700', letterSpacing: 1, color: '#00E5FF', fontFamily: MONO },
-  cardDesc: { fontSize: 12, lineHeight: 18, color: '#6B8A7A', marginBottom: 16 },
+  cardDesc: { fontSize: 12, lineHeight: 18, color: '#6B8A7A', marginBottom: 12 },
 
   // Matrix
   matrixWrapper: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },

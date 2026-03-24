@@ -135,7 +135,7 @@ const styles = StyleSheet.create({
   innerCard: {
     borderRadius: 12,
     borderWidth: 1,
-    padding: 16,
+    padding: 12,
     overflow: "hidden",
   },
 });

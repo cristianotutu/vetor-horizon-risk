@@ -9,7 +9,6 @@ import { StatusIndicator } from "@/components/ui/status-indicator";
 import { RISKS_AULA3, RISKS_AULA4, RISKS_AULA5, RISKS_AULA6, EVOLUTION_3_TO_4, EVOLUTION_4_TO_5, EVOLUTION_5_TO_6, EVOLUTION_3_TO_6, AULA_RISK_COUNTS } from "@/lib/evolution-data";
 import { getRiskLevel, getGutLevel, Risk } from "@/lib/models";
 import Animated, { FadeInDown } from "react-native-reanimated";
-import { useWizard } from "@/components/wizard-overlay";
 
 type ViewMode = 'overview' | 'comparison' | 'matrix';
 type CompareMode = '3v4' | '4v5' | '5v6' | '3v6';
@@ -67,8 +66,6 @@ export default function EvolutionScreen() {
   const toData = getAulaData(toAula);
   const evolution = useMemo(() => getEvolution(compareMode), [compareMode]);
 
-  const { triggerWizard } = useWizard();
-  useEffect(() => { triggerWizard('evolution'); }, []);
 
   const newRisks = evolution.filter(e => e.type === 'new');
   const modifiedRisks = evolution.filter(e => e.type === 'modified');
@@ -658,26 +655,26 @@ const MONO = Platform.OS === 'web' ? 'monospace' : undefined;
 const s = StyleSheet.create({
   scrollContent: { flexGrow: 1, paddingBottom: 12 },
   scrollContentDesktop: { maxWidth: 1280, alignSelf: 'center' as any, width: '100%' as any },
-  header: { paddingHorizontal: 16, paddingTop: 10, paddingBottom: 8 },
+  header: { paddingHorizontal: 12, paddingTop: 8, paddingBottom: 6 },
   headerLeft: { flex: 1 },
   pageTitle: { fontSize: 22, fontWeight: '800', letterSpacing: 1, color: '#E0F0E0', fontFamily: MONO },
   pageSubtitle: { fontSize: 12, marginTop: 2, letterSpacing: 0.5, color: '#6B8A7A', fontFamily: MONO },
 
   // View Selector
-  viewSelector: { flexDirection: 'row', marginHorizontal: 24, marginBottom: 12, backgroundColor: '#0D1117', borderRadius: 10, borderWidth: 1, borderColor: '#1A3A2A', padding: 4, gap: 4 },
+  viewSelector: { flexDirection: 'row', marginHorizontal: 12, marginBottom: 10, backgroundColor: '#0D1117', borderRadius: 10, borderWidth: 1, borderColor: '#1A3A2A', padding: 4, gap: 4 },
   viewSelectorBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 10, borderRadius: 8, gap: 6 },
   viewSelectorBtnActive: { backgroundColor: '#00E5FF15' },
   viewSelectorLabel: { fontSize: 12, fontWeight: '600', color: '#6B8A7A', fontFamily: MONO },
   viewSelectorLabelActive: { color: '#00E5FF' },
 
   // Compare Selector
-  compareSelector: { flexDirection: 'row', marginHorizontal: 24, marginBottom: 16, gap: 8, flexWrap: 'wrap' },
+  compareSelector: { flexDirection: 'row', marginHorizontal: 12, marginBottom: 12, gap: 6, flexWrap: 'wrap' },
   compareSelectorBtn: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 8, backgroundColor: '#0D1117', borderWidth: 1, borderColor: '#1A3A2A' },
   compareSelectorBtnActive: { backgroundColor: '#00E5FF15', borderColor: '#00E5FF40' },
   compareSelectorLabel: { fontSize: 11, fontWeight: '600', color: '#6B8A7A', fontFamily: MONO },
   compareSelectorLabelActive: { color: '#00E5FF' },
 
-  section: { paddingHorizontal: 16, gap: 12 },
+  section: { paddingHorizontal: 10, gap: 10 },
 
   // Card
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },

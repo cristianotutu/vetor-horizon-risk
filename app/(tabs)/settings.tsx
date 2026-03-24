@@ -3,15 +3,13 @@ import { useEffect } from "react";
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
 import { useRisks } from "@/lib/risk-context";
-import { WizardButton, useWizard } from "@/components/wizard-overlay";
+import { WizardButton } from "@/components/wizard-overlay";
 
 const vetorHorizonLogo = require("@/assets/images/vetor-horizon-logo.png");
 
 export default function SettingsScreen() {
   const colors = useColors();
 
-  const { triggerWizard } = useWizard();
-  useEffect(() => { triggerWizard('settings'); }, []);
   const { risks } = useRisks();
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;
@@ -138,17 +136,16 @@ export default function SettingsScreen() {
           </View>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
             {[
-              { name: 'Cristiano Siqueira Israel', role: 'Gestão de Riscos', color: '#00E5FF' },
-              { name: 'Danielli Mezavilla Pinto', role: 'Análise Estratégica', color: '#FF8C00' },
-              { name: 'Karolina Guimarães Negrizolo', role: 'Conformidade & LGPD', color: '#00FF88' },
-              { name: 'Matheus Augusto Arduini', role: 'Segurança da Informação', color: '#FFD600' },
+              { name: 'Cristiano Siqueira Israel', color: '#00E5FF' },
+              { name: 'Danielli Mezavilla Pinto', color: '#FF8C00' },
+              { name: 'Karolina Guimarães Negrizolo', color: '#00FF88' },
+              { name: 'Matheus Augusto Arduini', color: '#FFD600' },
             ].map((c, idx) => (
               <View key={idx} style={{ flex: 1, minWidth: isDesktop ? 260 : '45%' as any, backgroundColor: c.color + '08', borderWidth: 1, borderColor: c.color + '25', borderRadius: 12, padding: 14, alignItems: 'center' }}>
                 <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: c.color + '20', borderWidth: 2, borderColor: c.color + '40', justifyContent: 'center', alignItems: 'center', marginBottom: 8 }}>
                   <Text style={{ fontSize: 20, fontWeight: '800', color: c.color }}>{c.name.charAt(0)}</Text>
                 </View>
                 <Text style={{ color: colors.foreground, fontSize: 13, fontWeight: '700', textAlign: 'center' }}>{c.name}</Text>
-                <Text style={{ color: c.color, fontSize: 10, fontWeight: '600', marginTop: 3, textAlign: 'center', letterSpacing: 0.5 }}>{c.role}</Text>
               </View>
             ))}
           </View>
