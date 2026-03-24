@@ -326,9 +326,7 @@ export default function RisksScreen() {
       {/* Content */}
       {isDesktop ? (
         <ScrollView style={{ flex: 1 }} contentContainerStyle={[styles.tableArea, isDesktop && styles.tableAreaDesktop]}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={true} contentContainerStyle={{ minWidth: 900 }}>
-            {renderDesktopTable()}
-          </ScrollView>
+          {renderDesktopTable()}
           <View style={{ height: 40 }} />
         </ScrollView>
       ) : (
@@ -365,32 +363,32 @@ const styles = StyleSheet.create({
   chipDot: { width: 6, height: 6, borderRadius: 3 },
   chipText: { fontSize: 10, fontWeight: '600', letterSpacing: 0.5 },
   chipDivider: { width: 1, marginHorizontal: 4, alignSelf: 'stretch' },
-  tableArea: { paddingHorizontal: 6 },
-  tableAreaDesktop: { paddingHorizontal: 8 },
+  tableArea: { paddingHorizontal: 4 },
+  tableAreaDesktop: { paddingHorizontal: 6 },
   tableCard: { borderWidth: 1, borderRadius: 10, overflow: 'hidden' },
-  tableHeaderRow: { flexDirection: 'row', paddingHorizontal: 8, paddingVertical: 10, borderBottomWidth: 2, alignItems: 'center' },
+  tableHeaderRow: { flexDirection: 'row', paddingHorizontal: 6, paddingVertical: 8, borderBottomWidth: 2, alignItems: 'center' },
   thCell: { fontSize: 10, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5, fontFamily: 'monospace' },
-  colId: { width: 44, paddingHorizontal: 3 },
-  colDesc: { flex: 4.5, paddingHorizontal: 4 },
-  colType: { width: 95, paddingHorizontal: 2 },
-  colPxi: { width: 40, paddingHorizontal: 1 },
-  colLevel: { width: 58, paddingHorizontal: 1 },
-  colGut: { width: 40, paddingHorizontal: 1 },
-  colResp: { flex: 2, paddingHorizontal: 4 },
-  colTrat: { width: 120, paddingHorizontal: 2 },
-  tableRow: { flexDirection: 'row', paddingHorizontal: 8, paddingVertical: 7, borderBottomWidth: 1, alignItems: 'center', minHeight: 44 },
+  colId: { width: 42, paddingHorizontal: 2 },
+  colDesc: { flex: 3, paddingHorizontal: 3 },
+  colType: { width: 88, paddingHorizontal: 2 },
+  colPxi: { width: 36, paddingHorizontal: 1 },
+  colLevel: { width: 56, paddingHorizontal: 1 },
+  colGut: { width: 36, paddingHorizontal: 1 },
+  colResp: { flex: 1.5, paddingHorizontal: 3 },
+  colTrat: { width: 105, paddingHorizontal: 2 },
+  tableRow: { flexDirection: 'row', paddingHorizontal: 6, paddingVertical: 6, borderBottomWidth: 1, alignItems: 'center', minHeight: 40 },
   cellCenter: { justifyContent: 'center', alignItems: 'center' },
-  tdId: { fontSize: 12, fontWeight: '700', fontFamily: 'monospace', color: '#00E5FF' },
-  tdDesc: { fontSize: 11.5, lineHeight: 16, color: '#E0F0E0' },
+  tdId: { fontSize: 11, fontWeight: '700', fontFamily: 'monospace', color: '#00E5FF' },
+  tdDesc: { fontSize: 11, lineHeight: 15, color: '#E0F0E0' },
   typeBadge: { paddingHorizontal: 6, paddingVertical: 3, borderRadius: 4, borderWidth: 1, alignItems: 'center' },
   typeText: { fontSize: 9, fontWeight: '700', fontFamily: 'monospace', textAlign: 'center' },
   scoreBadge: { paddingHorizontal: 6, paddingVertical: 3, borderRadius: 4, borderWidth: 1, minWidth: 32, alignItems: 'center' },
-  scoreText: { fontSize: 13, fontWeight: '800', fontFamily: 'monospace' },
+  scoreText: { fontSize: 12, fontWeight: '800', fontFamily: 'monospace' },
   gutBadge: { paddingHorizontal: 6, paddingVertical: 3, borderRadius: 4, borderWidth: 1, minWidth: 32, alignItems: 'center' },
   gutText: { fontSize: 11, fontWeight: '700', fontFamily: 'monospace' },
-  tdResp: { fontSize: 10.5, lineHeight: 14, color: '#B0C8B8', fontFamily: 'monospace' },
+  tdResp: { fontSize: 10, lineHeight: 13, color: '#B0C8B8', fontFamily: 'monospace' },
   tratBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 4, borderWidth: 1 },
-  tratText: { fontSize: 9.5, fontWeight: '600', fontFamily: 'monospace', color: '#6BCAAA', textAlign: 'center' },
+  tratText: { fontSize: 9, fontWeight: '600', fontFamily: 'monospace', color: '#6BCAAA', textAlign: 'center' },
   emptyTable: { padding: 40, alignItems: 'center' },
   mobileList: { paddingHorizontal: 16, paddingBottom: 80 },
   mobileCard: { borderWidth: 1, borderRadius: 10, padding: 12, marginBottom: 8 },
