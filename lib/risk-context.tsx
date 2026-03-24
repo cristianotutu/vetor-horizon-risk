@@ -25,7 +25,7 @@ interface RiskContextType {
 
 const RiskContext = createContext<RiskContextType>({
   risks: [],
-  loading: true,
+  loading: false,
   addRisk: async () => {},
   updateRisk: async () => {},
   deleteRisk: async () => {},
@@ -34,8 +34,8 @@ const RiskContext = createContext<RiskContextType>({
 });
 
 export function RiskProvider({ children }: { children: React.ReactNode }) {
-  const [risks, setRisks] = useState<Risk[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [risks, setRisks] = useState<Risk[]>(RISKS_WITH_FINANCIAL);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     loadRisks();
@@ -43,22 +43,16 @@ export function RiskProvider({ children }: { children: React.ReactNode }) {
 
   const loadRisks = async () => {
     try {
-      const initialized = await AsyncStorage.getItem(INITIALIZED_KEY);
-      if (!initialized) {
+      const stored = await AsyncStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        setRisks(JSON.parse(stored));
+      } else {
         await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(RISKS_WITH_FINANCIAL));
         await AsyncStorage.setItem(INITIALIZED_KEY, 'true');
-        setRisks(RISKS_WITH_FINANCIAL);
-      } else {
-        const stored = await AsyncStorage.getItem(STORAGE_KEY);
-        if (stored) {
-          setRisks(JSON.parse(stored));
-        }
       }
     } catch (e) {
       console.error('Error loading risks:', e);
-      setRisks(RISKS_WITH_FINANCIAL);
-    } finally {
-      setLoading(false);
+      // Already initialized with RISKS_WITH_FINANCIAL
     }
   };
 
