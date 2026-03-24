@@ -573,15 +573,15 @@ export default function StrategicScreen() {
           </View>
 
           {/* Main Content Grid */}
-          <View style={[s.section, { paddingHorizontal: isDesktop ? 32 : 16 }]}>
-            <View style={isDesktop ? s.twoColGrid : { gap: 16 }}>
+          <View style={[s.section, { paddingHorizontal: isDesktop ? 24 : 12 }]}>
+            <View style={isDesktop ? s.twoColGrid : { gap: 12 }}>
               <View style={isDesktop ? { flex: 1, minWidth: 0 } : undefined}><HeatMapByType /></View>
               <View style={isDesktop ? { flex: 1, minWidth: 0 } : undefined}><TreatmentChart /></View>
             </View>
           </View>
 
           {/* Financial Investment & Impact */}
-          <View style={[s.section, { paddingHorizontal: isDesktop ? 32 : 16 }]}>
+          <View style={[s.section, { paddingHorizontal: isDesktop ? 24 : 12 }]}>
             <View style={{ marginBottom: 16 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                 <View style={{ width: 4, height: 24, borderRadius: 2, backgroundColor: '#00E5FF' }} />
@@ -605,9 +605,9 @@ export default function StrategicScreen() {
                   <IconSymbol name="shield.fill" size={20} color="#00E5FF" />
                   <Text style={[s.cardTitle, { color: NEON.text, fontSize: 15 }]}>Investimento Preventivo</Text>
                 </View>
-                <View style={{ alignItems: 'center', paddingVertical: 12 }}>
+                <View style={{ alignItems: 'center', paddingVertical: 8 }}>
                   <Text style={{ fontSize: 10, fontWeight: '700', color: NEON.muted, fontFamily: 'monospace', letterSpacing: 1, marginBottom: 4 }}>TOTAL RECOMENDADO</Text>
-                  <Text style={{ fontSize: 32, fontWeight: '800', color: '#00E5FF', fontFamily: 'monospace' }}>R$ {(financialStats.totalInvestimento / 1000000).toFixed(1)}M</Text>
+                  <Text style={{ fontSize: 26, fontWeight: '800', color: '#00E5FF', fontFamily: 'monospace' }}>R$ {(financialStats.totalInvestimento / 1000000).toFixed(1)}M</Text>
                   <Text style={{ fontSize: 11, color: NEON.muted, fontFamily: 'monospace', marginTop: 4 }}>Controles + Contingências</Text>
                 </View>
                 <View style={{ borderTopWidth: 1, borderTopColor: NEON.cardBorder, paddingTop: 12, gap: 8 }}>
@@ -640,9 +640,9 @@ export default function StrategicScreen() {
                   <IconSymbol name="exclamationmark.triangle.fill" size={20} color="#FF3D3D" />
                   <Text style={[s.cardTitle, { color: NEON.text, fontSize: 15 }]}>Impacto Financeiro</Text>
                 </View>
-                <View style={{ alignItems: 'center', paddingVertical: 12 }}>
+                <View style={{ alignItems: 'center', paddingVertical: 8 }}>
                   <Text style={{ fontSize: 10, fontWeight: '700', color: NEON.muted, fontFamily: 'monospace', letterSpacing: 1, marginBottom: 4 }}>EXPOSIÇÃO TOTAL (ALTA)</Text>
-                  <Text style={{ fontSize: 32, fontWeight: '800', color: '#FF3D3D', fontFamily: 'monospace' }}>R$ {(financialStats.totalExposicaoAlta / 1000000).toFixed(1)}M</Text>
+                  <Text style={{ fontSize: 26, fontWeight: '800', color: '#FF3D3D', fontFamily: 'monospace' }}>R$ {(financialStats.totalExposicaoAlta / 1000000).toFixed(1)}M</Text>
                   <Text style={{ fontSize: 11, color: NEON.muted, fontFamily: 'monospace', marginTop: 4 }}>Black Friday / Natal</Text>
                 </View>
                 <View style={{ borderTopWidth: 1, borderTopColor: NEON.cardBorder, paddingTop: 12, gap: 8 }}>
@@ -662,10 +662,10 @@ export default function StrategicScreen() {
             </View>
           </View>
 
-          <View style={[s.section, { paddingHorizontal: isDesktop ? 32 : 16 }]}><InternalExternalSection /></View>
-          <View style={[s.section, { paddingHorizontal: isDesktop ? 32 : 16 }]}><TPRMSection /></View>
+          <View style={[s.section, { paddingHorizontal: isDesktop ? 24 : 12 }]}><InternalExternalSection /></View>
+          <View style={[s.section, { paddingHorizontal: isDesktop ? 24 : 12 }]}><TPRMSection /></View>
 
-          <View style={[s.section, { paddingHorizontal: isDesktop ? 32 : 16 }]}>
+          <View style={[s.section, { paddingHorizontal: isDesktop ? 24 : 12 }]}>
             <View style={isDesktop ? s.twoColGrid : { gap: 16 }}>
               <View style={isDesktop ? { flex: 1, minWidth: 0 } : undefined}><Top10Section /></View>
               <View style={isDesktop ? { flex: 1, minWidth: 0 } : undefined}><ResponsibleSection /></View>
@@ -679,22 +679,22 @@ export default function StrategicScreen() {
 }
 
 const s = StyleSheet.create({
-  container: { paddingTop: 8 },
-  header: { paddingVertical: 16 },
-  headerTitle: { fontSize: 26, fontWeight: '800', letterSpacing: 1 },
-  headerSubtitle: { fontSize: 12, marginTop: 4, letterSpacing: 1 },
-  section: { marginBottom: 16 },
+  container: { paddingTop: 4 },
+  header: { paddingVertical: 10 },
+  headerTitle: { fontSize: 22, fontWeight: '800', letterSpacing: 1 },
+  headerSubtitle: { fontSize: 12, marginTop: 2, letterSpacing: 1 },
+  section: { marginBottom: 12 },
   kpiGridDesktop: { flexDirection: 'row', gap: 16 },
   kpiGridMobile: { gap: 12 },
-  gaugeCard: { flex: 1, borderRadius: 10, borderWidth: 1, padding: 16 },
+  gaugeCard: { flex: 1, borderRadius: 10, borderWidth: 1, padding: 12 },
   gaugeLabel: { fontSize: 10, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, fontFamily: 'monospace' },
-  gaugeValue: { fontSize: 32, fontWeight: '800', marginTop: 4, fontFamily: 'monospace' },
+  gaugeValue: { fontSize: 26, fontWeight: '800', marginTop: 2, fontFamily: 'monospace' },
   gaugeUnit: { fontSize: 16, fontWeight: '600' },
   gaugeBarBg: { height: 4, borderRadius: 2, marginTop: 8 },
   gaugeBarFill: { height: 4, borderRadius: 2 },
   gaugeSubtitle: { fontSize: 10, marginTop: 4, fontFamily: 'monospace' },
-  card: { borderRadius: 10, borderWidth: 1, padding: 20 },
-  cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 },
+  card: { borderRadius: 10, borderWidth: 1, padding: 14 },
+  cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 },
   cardTitle: { fontSize: 14, fontWeight: '700', flex: 1, letterSpacing: 0.5 },
   heatRow: { marginBottom: 12 },
   heatLabelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
@@ -716,7 +716,7 @@ const s = StyleSheet.create({
   tprmStatsCol: { gap: 8, marginBottom: 16 },
   tprmStatCard: { flex: 1, borderRadius: 8, borderWidth: 1, padding: 14, alignItems: 'center' },
   tprmStatLabel: { fontSize: 10, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5 },
-  tprmStatValue: { fontSize: 28, fontWeight: '800', marginTop: 2 },
+  tprmStatValue: { fontSize: 22, fontWeight: '800', marginTop: 2 },
   tprmStatSub: { fontSize: 11, marginTop: 1 },
   tprmRiskRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, borderBottomWidth: 1 },
   tprmRiskId: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 4 },
@@ -749,7 +749,7 @@ const s = StyleSheet.create({
   legendText: { fontSize: 11 },
   originCard: { borderRadius: 10, borderWidth: 1, padding: 16, alignItems: 'center' },
   originLabel: { fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1 },
-  originValue: { fontSize: 36, fontWeight: '800', marginTop: 4 },
+  originValue: { fontSize: 28, fontWeight: '800', marginTop: 2 },
   originPct: { fontSize: 14, fontWeight: '600', marginTop: 2 },
   originBar: { height: 4, borderRadius: 2, width: '100%', marginTop: 8 },
   originBarFill: { height: 4, borderRadius: 2 },

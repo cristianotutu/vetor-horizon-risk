@@ -656,12 +656,12 @@ export default function EvolutionScreen() {
 const MONO = Platform.OS === 'web' ? 'monospace' : undefined;
 
 const s = StyleSheet.create({
-  scrollContent: { flexGrow: 1, paddingBottom: 20 },
+  scrollContent: { flexGrow: 1, paddingBottom: 12 },
   scrollContentDesktop: { maxWidth: 1280, alignSelf: 'center' as any, width: '100%' as any },
-  header: { paddingHorizontal: 24, paddingTop: 16, paddingBottom: 12 },
+  header: { paddingHorizontal: 16, paddingTop: 10, paddingBottom: 8 },
   headerLeft: { flex: 1 },
-  pageTitle: { fontSize: 26, fontWeight: '800', letterSpacing: 1, color: '#E0F0E0', fontFamily: MONO },
-  pageSubtitle: { fontSize: 12, marginTop: 4, letterSpacing: 0.5, color: '#6B8A7A', fontFamily: MONO },
+  pageTitle: { fontSize: 22, fontWeight: '800', letterSpacing: 1, color: '#E0F0E0', fontFamily: MONO },
+  pageSubtitle: { fontSize: 12, marginTop: 2, letterSpacing: 0.5, color: '#6B8A7A', fontFamily: MONO },
 
   // View Selector
   viewSelector: { flexDirection: 'row', marginHorizontal: 24, marginBottom: 12, backgroundColor: '#0D1117', borderRadius: 10, borderWidth: 1, borderColor: '#1A3A2A', padding: 4, gap: 4 },
@@ -677,10 +677,10 @@ const s = StyleSheet.create({
   compareSelectorLabel: { fontSize: 11, fontWeight: '600', color: '#6B8A7A', fontFamily: MONO },
   compareSelectorLabelActive: { color: '#00E5FF' },
 
-  section: { paddingHorizontal: 24, gap: 16 },
+  section: { paddingHorizontal: 16, gap: 12 },
 
   // Card
-  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
+  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
   cardTitle: { fontSize: 13, fontWeight: '700', letterSpacing: 1.5, color: '#00E5FF', fontFamily: MONO },
 
   // Chart

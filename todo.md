@@ -155,3 +155,5 @@
 - [x] Remover chatbot de IA
 - [x] Reescrever README.md profissional
 - [x] Criar documento How-To (guia de uso de cada menu)
+- [x] Atualizar lista de consultores: remover Pedro Ricci Righeti (manter 4 consultores)
+- [x] Enquadramento inteligente das telas (otimizar espaços, ajustar layouts)

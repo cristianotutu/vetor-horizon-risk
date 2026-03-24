@@ -145,7 +145,6 @@ export default function SettingsScreen() {
               'Danielli Mezavilla Pinto',
               'Karolina Guimarães Negrizolo',
               'Matheus Augusto Arduini',
-              'Pedro Ricci Righeti',
             ].map((name, idx) => (
               <View key={idx} style={[styles.consultantRow, { borderBottomColor: colors.border }]}>
                 <View style={[styles.consultantAvatar, { backgroundColor: colors.primary + '15' }]}>
@@ -212,15 +211,15 @@ function StatBox({ label, value, colors }: { label: string; value: string; color
 }
 
 const styles = StyleSheet.create({
-  scrollContent: { flexGrow: 1, paddingHorizontal: 24, paddingBottom: 40 },
-  scrollContentDesktop: { paddingHorizontal: 32 },
-  header: { paddingTop: 16, paddingBottom: 20 },
-  pageTitle: { fontSize: 26, fontWeight: '800', letterSpacing: -0.5 },
-  pageSubtitle: { fontSize: 14, marginTop: 4 },
-  grid: { gap: 16 },
+  scrollContent: { flexGrow: 1, paddingHorizontal: 16, paddingBottom: 24 },
+  scrollContentDesktop: { paddingHorizontal: 24 },
+  header: { paddingTop: 10, paddingBottom: 12 },
+  pageTitle: { fontSize: 22, fontWeight: '800', letterSpacing: -0.5 },
+  pageSubtitle: { fontSize: 14, marginTop: 2 },
+  grid: { gap: 12 },
   gridDesktop: { flexDirection: 'row', flexWrap: 'wrap' },
-  card: { borderWidth: 1, borderRadius: 14, padding: 24, flex: 1, minWidth: 340 },
-  cardHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 16 },
+  card: { borderWidth: 1, borderRadius: 14, padding: 18, flex: 1, minWidth: 340 },
+  cardHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 },
   cardIcon: { width: 40, height: 40, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
   cardTitle: { fontSize: 18, fontWeight: '700', flex: 1 },
   infoGrid: { gap: 0 },

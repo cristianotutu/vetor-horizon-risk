@@ -504,11 +504,11 @@ function getImpLabel(n: number): string {
 }
 
 const s = StyleSheet.create({
-  scrollContent: { flexGrow: 1, paddingBottom: 20 },
+  scrollContent: { flexGrow: 1, paddingBottom: 12 },
   scrollContentDesktop: { maxWidth: 1280, alignSelf: 'center' as any, width: '100%' as any },
-  header: { paddingHorizontal: 24, paddingTop: 16, paddingBottom: 12 },
-  pageTitle: { fontSize: 26, fontWeight: '800', letterSpacing: 1, color: '#E0F0E0', fontFamily: MONO },
-  pageSubtitle: { fontSize: 12, marginTop: 4, letterSpacing: 0.5, color: '#6B8A7A', fontFamily: MONO },
+  header: { paddingHorizontal: 16, paddingTop: 10, paddingBottom: 8 },
+  pageTitle: { fontSize: 22, fontWeight: '800', letterSpacing: 1, color: '#E0F0E0', fontFamily: MONO },
+  pageSubtitle: { fontSize: 12, marginTop: 2, letterSpacing: 0.5, color: '#6B8A7A', fontFamily: MONO },
 
   // Tabs
   tabBar: { flexDirection: 'row', marginHorizontal: 24, backgroundColor: '#0D1117', borderRadius: 10, borderWidth: 1, borderColor: '#1A3A2A', padding: 4, gap: 4, marginBottom: 12 },

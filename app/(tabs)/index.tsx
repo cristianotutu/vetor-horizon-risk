@@ -404,7 +404,7 @@ export default function DashboardScreen() {
             {!isDesktop && (
               <Image
                 source={vetorHorizonLogo}
-                style={{ width: 120, height: 120, borderRadius: 10, marginBottom: 8 }}
+                style={{ width: 80, height: 80, borderRadius: 8, marginBottom: 4 }}
                 resizeMode="contain"
               />
             )}
@@ -471,7 +471,7 @@ export default function DashboardScreen() {
         </View>
 
         {/* === 3 MATRIZES EM FLUXO HORIZONTAL (Desktop) === */}
-        <View style={[styles.section, isDesktop && styles.sectionDesktop, { marginTop: 20 }]}>
+        <View style={[styles.section, isDesktop && styles.sectionDesktop, { marginTop: 12 }]}>
           <Animated.View entering={FadeInDown.duration(500).delay(300)}>
             <GlowCard variant="default">
               <View style={styles.cardHeader}>
@@ -640,7 +640,7 @@ export default function DashboardScreen() {
         </View>
 
         {/* Content Grid: Type + Top Risks + Financial */}
-        <View style={[styles.section, isDesktop && styles.sectionDesktop, { marginTop: 16 }]}>
+        <View style={[styles.section, isDesktop && styles.sectionDesktop, { marginTop: 10 }]}>
           <View style={[styles.contentGrid, isDesktop && styles.contentGridDesktop]}>
             {/* Left Column: Risk by Type + Financial */}
             <View style={[styles.column, isDesktop && { flex: 1 }]}>
@@ -834,7 +834,7 @@ export default function DashboardScreen() {
           </View>
         </View>
 
-        <View style={{ height: 16 }} />
+        <View style={{ height: 8 }} />
       </ScrollView>
 
       {renderRiskModal()}
@@ -843,17 +843,17 @@ export default function DashboardScreen() {
 }
 
 const styles = StyleSheet.create({
-  scrollContent: { flexGrow: 1, paddingBottom: 20 },
-  header: { paddingHorizontal: 24, paddingTop: 16, paddingBottom: 20, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  headerDesktop: { paddingHorizontal: 32, paddingTop: 28 },
+  scrollContent: { flexGrow: 1, paddingBottom: 12 },
+  header: { paddingHorizontal: 16, paddingTop: 10, paddingBottom: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+  headerDesktop: { paddingHorizontal: 24, paddingTop: 16 },
   headerLeft: { flex: 1 },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  pageTitle: { fontSize: 26, fontWeight: '800', letterSpacing: 1 },
+  pageTitle: { fontSize: 22, fontWeight: '800', letterSpacing: 1 },
   pageSubtitle: { fontSize: 12, marginTop: 4, letterSpacing: 0.5 },
   addButton: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 8 },
   addButtonText: { fontSize: 12, fontWeight: '700', letterSpacing: 1 },
-  section: { paddingHorizontal: 24 },
-  sectionDesktop: { paddingHorizontal: 32 },
+  section: { paddingHorizontal: 16 },
+  sectionDesktop: { paddingHorizontal: 24 },
   statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   statsGridDesktop: { flexWrap: 'nowrap' },
   statCardInner: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
@@ -874,7 +874,7 @@ const styles = StyleSheet.create({
   barTrack: { flex: 1, height: 6, borderRadius: 3, overflow: 'hidden' },
   barFill: { height: '100%', borderRadius: 3 },
   barValue: { fontSize: 14, fontWeight: '800', width: 24, textAlign: 'right' },
-  riskItem: { paddingVertical: 14 },
+  riskItem: { paddingVertical: 10 },
   riskItemHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, flexWrap: 'wrap', gap: 8 },
   riskItemLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   riskItemRight: { flexDirection: 'row', gap: 6, alignItems: 'center' },
@@ -888,8 +888,8 @@ const styles = StyleSheet.create({
   riskMeta: { flexDirection: 'row', gap: 16 },
   riskMetaText: { fontSize: 10 },
   quickStatsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  quickStatItem: { flex: 1, minWidth: '40%', borderWidth: 1, borderRadius: 8, padding: 12, alignItems: 'center' },
-  quickStatValue: { fontSize: 22, fontWeight: '800' },
+  quickStatItem: { flex: 1, minWidth: '40%', borderWidth: 1, borderRadius: 8, padding: 8, alignItems: 'center' },
+  quickStatValue: { fontSize: 18, fontWeight: '800' },
   quickStatLabel: { fontSize: 10, marginTop: 4, textAlign: 'center', letterSpacing: 0.5 },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', alignItems: 'center', padding: 16 },
   modalContent: { borderRadius: 12, borderWidth: 1, width: '100%', overflow: 'hidden' },
@@ -908,7 +908,7 @@ const styles = StyleSheet.create({
   modalRiskDesc: { fontSize: 13, lineHeight: 19, marginBottom: 8 },
   modalRiskFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   modalRiskMeta: { fontSize: 10, flex: 1 },
-  finCardResponsive: { flex: 1, borderWidth: 1, borderRadius: 8, padding: 10, alignItems: 'center', minWidth: 0 },
-  finLabel: { fontSize: 8, fontWeight: '700', letterSpacing: 0.5, textAlign: 'center', marginBottom: 3 },
-  finValueMobile: { fontSize: 15, fontWeight: '800' },
+  finCardResponsive: { flex: 1, borderWidth: 1, borderRadius: 8, padding: 8, alignItems: 'center', minWidth: 0 },
+  finLabel: { fontSize: 7, fontWeight: '700', letterSpacing: 0.5, textAlign: 'center', marginBottom: 2 },
+  finValueMobile: { fontSize: 13, fontWeight: '800' },
 });

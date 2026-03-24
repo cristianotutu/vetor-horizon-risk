@@ -705,7 +705,7 @@ export default function ReportScreen() {
     <ScreenContainer edges={["top", "left", "right"]} containerClassName="bg-background">
       <View style={{ flex: 1, backgroundColor: C.bg }}>
         {/* Navigation Bar */}
-        <View style={{ backgroundColor: C.card, borderBottomWidth: 1, borderBottomColor: C.border, paddingVertical: 8, paddingHorizontal: isDesktop ? 32 : 12 }}>
+        <View style={{ backgroundColor: C.card, borderBottomWidth: 1, borderBottomColor: C.border, paddingVertical: 6, paddingHorizontal: isDesktop ? 24 : 10 }}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 4, alignItems: 'center' }}>
             {slides.map((slide, i) => (
               <TouchableOpacity
@@ -738,7 +738,7 @@ export default function ReportScreen() {
         {/* Slide Content */}
         <ScrollView
           style={{ flex: 1 }}
-          contentContainerStyle={{ padding: isDesktop ? 32 : 16, paddingBottom: 100 }}
+          contentContainerStyle={{ padding: isDesktop ? 24 : 12, paddingBottom: 80 }}
         >
           <Animated.View entering={FadeInDown.duration(300)} key={currentSlide}>
             {/* Slide Header */}
@@ -752,14 +752,14 @@ export default function ReportScreen() {
               <Text style={{ color: C.muted, fontSize: 10, fontFamily: 'monospace', marginLeft: 36 }}>{slides[currentSlide].subtitle}</Text>
             </View>
 
-            <View style={{ maxWidth: isDesktop ? 900 : undefined, alignSelf: isDesktop ? 'center' : undefined, width: '100%' }}>
+            <View style={{ maxWidth: isDesktop ? 960 : undefined, alignSelf: isDesktop ? 'center' : undefined, width: '100%' }}>
               <CurrentSlideComponent />
             </View>
           </Animated.View>
         </ScrollView>
 
         {/* Bottom Navigation */}
-        <View style={{ backgroundColor: C.card, borderTopWidth: 1, borderTopColor: C.border, paddingVertical: 10, paddingHorizontal: isDesktop ? 32 : 16, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+        <View style={{ backgroundColor: C.card, borderTopWidth: 1, borderTopColor: C.border, paddingVertical: 8, paddingHorizontal: isDesktop ? 24 : 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
           <TouchableOpacity
             onPress={() => goTo(currentSlide - 1)}
             activeOpacity={0.7}

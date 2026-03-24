@@ -190,7 +190,6 @@ Equipe de consultores responsáveis pela análise e gestão de riscos do estudo 
 - **Danielli Mezavilla Pinto**
 - **Karolina Guimarães Negrizolo**
 - **Matheus Augusto Arduini**
-- **Pedro Ricci Righeti**
 
 ## Licença
 
