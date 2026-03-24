@@ -162,8 +162,8 @@ export default function DashboardScreen() {
 
   // ─── MATRIX 5x5 RENDERER ─────────────────────────────
   const renderMatrix5x5 = (matrixData: Risk[][][], prefix: string, interactive = true) => {
-    const cellSize = isDesktop ? 68 : 48;
-    const gap = isDesktop ? 3 : 2;
+    const cellSize = isDesktop ? 54 : 48;
+    const gap = isDesktop ? 2 : 2;
     return (
       <View>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -238,8 +238,8 @@ export default function DashboardScreen() {
 
   // ─── DESLOCAMENTO MATRIX (shows migration arrows) ─────────────────────────────
   const renderDeslocamentoMatrix = () => {
-    const cellSize = isDesktop ? 68 : 48;
-    const gap = isDesktop ? 3 : 2;
+    const cellSize = isDesktop ? 54 : 48;
+    const gap = isDesktop ? 2 : 2;
     return (
       <View>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -409,7 +409,7 @@ export default function DashboardScreen() {
                   ) : (
                     <PulsingBadge level={stat.variant === 'default' ? 'medium' : stat.variant} size="sm" />
                   )}
-                  <AnimatedCounter value={stat.value} color={stat.color} fontSize={32} />
+                  <AnimatedCounter value={stat.value} color={stat.color} fontSize={26} />
                   <Text style={[s.tapHint, { color: stat.color + '80', fontFamily: MONO }]}>VER →</Text>
                 </GlowCard>
               </Animated.View>
@@ -420,7 +420,7 @@ export default function DashboardScreen() {
         {/* ═══════════════════════════════════════════════════════════════
             3 MATRIZES EM FLUXO HORIZONTAL: INERENTE → DESLOCAMENTO → RESIDUAL
             ═══════════════════════════════════════════════════════════════ */}
-        <View style={[s.section, isDesktop && s.sectionDesktop, { marginTop: 8 }]}>
+        <View style={[s.section, isDesktop && s.sectionDesktop, { marginTop: 4 }]}>
           <Animated.View entering={FadeInDown.duration(500).delay(300)}>
             <GlowCard variant="default">
               <View style={s.cardHeader}>
@@ -443,17 +443,17 @@ export default function DashboardScreen() {
                 <View style={{ alignItems: 'center' }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                     <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: '#FF3D3D', shadowColor: '#FF3D3D', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.6, shadowRadius: 6 }} />
-                    <Text style={{ color: '#FF3D3D', fontSize: 13, fontWeight: '900', fontFamily: MONO, letterSpacing: 2 }}>INERENTE</Text>
+                    <Text style={{ color: '#FF3D3D', fontSize: 11, fontWeight: '900', fontFamily: MONO, letterSpacing: 2 }}>INERENTE</Text>
                   </View>
-                  <View style={{ backgroundColor: '#FF3D3D08', borderWidth: 1.5, borderColor: '#FF3D3D30', borderRadius: 10, padding: isDesktop ? 10 : 6 }}>
+                  <View style={{ backgroundColor: '#FF3D3D08', borderWidth: 1.5, borderColor: '#FF3D3D30', borderRadius: 8, padding: isDesktop ? 6 : 6 }}>
                     <Text style={{ color: '#FF3D3D80', fontSize: 8, fontWeight: '700', fontFamily: MONO, textAlign: 'center', marginBottom: 4, letterSpacing: 2 }}>ANTES DOS CONTROLES</Text>
                     {renderMatrix5x5(matrixInerente, 'inerente')}
                   </View>
                 </View>
                 {/* Arrow → */}
-                <View style={{ justifyContent: 'center', alignItems: 'center', paddingHorizontal: isDesktop ? 12 : 0, paddingVertical: isDesktop ? 0 : 6 }}>
-                  <View style={{ backgroundColor: '#00FF8815', borderRadius: 24, width: 44, height: 44, justifyContent: 'center', alignItems: 'center', borderWidth: 1.5, borderColor: '#00FF885050', shadowColor: '#FFD600', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.3, shadowRadius: 8 }}>
-                    <Text style={{ color: '#FFD600', fontSize: 22, fontWeight: '900' }}>{isDesktop ? '→' : '↓'}</Text>
+                <View style={{ justifyContent: 'center', alignItems: 'center', paddingHorizontal: isDesktop ? 6 : 0, paddingVertical: isDesktop ? 0 : 4 }}>
+                  <View style={{ backgroundColor: '#00FF8815', borderRadius: 18, width: 32, height: 32, justifyContent: 'center', alignItems: 'center', borderWidth: 1.5, borderColor: '#00FF885050', shadowColor: '#FFD600', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.3, shadowRadius: 8 }}>
+                    <Text style={{ color: '#FFD600', fontSize: 18, fontWeight: '900' }}>{isDesktop ? '→' : '↓'}</Text>
                   </View>
                 </View>
 
@@ -461,18 +461,18 @@ export default function DashboardScreen() {
                 <View style={{ alignItems: 'center' }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                     <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: '#FFD600', shadowColor: '#FFD600', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.6, shadowRadius: 6 }} />
-                    <Text style={{ color: '#FFD600', fontSize: 13, fontWeight: '900', fontFamily: MONO, letterSpacing: 2 }}>DESLOCAMENTO</Text>
+                    <Text style={{ color: '#FFD600', fontSize: 11, fontWeight: '900', fontFamily: MONO, letterSpacing: 2 }}>DESLOCAMENTO</Text>
                   </View>
-                  <View style={{ backgroundColor: '#FFD60008', borderWidth: 1.5, borderColor: '#FFD60030', borderRadius: 10, padding: isDesktop ? 10 : 6 }}>
+                  <View style={{ backgroundColor: '#FFD60008', borderWidth: 1.5, borderColor: '#FFD60030', borderRadius: 8, padding: isDesktop ? 6 : 6 }}>
                     <Text style={{ color: '#FFD60080', fontSize: 8, fontWeight: '700', fontFamily: MONO, textAlign: 'center', marginBottom: 4, letterSpacing: 2 }}>MIGRAÇÃO DOS RISCOS</Text>
                     {renderDeslocamentoMatrix()}
                   </View>
                 </View>
 
                 {/* Arrow → */}
-                <View style={{ justifyContent: 'center', alignItems: 'center', paddingHorizontal: isDesktop ? 8 : 0, paddingVertical: isDesktop ? 0 : 4 }}>
-                  <View style={{ backgroundColor: '#00FF8820', borderRadius: 20, width: 36, height: 36, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#00FF8840' }}>
-                    <Text style={{ color: '#00FF88', fontSize: 22, fontWeight: '900' }}>{isDesktop ? '→' : '↓'}</Text>
+                <View style={{ justifyContent: 'center', alignItems: 'center', paddingHorizontal: isDesktop ? 4 : 0, paddingVertical: isDesktop ? 0 : 4 }}>
+                  <View style={{ backgroundColor: '#00FF8820', borderRadius: 16, width: 28, height: 28, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#00FF8840' }}>
+                    <Text style={{ color: '#00FF88', fontSize: 16, fontWeight: '900' }}>{isDesktop ? '→' : '↓'}</Text>
                   </View>
                 </View>
 
@@ -480,9 +480,9 @@ export default function DashboardScreen() {
                 <View style={{ alignItems: 'center' }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                     <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: '#00FF88', shadowColor: '#00FF88', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.6, shadowRadius: 6 }} />
-                    <Text style={{ color: '#00FF88', fontSize: 13, fontWeight: '900', fontFamily: MONO, letterSpacing: 2 }}>RESIDUAL</Text>
+                    <Text style={{ color: '#00FF88', fontSize: 11, fontWeight: '900', fontFamily: MONO, letterSpacing: 2 }}>RESIDUAL</Text>
                   </View>
-                  <View style={{ backgroundColor: '#00FF8808', borderWidth: 1.5, borderColor: '#00FF8830', borderRadius: 10, padding: isDesktop ? 10 : 6 }}>
+                  <View style={{ backgroundColor: '#00FF8808', borderWidth: 1.5, borderColor: '#00FF8830', borderRadius: 8, padding: isDesktop ? 6 : 6 }}>
                     <Text style={{ color: '#00FF8880', fontSize: 8, fontWeight: '700', fontFamily: MONO, textAlign: 'center', marginBottom: 4, letterSpacing: 2 }}>APÓS CONTROLES</Text>
                     {renderMatrix5x5(matrixResidual, 'residual')}
                   </View>
@@ -490,22 +490,22 @@ export default function DashboardScreen() {
               </ScrollView>
 
               {/* Summary bar */}
-              <View style={{ flexDirection: 'row', gap: 8, marginTop: 14, borderTopWidth: 1, borderTopColor: '#1A3A2A', paddingTop: 12 }}>
-                <View style={{ flex: 1, backgroundColor: '#FF3D3D10', borderWidth: 1.5, borderColor: '#FF3D3D40', borderRadius: 8, padding: 10, alignItems: 'center' }}>
-                  <Text style={{ color: '#FF3D3D', fontSize: 9, fontWeight: '700', fontFamily: MONO, marginBottom: 3, letterSpacing: 1 }}>INERENTE</Text>
-                  <Text style={{ color: '#FF3D3D', fontSize: 22, fontWeight: '900', fontFamily: MONO }}>{risks.filter(r => r.riscoInerente >= 20).length}</Text>
+              <View style={{ flexDirection: 'row', gap: 6, marginTop: 10, borderTopWidth: 1, borderTopColor: '#1A3A2A', paddingTop: 8 }}>
+                <View style={{ flex: 1, backgroundColor: '#FF3D3D10', borderWidth: 1.5, borderColor: '#FF3D3D40', borderRadius: 6, padding: 8, alignItems: 'center' }}>
+                  <Text style={{ color: '#FF3D3D', fontSize: 8, fontWeight: '700', fontFamily: MONO, marginBottom: 2, letterSpacing: 1 }}>INERENTE</Text>
+                  <Text style={{ color: '#FF3D3D', fontSize: 18, fontWeight: '900', fontFamily: MONO }}>{risks.filter(r => r.riscoInerente >= 20).length}</Text>
                   <Text style={{ color: '#FF3D3D80', fontSize: 9, fontFamily: MONO }}>Críticos</Text>
                 </View>
                 <View style={{ justifyContent: 'center' }}><Text style={{ color: '#FFD600', fontSize: 20, fontWeight: '900' }}>→</Text></View>
-                <View style={{ flex: 1, backgroundColor: '#FFD60010', borderWidth: 1.5, borderColor: '#FFD60040', borderRadius: 8, padding: 10, alignItems: 'center' }}>
-                  <Text style={{ color: '#FFD600', fontSize: 9, fontWeight: '700', fontFamily: MONO, marginBottom: 3, letterSpacing: 1 }}>EFICÁCIA</Text>
-                  <Text style={{ color: '#FFD600', fontSize: 22, fontWeight: '900', fontFamily: MONO }}>{eficaciaStats.reducaoMedia.toFixed(0)}%</Text>
+                <View style={{ flex: 1, backgroundColor: '#FFD60010', borderWidth: 1.5, borderColor: '#FFD60040', borderRadius: 6, padding: 8, alignItems: 'center' }}>
+                  <Text style={{ color: '#FFD600', fontSize: 8, fontWeight: '700', fontFamily: MONO, marginBottom: 2, letterSpacing: 1 }}>EFICÁCIA</Text>
+                  <Text style={{ color: '#FFD600', fontSize: 18, fontWeight: '900', fontFamily: MONO }}>{eficaciaStats.reducaoMedia.toFixed(0)}%</Text>
                   <Text style={{ color: '#FFD60080', fontSize: 9, fontFamily: MONO }}>Redução</Text>
                 </View>
                 <View style={{ justifyContent: 'center' }}><Text style={{ color: '#00FF88', fontSize: 20, fontWeight: '900' }}>→</Text></View>
-                <View style={{ flex: 1, backgroundColor: '#00FF8810', borderWidth: 1.5, borderColor: '#00FF8840', borderRadius: 8, padding: 10, alignItems: 'center' }}>
-                  <Text style={{ color: '#00FF88', fontSize: 9, fontWeight: '700', fontFamily: MONO, marginBottom: 3, letterSpacing: 1 }}>RESIDUAL</Text>
-                  <Text style={{ color: '#00FF88', fontSize: 22, fontWeight: '900', fontFamily: MONO }}>{risks.filter(r => (r.riscoResidual || r.riscoInerente) >= 20).length}</Text>
+                <View style={{ flex: 1, backgroundColor: '#00FF8810', borderWidth: 1.5, borderColor: '#00FF8840', borderRadius: 6, padding: 8, alignItems: 'center' }}>
+                  <Text style={{ color: '#00FF88', fontSize: 8, fontWeight: '700', fontFamily: MONO, marginBottom: 2, letterSpacing: 1 }}>RESIDUAL</Text>
+                  <Text style={{ color: '#00FF88', fontSize: 18, fontWeight: '900', fontFamily: MONO }}>{risks.filter(r => (r.riscoResidual || r.riscoInerente) >= 20).length}</Text>
                   <Text style={{ color: '#00FF8880', fontSize: 9, fontFamily: MONO }}>Críticos</Text>
                 </View>
               </View>
@@ -514,7 +514,7 @@ export default function DashboardScreen() {
         </View>
 
         {/* Content Grid: Type + Financial | Top Risks */}
-        <View style={[s.section, isDesktop && s.sectionDesktop, { marginTop: 8 }]}>
+        <View style={[s.section, isDesktop && s.sectionDesktop, { marginTop: 4 }]}>
           <View style={[s.contentGrid, isDesktop && s.contentGridDesktop]}>
             {/* Left Column */}
             <View style={[s.column, isDesktop && { flex: 1 }]}>
@@ -543,7 +543,7 @@ export default function DashboardScreen() {
 
               {/* Financial Summary */}
               {financialSummary.riscosComDados > 0 && (
-                <Animated.View entering={FadeInDown.duration(500).delay(500)} style={{ marginTop: 10 }}>
+                <Animated.View entering={FadeInDown.duration(500).delay(500)} style={{ marginTop: 6 }}>
                   <GlowCard variant="default">
                     <View style={s.cardHeader}>
                       <Text style={[s.cardTitle, { color: '#00E5FF', fontFamily: MONO }]}>IMPACTO FINANCEIRO</Text>
@@ -585,7 +585,7 @@ export default function DashboardScreen() {
               )}
 
               {/* Resumo Executivo */}
-              <Animated.View entering={FadeInRight.duration(500).delay(400)} style={{ marginTop: 10 }}>
+              <Animated.View entering={FadeInRight.duration(500).delay(400)} style={{ marginTop: 6 }}>
                 <GlowCard variant="default">
                   <Text style={[s.cardTitle, { color: '#00E5FF', fontFamily: MONO, marginBottom: 10 }]}>RESUMO EXECUTIVO</Text>
                   <View style={s.quickStatsGrid}>
@@ -663,36 +663,36 @@ export default function DashboardScreen() {
 }
 
 const s = StyleSheet.create({
-  scrollContent: { flexGrow: 1, paddingBottom: 8 },
-  header: { paddingHorizontal: 14, paddingTop: 8, paddingBottom: 8, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  headerDesktop: { paddingHorizontal: 20, paddingTop: 12 },
+  scrollContent: { flexGrow: 1, paddingBottom: 4 },
+  header: { paddingHorizontal: 10, paddingTop: 6, paddingBottom: 4, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+  headerDesktop: { paddingHorizontal: 14, paddingTop: 8 },
   headerLeft: { flex: 1 },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   pageTitle: { fontSize: 22, fontWeight: '800', letterSpacing: 1 },
   pageSubtitle: { fontSize: 11, marginTop: 2, letterSpacing: 0.5 },
   addButton: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 8, backgroundColor: '#00E5FF20', borderWidth: 1, borderColor: '#00E5FF40' },
   addButtonText: { fontSize: 11, fontWeight: '700', letterSpacing: 1, color: '#00E5FF', fontFamily: Platform.OS === 'web' ? 'monospace' : undefined },
-  section: { paddingHorizontal: 14 },
-  sectionDesktop: { paddingHorizontal: 20 },
-  statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  section: { paddingHorizontal: 10 },
+  sectionDesktop: { paddingHorizontal: 14 },
+  statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   statsGridDesktop: { flexWrap: 'nowrap' },
   statCardInner: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 },
   statLabel: { fontSize: 9, fontWeight: '700', letterSpacing: 1 },
   tapHint: { fontSize: 8, fontWeight: '600', letterSpacing: 0.5, marginTop: 2 },
-  contentGrid: { gap: 10 },
+  contentGrid: { gap: 8 },
   contentGridDesktop: { flexDirection: 'row' },
   column: { gap: 0 },
-  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
-  cardTitle: { fontSize: 12, fontWeight: '700', letterSpacing: 1 },
+  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  cardTitle: { fontSize: 11, fontWeight: '700', letterSpacing: 1 },
   cardBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 4, borderWidth: 1 },
   cardBadgeText: { fontSize: 8, fontWeight: '700', letterSpacing: 1 },
   seeAll: { fontSize: 10, fontWeight: '700', letterSpacing: 0.5 },
-  barRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 6, gap: 6, paddingHorizontal: 4, borderBottomWidth: 1, borderBottomColor: '#1A3A2A' },
-  barLabel: { fontSize: 10, fontWeight: '500', width: 130 },
+  barRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 4, gap: 4, paddingHorizontal: 2, borderBottomWidth: 1, borderBottomColor: '#1A3A2A' },
+  barLabel: { fontSize: 9, fontWeight: '500', width: 120 },
   barTrack: { flex: 1, height: 5, borderRadius: 3, overflow: 'hidden' },
   barFill: { height: '100%', borderRadius: 3 },
   barValue: { fontSize: 13, fontWeight: '800', width: 22, textAlign: 'right' },
-  riskItem: { paddingVertical: 8 },
+  riskItem: { paddingVertical: 6 },
   riskItemHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4, flexWrap: 'wrap', gap: 6 },
   riskItemLeft: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   riskItemRight: { flexDirection: 'row', gap: 4, alignItems: 'center' },
@@ -702,14 +702,14 @@ const s = StyleSheet.create({
   riskType: { fontSize: 10, marginTop: 1, color: '#6B8A7A' },
   scorePill: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, borderWidth: 1 },
   scoreText: { fontSize: 9, fontWeight: '700', fontFamily: Platform.OS === 'web' ? 'monospace' : undefined },
-  riskDesc: { fontSize: 12, lineHeight: 17, marginBottom: 4, color: '#E0F0E0' },
+  riskDesc: { fontSize: 11, lineHeight: 15, marginBottom: 3, color: '#E0F0E0' },
   riskMeta: { flexDirection: 'row', gap: 12 },
   riskMetaText: { fontSize: 9, color: '#6B8A7A', fontFamily: Platform.OS === 'web' ? 'monospace' : undefined },
   quickStatsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  quickStatItem: { flex: 1, minWidth: '40%' as any, borderWidth: 1, borderColor: '#1A3A2A', backgroundColor: '#111820', borderRadius: 8, padding: 8, alignItems: 'center' },
-  quickStatValue: { fontSize: 16, fontWeight: '800' },
-  quickStatLabel: { fontSize: 9, marginTop: 2, textAlign: 'center', letterSpacing: 0.5 },
-  finCard: { flex: 1, borderWidth: 1, borderRadius: 8, padding: 8, alignItems: 'center' },
+  quickStatItem: { flex: 1, minWidth: '40%' as any, borderWidth: 1, borderColor: '#1A3A2A', backgroundColor: '#111820', borderRadius: 6, padding: 6, alignItems: 'center' },
+  quickStatValue: { fontSize: 14, fontWeight: '800' },
+  quickStatLabel: { fontSize: 8, marginTop: 1, textAlign: 'center', letterSpacing: 0.5 },
+  finCard: { flex: 1, borderWidth: 1, borderRadius: 6, padding: 6, alignItems: 'center' },
   finLabel: { fontSize: 7, fontWeight: '700', letterSpacing: 0.5, textAlign: 'center', marginBottom: 2, color: '#6B8A7A', fontFamily: Platform.OS === 'web' ? 'monospace' : undefined },
   finValue: { fontSize: 13, fontWeight: '800', fontFamily: Platform.OS === 'web' ? 'monospace' : undefined },
   // Modal

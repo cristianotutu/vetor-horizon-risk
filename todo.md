@@ -172,3 +172,10 @@
 - [x] Remover cargo dos consultores no Sobre
 - [x] Wizard mostrar apenas 1 vez (já tem tutorial no Sobre)
 - [x] Melhorar visualização da tabela de riscos (layout, legibilidade, aproveitamento de espaço)
+- [x] Otimizar Dashboard para 1366×768 full viewport (sem áreas vazias)
+- [x] Otimizar Riscos para 1366×768 full viewport (tabela ocupa todo espaço)
+- [x] Otimizar Evolução para 1366×768 full viewport (sem scroll desnecessário)
+- [x] Otimizar Estratégico para 1366×768 full viewport (painéis expandidos)
+- [x] Otimizar Relatório para 1366×768 full viewport (slides maximizados)
+- [x] Otimizar Tabelas de Referência para 1366×768 full viewport (matrizes maiores)
+- [x] Otimizar Sobre para 1366×768 full viewport (conteúdo distribuído)

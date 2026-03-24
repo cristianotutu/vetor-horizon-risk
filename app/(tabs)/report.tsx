@@ -702,7 +702,7 @@ export default function ReportScreen() {
     <ScreenContainer edges={["top", "left", "right"]} containerClassName="bg-background">
       <View style={{ flex: 1, backgroundColor: C.bg }}>
         {/* Navigation Bar */}
-        <View style={{ backgroundColor: C.card, borderBottomWidth: 1, borderBottomColor: C.border, paddingVertical: 6, paddingHorizontal: isDesktop ? 24 : 10 }}>
+        <View style={{ backgroundColor: C.card, borderBottomWidth: 1, borderBottomColor: C.border, paddingVertical: 4, paddingHorizontal: isDesktop ? 16 : 10 }}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 4, alignItems: 'center' }}>
             {slides.map((slide, i) => (
               <TouchableOpacity
@@ -735,28 +735,28 @@ export default function ReportScreen() {
         {/* Slide Content */}
         <ScrollView
           style={{ flex: 1 }}
-          contentContainerStyle={{ padding: isDesktop ? 16 : 10, paddingBottom: 60 }}
+          contentContainerStyle={{ padding: isDesktop ? 12 : 10, paddingBottom: 40 }}
         >
           <Animated.View entering={FadeInDown.duration(300)} key={currentSlide}>
             {/* Slide Header */}
-            <View style={{ marginBottom: 12 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: slides[currentSlide].color + '15', borderWidth: 1, borderColor: slides[currentSlide].color + '30', alignItems: 'center', justifyContent: 'center' }}>
-                  <Text style={{ color: slides[currentSlide].color, fontSize: 12, fontWeight: '800', fontFamily: 'monospace' }}>{currentSlide + 1}</Text>
+            <View style={{ marginBottom: 8 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 3 }}>
+                <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: slides[currentSlide].color + '15', borderWidth: 1, borderColor: slides[currentSlide].color + '30', alignItems: 'center', justifyContent: 'center' }}>
+                  <Text style={{ color: slides[currentSlide].color, fontSize: 10, fontWeight: '800', fontFamily: 'monospace' }}>{currentSlide + 1}</Text>
                 </View>
                 <Text style={{ color: slides[currentSlide].color, fontSize: 11, fontWeight: '700', fontFamily: 'monospace', letterSpacing: 1.5 }}>{slides[currentSlide].title}</Text>
               </View>
               <Text style={{ color: C.muted, fontSize: 10, fontFamily: 'monospace', marginLeft: 36 }}>{slides[currentSlide].subtitle}</Text>
             </View>
 
-            <View style={{ maxWidth: isDesktop ? 960 : undefined, alignSelf: isDesktop ? 'center' : undefined, width: '100%' }}>
+            <View style={{ maxWidth: isDesktop ? 1200 : undefined, alignSelf: isDesktop ? 'center' : undefined, width: '100%' }}>
               <CurrentSlideComponent />
             </View>
           </Animated.View>
         </ScrollView>
 
         {/* Bottom Navigation */}
-        <View style={{ backgroundColor: C.card, borderTopWidth: 1, borderTopColor: C.border, paddingVertical: 8, paddingHorizontal: isDesktop ? 24 : 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+        <View style={{ backgroundColor: C.card, borderTopWidth: 1, borderTopColor: C.border, paddingVertical: 6, paddingHorizontal: isDesktop ? 16 : 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
           <TouchableOpacity
             onPress={() => goTo(currentSlide - 1)}
             activeOpacity={0.7}
@@ -797,11 +797,11 @@ const st = StyleSheet.create({
   },
   slideQuestion: {
     color: C.text,
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '700',
     fontFamily: 'monospace',
     fontStyle: 'italic',
-    marginBottom: 16,
-    lineHeight: 22,
+    marginBottom: 12,
+    lineHeight: 18,
   },
 });
