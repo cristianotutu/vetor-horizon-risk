@@ -16,6 +16,9 @@ export const FINANCIAL_DATA: Record<string, FinancialImpact> = {
     roiPrevencao: 807.1,
     racional: 'Parada no faturamento por 5 dias (25-30 do mês). Alta demanda: R$ 2.9M/dia x 5 dias = R$ 14.5M. Baixa: R$ 960K/dia x 5 = R$ 4.8M. Inclui multas contratuais e retrabalho.',
     categoria: 'Receita',
+    fair: { sle: 25700000, aro: 0.3, ale: 7710000, lef: 'Improvável', lm: 'Significativa' },
+    coso: { apetite: 'Acima da Capacidade', componente: 'Desempenho' },
+    riskIt: { dominio: 'Resposta ao Risco', cenario: 'Interrupção de sistemas críticos de negócio' },
   },
   'R004': {
     perdaAltaDemanda: 8200000,
@@ -27,6 +30,9 @@ export const FINANCIAL_DATA: Record<string, FinancialImpact> = {
     roiPrevencao: 285.8,
     racional: 'Assalto em CD: perda de mercadorias (R$ 2-5M), parada operacional de 3-7 dias, custos com seguros e indenizações. Alta demanda: estoque 3x maior = perda proporcional.',
     categoria: 'Operacional',
+    fair: { sle: 18520000, aro: 0.25, ale: 4630000, lef: 'Improvável', lm: 'Significativa' },
+    coso: { apetite: 'No Limite da Tolerância', componente: 'Desempenho' },
+    riskIt: { dominio: 'Resposta ao Risco', cenario: 'Comprometimento de ativos físicos e infraestrutura' },
   },
   'R005': {
     perdaAltaDemanda: 35000000,
@@ -38,6 +44,9 @@ export const FINANCIAL_DATA: Record<string, FinancialImpact> = {
     roiPrevencao: 575.0,
     racional: 'Vazamento de dados: multa LGPD até 2% do faturamento (R$ 7M), perda de clientes (15-20% da base), custos de remediação, processos judiciais. Alta demanda: exposição de dados 3x maior, impacto reputacional amplificado.',
     categoria: 'Receita',
+    fair: { sle: 37800000, aro: 0.5, ale: 18900000, lef: 'Possível', lm: 'Catastrófica' },
+    coso: { apetite: 'Acima da Capacidade', componente: 'Desempenho' },
+    riskIt: { dominio: 'Resposta ao Risco', cenario: 'Ataque cibernético com comprometimento de dados e/ou operações' },
   },
   'R006': {
     perdaAltaDemanda: 18000000,
@@ -49,6 +58,9 @@ export const FINANCIAL_DATA: Record<string, FinancialImpact> = {
     roiPrevencao: 516.7,
     racional: 'Erro de precificação em alta demanda pode gerar vendas com prejuízo (margem negativa) ou perda de vendas. Falha na entrega: 30% dos pedidos em datas críticas = R$ 18M em chargebacks e devoluções.',
     categoria: 'Receita',
+    fair: { sle: 11562500, aro: 0.8, ale: 9250000, lef: 'Provável', lm: 'Moderada' },
+    coso: { apetite: 'Acima da Capacidade', componente: 'Desempenho' },
+    riskIt: { dominio: 'Avaliação de Risco', cenario: 'Falha em processos operacionais críticos' },
   },
   'R007': {
     perdaAltaDemanda: 43500000,
@@ -60,6 +72,9 @@ export const FINANCIAL_DATA: Record<string, FinancialImpact> = {
     roiPrevencao: 480.9,
     racional: 'Indisponibilidade total do e-commerce por 15 dias. Alta demanda: R$ 2.9M/dia x 15 = R$ 43.5M em vendas perdidas. Baixa: R$ 694K/dia x 15 = R$ 10.4M. Inclui danos reputacionais e perda de clientes.',
     categoria: 'Receita',
+    fair: { sle: 50825000, aro: 0.4, ale: 20330000, lef: 'Possível', lm: 'Catastrófica' },
+    coso: { apetite: 'Acima da Capacidade', componente: 'Desempenho' },
+    riskIt: { dominio: 'Resposta ao Risco', cenario: 'Indisponibilidade de plataforma tecnológica' },
   },
   'R008': {
     perdaAltaDemanda: 9500000,
@@ -71,6 +86,9 @@ export const FINANCIAL_DATA: Record<string, FinancialImpact> = {
     roiPrevencao: 578.7,
     racional: 'Enchente bloqueando logística por 7-10 dias. Alta demanda: R$ 950K/dia em entregas atrasadas x 10 dias. Baixa: R$ 320K/dia x 10. Inclui custos de frete emergencial e devoluções.',
     categoria: 'Operacional',
+    fair: { sle: 8483333, aro: 0.6, ale: 5090000, lef: 'Provável', lm: 'Moderada' },
+    coso: { apetite: 'No Limite da Tolerância', componente: 'Desempenho' },
+    riskIt: { dominio: 'Avaliação de Risco', cenario: 'Interrupção da cadeia logística' },
   },
   'R009': {
     perdaAltaDemanda: 22000000,
@@ -82,6 +100,9 @@ export const FINANCIAL_DATA: Record<string, FinancialImpact> = {
     roiPrevencao: 597.2,
     racional: 'Crise institucional afetando confiança de investidores e parceiros. Perda de 5-8% do faturamento anual por queda de confiança. Alta demanda: impacto amplificado pela exposição midiática sazonal.',
     categoria: 'Reputacional',
+    fair: { sle: 41833333, aro: 0.3, ale: 12550000, lef: 'Improvável', lm: 'Catastrófica' },
+    coso: { apetite: 'Acima da Capacidade', componente: 'Governança e Cultura' },
+    riskIt: { dominio: 'Governança de Risco', cenario: 'Falha na estrutura de governança corporativa' },
   },
   'R010': {
     perdaAltaDemanda: 52500000,
@@ -93,6 +114,9 @@ export const FINANCIAL_DATA: Record<string, FinancialImpact> = {
     roiPrevencao: 566.7,
     racional: 'Sabotagem interna com acesso privilegiado: vazamento massivo + parada operacional. Perda de até 15% do faturamento anual. Alta demanda: dados de 3x mais transações expostos, multas LGPD + processos coletivos.',
     categoria: 'Receita',
+    fair: { sle: 56000000, aro: 0.5, ale: 28000000, lef: 'Possível', lm: 'Catastrófica' },
+    coso: { apetite: 'Acima da Capacidade', componente: 'Desempenho' },
+    riskIt: { dominio: 'Resposta ao Risco', cenario: 'Ataque cibernético com comprometimento de dados e/ou operações' },
   },
   'R011': {
     perdaAltaDemanda: 7000000,
@@ -104,6 +128,9 @@ export const FINANCIAL_DATA: Record<string, FinancialImpact> = {
     roiPrevencao: 658.3,
     racional: 'Fraude via fornecedores fictícios: desvio médio de 1-2% do volume de compras. Compras anuais ~R$ 175M (50% do faturamento). Alta demanda: volume de compras 3x maior, maior pressão por agilidade = menor controle.',
     categoria: 'Operacional',
+    fair: { sle: 9100000, aro: 0.5, ale: 4550000, lef: 'Possível', lm: 'Moderada' },
+    coso: { apetite: 'No Limite da Tolerância', componente: 'Desempenho' },
+    riskIt: { dominio: 'Resposta ao Risco', cenario: 'Fraude interna ou externa com impacto financeiro' },
   },
   'R012': {
     perdaAltaDemanda: 5000000,
@@ -115,6 +142,9 @@ export const FINANCIAL_DATA: Record<string, FinancialImpact> = {
     roiPrevencao: 350.0,
     racional: 'Diversificação sem expertise: investimento perdido de R$ 3-5M em novos segmentos. Impacto similar em alta e baixa demanda pois é investimento estratégico, não operacional.',
     categoria: 'Operacional',
+    fair: { sle: 12000000, aro: 0.3, ale: 3600000, lef: 'Improvável', lm: 'Moderada' },
+    coso: { apetite: 'No Limite da Tolerância', componente: 'Desempenho' },
+    riskIt: { dominio: 'Governança de Risco', cenario: 'Decisão estratégica sem análise de risco adequada' },
   },
   'R013': {
     perdaAltaDemanda: 28000000,
@@ -126,6 +156,9 @@ export const FINANCIAL_DATA: Record<string, FinancialImpact> = {
     roiPrevencao: 536.4,
     racional: 'Não atingir meta de +8% receita = perda de R$ 28M em alta demanda (onde se concentra 40% do faturamento). Baixa demanda: R$ 8M de receita não capturada. Meta: R$ 378M vs R$ 350M.',
     categoria: 'Receita',
+    fair: { sle: 14000000, aro: 1.0, ale: 14000000, lef: 'Quase Certo', lm: 'Moderada' },
+    coso: { apetite: 'Acima da Capacidade', componente: 'Desempenho' },
+    riskIt: { dominio: 'Avaliação de Risco', cenario: 'Perda de competitividade por mudanças de mercado' },
   },
   'R014': {
     perdaAltaDemanda: 15000000,
@@ -137,6 +170,9 @@ export const FINANCIAL_DATA: Record<string, FinancialImpact> = {
     roiPrevencao: 818.2,
     racional: 'Vazamento de código-fonte: perda de vantagem competitiva, exploração de vulnerabilidades. Custo de remediação + perda de mercado. Alta demanda: concorrentes podem explorar vulnerabilidades em período crítico.',
     categoria: 'Operacional',
+    fair: { sle: 33666667, aro: 0.3, ale: 10100000, lef: 'Improvável', lm: 'Catastrófica' },
+    coso: { apetite: 'Acima da Capacidade', componente: 'Desempenho' },
+    riskIt: { dominio: 'Avaliação de Risco', cenario: 'Vazamento de propriedade intelectual' },
   },
   'R015': {
     perdaAltaDemanda: 21000000,
@@ -148,6 +184,9 @@ export const FINANCIAL_DATA: Record<string, FinancialImpact> = {
     roiPrevencao: 477.5,
     racional: 'Ruptura de estoque: perda direta de vendas. Alta demanda: R$ 2.9M/dia x 7 dias de ruptura parcial (25% do catálogo) = R$ 21M. Baixa: R$ 694K/dia x 7 x 25% catálogo afetado.',
     categoria: 'Receita',
+    fair: { sle: 13200000, aro: 0.7, ale: 9240000, lef: 'Provável', lm: 'Moderada' },
+    coso: { apetite: 'Acima da Capacidade', componente: 'Desempenho' },
+    riskIt: { dominio: 'Avaliação de Risco', cenario: 'Ruptura na cadeia de suprimentos' },
   },
   'R016': {
     perdaAltaDemanda: 12000000,
@@ -159,6 +198,9 @@ export const FINANCIAL_DATA: Record<string, FinancialImpact> = {
     roiPrevencao: 372.2,
     racional: 'Multas regulatórias: LGPD até 2% (R$ 7M), PROCON, ANATEL. Alta demanda: maior volume de transações = maior exposição a reclamações e fiscalizações. Inclui custos de adequação emergencial.',
     categoria: 'Regulatório',
+    fair: { sle: 21250000, aro: 0.4, ale: 8500000, lef: 'Possível', lm: 'Significativa' },
+    coso: { apetite: 'Acima da Capacidade', componente: 'Informação, Comunicação e Reporte' },
+    riskIt: { dominio: 'Governança de Risco', cenario: 'Não conformidade regulatória' },
   },
   'R017': {
     perdaAltaDemanda: 26000000,
@@ -170,6 +212,9 @@ export const FINANCIAL_DATA: Record<string, FinancialImpact> = {
     roiPrevencao: 466.8,
     racional: 'Não atingir meta de +26% market share: receita não capturada de R$ 91M (26% de R$ 350M). Considerando probabilidade parcial: alta demanda R$ 26M, baixa R$ 9.1M de oportunidade perdida.',
     categoria: 'Receita',
+    fair: { sle: 14170000, aro: 1.0, ale: 14170000, lef: 'Quase Certo', lm: 'Moderada' },
+    coso: { apetite: 'Acima da Capacidade', componente: 'Desempenho' },
+    riskIt: { dominio: 'Avaliação de Risco', cenario: 'Perda de competitividade por mudanças de mercado' },
   },
   'R018': {
     perdaAltaDemanda: 11000000,
@@ -181,6 +226,9 @@ export const FINANCIAL_DATA: Record<string, FinancialImpact> = {
     roiPrevencao: 495.8,
     racional: 'Conflitos societários: paralisia decisória, perda de oportunidades, saída de executivos-chave. Impacto de 3-5% do faturamento. Alta demanda: decisões críticas de compra e pricing atrasadas.',
     categoria: 'Reputacional',
+    fair: { sle: 23833333, aro: 0.3, ale: 7150000, lef: 'Improvável', lm: 'Significativa' },
+    coso: { apetite: 'Acima da Capacidade', componente: 'Governança e Cultura' },
+    riskIt: { dominio: 'Governança de Risco', cenario: 'Falha na estrutura de governança corporativa' },
   },
   'R019': {
     perdaAltaDemanda: 6500000,
@@ -192,6 +240,9 @@ export const FINANCIAL_DATA: Record<string, FinancialImpact> = {
     roiPrevencao: 226.0,
     racional: 'Turnover elevado: custo de reposição = 1.5x salário anual por posição. Com 1.000 colaboradores e turnover de 15%: 150 reposições x R$ 35K médio = R$ 5.25M. Alta demanda: impacto operacional amplificado.',
     categoria: 'Operacional',
+    fair: { sle: 4890000, aro: 1.0, ale: 4890000, lef: 'Quase Certo', lm: 'Menor' },
+    coso: { apetite: 'No Limite da Tolerância', componente: 'Desempenho' },
+    riskIt: { dominio: 'Avaliação de Risco', cenario: 'Perda de capital humano crítico' },
   },
   'R020': {
     perdaAltaDemanda: 14000000,
@@ -203,6 +254,9 @@ export const FINANCIAL_DATA: Record<string, FinancialImpact> = {
     roiPrevencao: 468.8,
     racional: 'Multa ANPD: até 2% do faturamento (R$ 7M) + sanções (suspensão de tratamento de dados). Alta demanda: maior volume de dados coletados = maior exposição. Inclui custos de adequação e danos reputacionais.',
     categoria: 'Regulatório',
+    fair: { sle: 30333333, aro: 0.3, ale: 9100000, lef: 'Improvável', lm: 'Catastrófica' },
+    coso: { apetite: 'Acima da Capacidade', componente: 'Informação, Comunicação e Reporte' },
+    riskIt: { dominio: 'Governança de Risco', cenario: 'Violação de dados pessoais (LGPD/ANPD)' },
   },
   'R021': {
     perdaAltaDemanda: 3500000,
@@ -214,6 +268,9 @@ export const FINANCIAL_DATA: Record<string, FinancialImpact> = {
     roiPrevencao: 390.0,
     racional: 'Incêndio em DC/CD: perda de equipamentos e estoque parcial. Probabilidade baixa (1/5) mas impacto significativo. Alta demanda: estoque 3x maior em risco. Seguro cobre parte mas não o downtime.',
     categoria: 'Segurança',
+    fair: { sle: 9800000, aro: 0.25, ale: 2450000, lef: 'Improvável', lm: 'Moderada' },
+    coso: { apetite: 'No Limite da Tolerância', componente: 'Revisão e Monitoramento' },
+    riskIt: { dominio: 'Resposta ao Risco', cenario: 'Comprometimento de ativos físicos e infraestrutura' },
   },
   'R022': {
     perdaAltaDemanda: 25000000,
@@ -225,6 +282,9 @@ export const FINANCIAL_DATA: Record<string, FinancialImpact> = {
     roiPrevencao: 627.8,
     racional: 'Vazamento de campanhas e estratégias por funcionário: concorrentes antecipam promoções, perda de vantagem competitiva. Alta demanda: campanhas de Black Friday/Natal valem 30% do faturamento anual.',
     categoria: 'Receita',
+    fair: { sle: 32750000, aro: 0.4, ale: 13100000, lef: 'Possível', lm: 'Catastrófica' },
+    coso: { apetite: 'Acima da Capacidade', componente: 'Desempenho' },
+    riskIt: { dominio: 'Resposta ao Risco', cenario: 'Vazamento de informações confidenciais' },
   },
   'R023': {
     perdaAltaDemanda: 4500000,
@@ -236,6 +296,9 @@ export const FINANCIAL_DATA: Record<string, FinancialImpact> = {
     roiPrevencao: 500.0,
     racional: 'Greve de 5-7 dias: parada parcial dos CDs. Alta demanda: R$ 2.9M/dia x 5 dias x 30% impacto = R$ 4.5M. Baixa: R$ 694K/dia x 5 x 40% = R$ 1.5M. Probabilidade baixa (1/5).',
     categoria: 'Operacional',
+    fair: { sle: 12000000, aro: 0.2, ale: 2400000, lef: 'Improvável', lm: 'Moderada' },
+    coso: { apetite: 'No Limite da Tolerância', componente: 'Desempenho' },
+    riskIt: { dominio: 'Avaliação de Risco', cenario: 'Paralisação por conflito trabalhista' },
   },
   'R024': {
     perdaAltaDemanda: 16000000,
@@ -247,6 +310,9 @@ export const FINANCIAL_DATA: Record<string, FinancialImpact> = {
     roiPrevencao: 367.5,
     racional: 'Sem profissional de SI: vulnerabilidades não detectadas, resposta lenta a incidentes. Custo médio de breach no Brasil: R$ 6.5M. Alta demanda: superfície de ataque 3x maior, dados mais valiosos.',
     categoria: 'Segurança',
+    fair: { sle: 18700000, aro: 0.5, ale: 9350000, lef: 'Possível', lm: 'Significativa' },
+    coso: { apetite: 'Acima da Capacidade', componente: 'Revisão e Monitoramento' },
+    riskIt: { dominio: 'Resposta ao Risco', cenario: 'Ataque cibernético com comprometimento de dados e/ou operações' },
   },
   'R025': {
     perdaAltaDemanda: 9000000,
@@ -258,6 +324,9 @@ export const FINANCIAL_DATA: Record<string, FinancialImpact> = {
     roiPrevencao: 631.2,
     racional: 'Agência com acesso a dados de clientes: vazamento por terceiro. Multa LGPD + processos + perda de clientes. Alta demanda: base de dados maior (campanhas sazonais captam mais leads).',
     categoria: 'Regulatório',
+    fair: { sle: 11700000, aro: 0.5, ale: 5850000, lef: 'Possível', lm: 'Moderada' },
+    coso: { apetite: 'No Limite da Tolerância', componente: 'Informação, Comunicação e Reporte' },
+    riskIt: { dominio: 'Avaliação de Risco', cenario: 'Falha de terceiro com acesso a dados' },
   },
   'R026': {
     perdaAltaDemanda: 12000000,
@@ -269,6 +338,9 @@ export const FINANCIAL_DATA: Record<string, FinancialImpact> = {
     roiPrevencao: 517.8,
     racional: 'Estoque zero com ruptura: perda de vendas direta. Alta demanda: R$ 2.9M/dia x 4 dias de ruptura = R$ 12M. Baixa: R$ 694K/dia x 4 = R$ 2.8M. Inclui perda de clientes para concorrentes.',
     categoria: 'Receita',
+    fair: { sle: 7942857, aro: 0.7, ale: 5560000, lef: 'Provável', lm: 'Moderada' },
+    coso: { apetite: 'No Limite da Tolerância', componente: 'Desempenho' },
+    riskIt: { dominio: 'Avaliação de Risco', cenario: 'Ruptura na cadeia de suprimentos' },
   },
   'R027': {
     perdaAltaDemanda: 10500000,
@@ -280,6 +352,9 @@ export const FINANCIAL_DATA: Record<string, FinancialImpact> = {
     roiPrevencao: 366.7,
     racional: 'Fraude em e-commerce: taxa média de 1.5-3% do GMV. Faturamento e-commerce ~R$ 350M. Alta demanda: volume 3x maior, fraudadores mais ativos. Chargebacks + mercadorias perdidas + custos operacionais.',
     categoria: 'Receita',
+    fair: { sle: 11200000, aro: 0.5, ale: 5600000, lef: 'Possível', lm: 'Moderada' },
+    coso: { apetite: 'No Limite da Tolerância', componente: 'Desempenho' },
+    riskIt: { dominio: 'Resposta ao Risco', cenario: 'Fraude interna ou externa com impacto financeiro' },
   },
   'R001': {
     perdaAltaDemanda: 25000000,
@@ -291,6 +366,9 @@ export const FINANCIAL_DATA: Record<string, FinancialImpact> = {
     roiPrevencao: 274.3,
     racional: 'Perda de market share de 5-7% ao ano para marketplaces com logística própria. Faturamento R$ 350M: 7% = R$ 24.5M em alta demanda. Baixa: 2.3% = R$ 8M. Inclui compressão de margens para competir em preço.',
     categoria: 'Receita',
+    fair: { sle: 13100000, aro: 1.0, ale: 13100000, lef: 'Quase Certo', lm: 'Moderada' },
+    coso: { apetite: 'Acima da Capacidade', componente: 'Desempenho' },
+    riskIt: { dominio: 'Avaliação de Risco', cenario: 'Perda de competitividade por mudanças de mercado' },
   },
   'R002': {
     perdaAltaDemanda: 70000000,
@@ -302,6 +380,9 @@ export const FINANCIAL_DATA: Record<string, FinancialImpact> = {
     roiPrevencao: 670.0,
     racional: 'Recessão pode reduzir faturamento em 20-30%. Faturamento R$ 350M: 20% = R$ 70M em alta demanda. Baixa: ~7% = R$ 25M. Inclui inadimplência B2B, demissões e custos de reestruturação.',
     categoria: 'Receita',
+    fair: { sle: 192500000, aro: 0.2, ale: 38500000, lef: 'Improvável', lm: 'Catastrófica' },
+    coso: { apetite: 'Acima da Capacidade', componente: 'Desempenho' },
+    riskIt: { dominio: 'Governança de Risco', cenario: 'Impacto macroeconômico sobre receita e operações' },
   },
   'R028': {
     perdaAltaDemanda: 8000000,
@@ -313,6 +394,9 @@ export const FINANCIAL_DATA: Record<string, FinancialImpact> = {
     roiPrevencao: 400.0,
     racional: 'Estoque obsoleto: liquidação com 30-70% de desconto. Estoque médio R$ 20M, 10% obsoleto = R$ 2M de perda direta + custos de armazenagem. Alta demanda: compras 3x maiores amplificam o risco.',
     categoria: 'Operacional',
+    fair: { sle: 5625000, aro: 0.8, ale: 4500000, lef: 'Provável', lm: 'Moderada' },
+    coso: { apetite: 'No Limite da Tolerância', componente: 'Desempenho' },
+    riskIt: { dominio: 'Avaliação de Risco', cenario: 'Ruptura ou obsolescência de estoque' },
   },
   'R029': {
     perdaAltaDemanda: 15000000,
@@ -324,6 +408,9 @@ export const FINANCIAL_DATA: Record<string, FinancialImpact> = {
     roiPrevencao: 383.3,
     racional: 'Fracasso de projetos de transformação: 40% dos investimentos desperdiçados (R$ 6M/ano). Manutenção de vulnerabilidades: custo de incidentes evitáveis R$ 9M em alta demanda. Turnover de talentos: R$ 150K/posição.',
     categoria: 'Operacional',
+    fair: { sle: 17400000, aro: 0.5, ale: 8700000, lef: 'Possível', lm: 'Significativa' },
+    coso: { apetite: 'Acima da Capacidade', componente: 'Desempenho' },
+    riskIt: { dominio: 'Governança de Risco', cenario: 'Resistência organizacional à mudança' },
   },
   'R030': {
     perdaAltaDemanda: 20000000,
@@ -335,6 +422,9 @@ export const FINANCIAL_DATA: Record<string, FinancialImpact> = {
     roiPrevencao: 486.7,
     racional: 'Falha de gateway em Black Friday: R$ 2.9M/dia x 7 dias de pico = R$ 20M. Baixa demanda: R$ 694K/dia x 6 dias = R$ 4M. Inclui abandono de carrinho e migração de clientes.',
     categoria: 'Receita',
+    fair: { sle: 22000000, aro: 0.4, ale: 8800000, lef: 'Possível', lm: 'Significativa' },
+    coso: { apetite: 'Acima da Capacidade', componente: 'Desempenho' },
+    riskIt: { dominio: 'Resposta ao Risco', cenario: 'Indisponibilidade de plataforma tecnológica' },
   },
   'R031': {
     perdaAltaDemanda: 30000000,
@@ -346,6 +436,9 @@ export const FINANCIAL_DATA: Record<string, FinancialImpact> = {
     roiPrevencao: 700.0,
     racional: 'Paralisação total por falha do provedor: R$ 2.9M/dia x 10 dias = R$ 29M em alta demanda. Custos de migração emergencial: R$ 5M. Baixa: R$ 694K/dia x 14 dias = R$ 10M.',
     categoria: 'Operacional',
+    fair: { sle: 80000000, aro: 0.2, ale: 16000000, lef: 'Improvável', lm: 'Catastrófica' },
+    coso: { apetite: 'Acima da Capacidade', componente: 'Desempenho' },
+    riskIt: { dominio: 'Resposta ao Risco', cenario: 'Dependência crítica de provedor único de cloud' },
   },
   'R032': {
     perdaAltaDemanda: 18000000,
@@ -357,6 +450,9 @@ export const FINANCIAL_DATA: Record<string, FinancialImpact> = {
     roiPrevencao: 452.0,
     racional: 'Aumento de carga tributária de 3-5pp sobre faturamento de R$ 350M = R$ 10.5-17.5M/ano. Autuações por erro na transição: até R$ 3M. Custos de adaptação de sistemas: R$ 1.5M.',
     categoria: 'Regulatório',
+    fair: { sle: 46000000, aro: 0.3, ale: 13800000, lef: 'Improvável', lm: 'Catastrófica' },
+    coso: { apetite: 'Acima da Capacidade', componente: 'Informação, Comunicação e Reporte' },
+    riskIt: { dominio: 'Governança de Risco', cenario: 'Mudança regulatória tributária' },
   },
   'R033': {
     perdaAltaDemanda: 6000000,
@@ -368,6 +464,9 @@ export const FINANCIAL_DATA: Record<string, FinancialImpact> = {
     roiPrevencao: 254.2,
     racional: 'Custo de turnover: R$ 150K/posição x 20 saídas/ano = R$ 3M. Afastamentos por burnout: R$ 50K/colaborador x 30 = R$ 1.5M. Erros operacionais por fadiga: R$ 1.5M em alta demanda.',
     categoria: 'Operacional',
+    fair: { sle: 4250000, aro: 1.0, ale: 4250000, lef: 'Quase Certo', lm: 'Menor' },
+    coso: { apetite: 'No Limite da Tolerância', componente: 'Desempenho' },
+    riskIt: { dominio: 'Avaliação de Risco', cenario: 'Perda de capital humano crítico' },
   },
   'R034': {
     perdaAltaDemanda: 16000000,
@@ -379,6 +478,9 @@ export const FINANCIAL_DATA: Record<string, FinancialImpact> = {
     roiPrevencao: 361.1,
     racional: 'Falha logística last-mile: 15% dos pedidos atrasados em alta demanda = R$ 16M (chargebacks + devoluções + frete emergencial). Baixa: 8% = R$ 5M. Inclui dano reputacional e perda de recorrência.',
     categoria: 'Operacional',
+    fair: { sle: 13833333, aro: 0.6, ale: 8300000, lef: 'Provável', lm: 'Moderada' },
+    coso: { apetite: 'Acima da Capacidade', componente: 'Desempenho' },
+    riskIt: { dominio: 'Avaliação de Risco', cenario: 'Interrupção da cadeia logística' },
   },
   'R035': {
     perdaAltaDemanda: 12000000,
@@ -390,6 +492,9 @@ export const FINANCIAL_DATA: Record<string, FinancialImpact> = {
     roiPrevencao: 875.0,
     racional: 'Inadimplência B2B de 8-10% sobre carteira de R$ 120M = R$ 9.6-12M. Alta demanda: vendas maiores amplificam exposição. Custos de cobrança judicial: R$ 500K/ano. PDD: 3% do faturamento B2B.',
     categoria: 'Receita',
+    fair: { sle: 9750000, aro: 0.8, ale: 7800000, lef: 'Provável', lm: 'Moderada' },
+    coso: { apetite: 'Acima da Capacidade', componente: 'Desempenho' },
+    riskIt: { dominio: 'Avaliação de Risco', cenario: 'Inadimplência de clientes B2B' },
   },
 };
 

@@ -26,6 +26,34 @@ export interface FinancialImpact {
   racional: string;
   /** Categoria de impacto financeiro */
   categoria: 'Receita' | 'Operacional' | 'Regulatório' | 'Reputacional' | 'Segurança';
+  // === FAIR INSTITUTE — Factor Analysis of Information Risk ===
+  /** ALE (Annualized Loss Expectancy) = SLE × ARO em R$ */
+  fair?: {
+    /** SLE — Single Loss Expectancy: perda por evento único em R$ */
+    sle: number;
+    /** ARO — Annualized Rate of Occurrence: frequência anual esperada (0.1 = 1x a cada 10 anos, 1 = 1x/ano, 3 = 3x/ano) */
+    aro: number;
+    /** ALE — Annualized Loss Expectancy = SLE × ARO em R$ */
+    ale: number;
+    /** LEF — Loss Event Frequency: descritivo qualitativo */
+    lef: 'Raro' | 'Improvável' | 'Possível' | 'Provável' | 'Quase Certo';
+    /** Magnitude da perda: descritivo qualitativo */
+    lm: 'Insignificante' | 'Menor' | 'Moderada' | 'Significativa' | 'Catastrófica';
+  };
+  // === COSO ERM — Apetite e Tolerância ===
+  coso?: {
+    /** Classificação de apetite de risco: dentro, no limite ou acima */
+    apetite: 'Dentro do Apetite' | 'No Limite da Tolerância' | 'Acima da Capacidade';
+    /** Componente COSO ERM afetado */
+    componente: 'Governança e Cultura' | 'Estratégia e Definição de Objetivos' | 'Desempenho' | 'Revisão e Monitoramento' | 'Informação, Comunicação e Reporte';
+  };
+  // === RISK IT (ISACA) — Domínio e Cenário ===
+  riskIt?: {
+    /** Domínio RISK IT */
+    dominio: 'Governança de Risco' | 'Avaliação de Risco' | 'Resposta ao Risco';
+    /** Cenário de risco ISACA */
+    cenario: string;
+  };
 }
 
 // --- Core Risk Model ---

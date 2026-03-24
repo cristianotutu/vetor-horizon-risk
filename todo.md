@@ -143,3 +143,9 @@
 - [x] Dashboard: adicionar tooltip "?" explicativo em cada matriz
 - [x] Dashboard: demonstrar corrida/evolução dos riscos via eficácia dos controles
 - [x] Dashboard: preencher espaços vagos na tela
+- [x] Analisar PDF Damacorp Strategic Risk Assessment para modelo de relatório
+- [x] Analisar E-Book 3 páginas 6-9 para regras de apresentação executiva
+- [x] Redesenhar tela Relatório Executivo com padrão de apresentação ao conselho
+- [x] Ajustar layout de "Investimentos Preventivos — Priorizados por ROI" para caber toda informação
+- [x] Incorporar frameworks FAIR/COSO/RISK IT/ISACA para valores em R$ e apetite a risco
+- [ ] Push para GitHub e confirmar deploy no Netlify

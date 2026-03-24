@@ -386,15 +386,15 @@ export default function StrategicScreen() {
   const RiskModal = () => (
     <Modal visible={showModal} transparent animationType="fade" onRequestClose={() => setShowModal(false)}>
       <View style={s.modalOverlay}>
-        <View style={[s.modalContent, { backgroundColor: NEON.card, borderColor: NEON.cardBorder, borderWidth: 1, maxWidth: isDesktop ? 800 : '95%' as any }]}>
+        <View style={[s.modalContent, { backgroundColor: NEON.card, borderColor: NEON.cardBorder, borderWidth: 1, maxWidth: isDesktop ? 800 : '95%' as any, maxHeight: '90%' as any }]}>
           <View style={s.modalHeader}>
-            <Text style={[s.modalTitle, { color: NEON.text, fontFamily: 'monospace' }]}>{modalTitle}</Text>
+            <Text style={[s.modalTitle, { color: NEON.text, fontFamily: 'monospace' }]} numberOfLines={2}>{modalTitle}</Text>
             <TouchableOpacity onPress={() => setShowModal(false)} activeOpacity={0.7}>
               <IconSymbol name="xmark" size={22} color={NEON.muted} />
             </TouchableOpacity>
           </View>
           <Text style={[s.modalSubtitle, { color: NEON.cyan, fontFamily: 'monospace' }]}>{selectedRisks.length} RISCOS</Text>
-          <ScrollView style={{ maxHeight: 500 }}>
+          <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={true}>
             {modalMode === 'investment' && selectedRisks.map((r, i) => {
               const fin = r.financial || FINANCIAL_DATA[r.id];
               if (!fin) return null;
@@ -402,39 +402,38 @@ export default function StrategicScreen() {
               return (
                 <TouchableOpacity
                   key={r.id}
-                  style={[s.modalRiskRow, { borderColor: NEON.cardBorder, flexDirection: 'column', alignItems: 'stretch', gap: 8, paddingVertical: 14 }]}
+                  style={{ borderBottomWidth: 1, borderColor: NEON.cardBorder, paddingVertical: 10, gap: 6 }}
                   onPress={() => { setShowModal(false); router.push(`/risk/${r.id}` as any); }}
                   activeOpacity={0.7}
                 >
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                    <View style={{ width: 28, height: 28, borderRadius: 6, backgroundColor: i < 3 ? '#00FF8815' : NEON.bg, alignItems: 'center', justifyContent: 'center' }}>
-                      <Text style={{ fontSize: 12, fontWeight: '800', color: i < 3 ? '#00FF88' : NEON.muted, fontFamily: 'monospace' }}>#{i + 1}</Text>
+                  {/* Row 1: Rank + ID + Description + ROI */}
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Text style={{ fontSize: 10, fontWeight: '800', color: i < 3 ? '#00FF88' : NEON.muted, fontFamily: 'monospace', width: 22 }}>#{i + 1}</Text>
+                    <View style={{ backgroundColor: level.color + '15', borderRadius: 3, paddingHorizontal: 5, paddingVertical: 1 }}>
+                      <Text style={{ color: level.color, fontSize: 10, fontWeight: '700', fontFamily: 'monospace' }}>{r.id}</Text>
                     </View>
-                    <View style={[s.modalRiskId, { backgroundColor: level.color + '15', borderWidth: 1, borderColor: level.color + '30' }]}>
-                      <Text style={[s.modalRiskIdText, { color: level.color, fontFamily: 'monospace' }]}>{r.id}</Text>
-                    </View>
-                    <View style={{ flex: 1, minWidth: 0 }}>
-                      <Text style={[s.modalRiskDesc, { color: NEON.text }]} numberOfLines={1}>{r.descricaoRisco}</Text>
-                    </View>
-                    <View style={{ alignItems: 'flex-end' }}>
-                      <Text style={{ fontSize: 14, fontWeight: '800', color: '#00FF88', fontFamily: 'monospace' }}>ROI {fin.roiPrevencao.toFixed(0)}%</Text>
+                    <Text style={{ flex: 1, color: NEON.text, fontSize: 11, fontFamily: 'monospace' }} numberOfLines={1}>{r.descricaoRisco}</Text>
+                    <View style={{ backgroundColor: '#00FF8815', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 }}>
+                      <Text style={{ fontSize: 11, fontWeight: '800', color: '#00FF88', fontFamily: 'monospace' }}>ROI {fin.roiPrevencao.toFixed(0)}%</Text>
                     </View>
                   </View>
-                  <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
-                    <View style={{ flex: 1, minWidth: 120, backgroundColor: '#00E5FF08', borderWidth: 1, borderColor: '#00E5FF20', borderRadius: 6, padding: 8 }}>
-                      <Text style={{ fontSize: 9, color: NEON.muted, fontFamily: 'monospace', fontWeight: '700' }}>INVESTIR</Text>
-                      <Text style={{ fontSize: 14, fontWeight: '800', color: '#00E5FF', fontFamily: 'monospace' }}>{formatBRL(fin.investimentoPreventivo)}</Text>
+                  {/* Row 2: Compact financial metrics in a single row */}
+                  <View style={{ flexDirection: 'row', gap: 6 }}>
+                    <View style={{ flex: 1, backgroundColor: '#00E5FF08', borderWidth: 1, borderColor: '#00E5FF15', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 4 }}>
+                      <Text style={{ fontSize: 8, color: NEON.muted, fontFamily: 'monospace', fontWeight: '700' }}>INVESTIR</Text>
+                      <Text style={{ fontSize: 12, fontWeight: '800', color: '#00E5FF', fontFamily: 'monospace' }}>{formatBRL(fin.investimentoPreventivo)}</Text>
                     </View>
-                    <View style={{ flex: 1, minWidth: 120, backgroundColor: '#00FF8808', borderWidth: 1, borderColor: '#00FF8820', borderRadius: 6, padding: 8 }}>
-                      <Text style={{ fontSize: 9, color: NEON.muted, fontFamily: 'monospace', fontWeight: '700' }}>PERDA EVITADA</Text>
-                      <Text style={{ fontSize: 14, fontWeight: '800', color: '#00FF88', fontFamily: 'monospace' }}>{formatBRL(fin.perdaEvitada)}</Text>
+                    <View style={{ flex: 1, backgroundColor: '#00FF8808', borderWidth: 1, borderColor: '#00FF8815', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 4 }}>
+                      <Text style={{ fontSize: 8, color: NEON.muted, fontFamily: 'monospace', fontWeight: '700' }}>EVITADA</Text>
+                      <Text style={{ fontSize: 12, fontWeight: '800', color: '#00FF88', fontFamily: 'monospace' }}>{formatBRL(fin.perdaEvitada)}</Text>
                     </View>
-                    <View style={{ flex: 1, minWidth: 120, backgroundColor: '#FF3D3D08', borderWidth: 1, borderColor: '#FF3D3D20', borderRadius: 6, padding: 8 }}>
-                      <Text style={{ fontSize: 9, color: NEON.muted, fontFamily: 'monospace', fontWeight: '700' }}>EXPOSIÇÃO ALTA</Text>
-                      <Text style={{ fontSize: 14, fontWeight: '800', color: '#FF3D3D', fontFamily: 'monospace' }}>{formatBRL(fin.perdaAltaDemanda)}</Text>
+                    <View style={{ flex: 1, backgroundColor: '#FF3D3D08', borderWidth: 1, borderColor: '#FF3D3D15', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 4 }}>
+                      <Text style={{ fontSize: 8, color: NEON.muted, fontFamily: 'monospace', fontWeight: '700' }}>EXPOSIÇÃO</Text>
+                      <Text style={{ fontSize: 12, fontWeight: '800', color: '#FF3D3D', fontFamily: 'monospace' }}>{formatBRL(fin.perdaAltaDemanda)}</Text>
                     </View>
                   </View>
-                  <Text style={{ fontSize: 10, color: NEON.muted, fontFamily: 'monospace', lineHeight: 14 }} numberOfLines={2}>{fin.descricaoInvestimento}</Text>
+                  {/* Row 3: Description compact */}
+                  <Text style={{ fontSize: 9, color: NEON.muted, fontFamily: 'monospace', lineHeight: 13 }} numberOfLines={2}>{fin.descricaoInvestimento}</Text>
                 </TouchableOpacity>
               );
             })}
@@ -445,36 +444,35 @@ export default function StrategicScreen() {
               return (
                 <TouchableOpacity
                   key={r.id}
-                  style={[s.modalRiskRow, { borderColor: NEON.cardBorder, flexDirection: 'column', alignItems: 'stretch', gap: 8, paddingVertical: 14 }]}
+                  style={{ borderBottomWidth: 1, borderColor: NEON.cardBorder, paddingVertical: 10, gap: 6 }}
                   onPress={() => { setShowModal(false); router.push(`/risk/${r.id}` as any); }}
                   activeOpacity={0.7}
                 >
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                    <View style={{ width: 28, height: 28, borderRadius: 6, backgroundColor: i < 3 ? '#FF3D3D15' : NEON.bg, alignItems: 'center', justifyContent: 'center' }}>
-                      <Text style={{ fontSize: 12, fontWeight: '800', color: i < 3 ? '#FF3D3D' : NEON.muted, fontFamily: 'monospace' }}>#{i + 1}</Text>
+                  {/* Row 1: Rank + ID + Description */}
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Text style={{ fontSize: 10, fontWeight: '800', color: i < 3 ? '#FF3D3D' : NEON.muted, fontFamily: 'monospace', width: 22 }}>#{i + 1}</Text>
+                    <View style={{ backgroundColor: level.color + '15', borderRadius: 3, paddingHorizontal: 5, paddingVertical: 1 }}>
+                      <Text style={{ color: level.color, fontSize: 10, fontWeight: '700', fontFamily: 'monospace' }}>{r.id}</Text>
                     </View>
-                    <View style={[s.modalRiskId, { backgroundColor: level.color + '15', borderWidth: 1, borderColor: level.color + '30' }]}>
-                      <Text style={[s.modalRiskIdText, { color: level.color, fontFamily: 'monospace' }]}>{r.id}</Text>
+                    <Text style={{ flex: 1, color: NEON.text, fontSize: 11, fontFamily: 'monospace' }} numberOfLines={1}>{r.descricaoRisco}</Text>
+                  </View>
+                  {/* Row 2: Compact financial metrics */}
+                  <View style={{ flexDirection: 'row', gap: 6 }}>
+                    <View style={{ flex: 1, backgroundColor: '#FF3D3D08', borderWidth: 1, borderColor: '#FF3D3D15', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 4 }}>
+                      <Text style={{ fontSize: 8, color: NEON.muted, fontFamily: 'monospace', fontWeight: '700' }}>ALTA DEMANDA</Text>
+                      <Text style={{ fontSize: 12, fontWeight: '800', color: '#FF3D3D', fontFamily: 'monospace' }}>{formatBRL(fin.perdaAltaDemanda)}</Text>
                     </View>
-                    <View style={{ flex: 1, minWidth: 0 }}>
-                      <Text style={[s.modalRiskDesc, { color: NEON.text }]} numberOfLines={1}>{r.descricaoRisco}</Text>
+                    <View style={{ flex: 1, backgroundColor: '#FF8C0008', borderWidth: 1, borderColor: '#FF8C0015', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 4 }}>
+                      <Text style={{ fontSize: 8, color: NEON.muted, fontFamily: 'monospace', fontWeight: '700' }}>BAIXA DEMANDA</Text>
+                      <Text style={{ fontSize: 12, fontWeight: '800', color: '#FF8C00', fontFamily: 'monospace' }}>{formatBRL(fin.perdaBaixaDemanda)}</Text>
+                    </View>
+                    <View style={{ flex: 1, backgroundColor: '#00E5FF08', borderWidth: 1, borderColor: '#00E5FF15', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 4 }}>
+                      <Text style={{ fontSize: 8, color: NEON.muted, fontFamily: 'monospace', fontWeight: '700' }}>INVESTIR</Text>
+                      <Text style={{ fontSize: 12, fontWeight: '800', color: '#00E5FF', fontFamily: 'monospace' }}>{formatBRL(fin.investimentoPreventivo)}</Text>
                     </View>
                   </View>
-                  <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
-                    <View style={{ flex: 1, minWidth: 120, backgroundColor: '#FF3D3D08', borderWidth: 1, borderColor: '#FF3D3D20', borderRadius: 6, padding: 8 }}>
-                      <Text style={{ fontSize: 9, color: NEON.muted, fontFamily: 'monospace', fontWeight: '700' }}>ALTA DEMANDA</Text>
-                      <Text style={{ fontSize: 14, fontWeight: '800', color: '#FF3D3D', fontFamily: 'monospace' }}>{formatBRL(fin.perdaAltaDemanda)}</Text>
-                    </View>
-                    <View style={{ flex: 1, minWidth: 120, backgroundColor: '#FF8C0008', borderWidth: 1, borderColor: '#FF8C0020', borderRadius: 6, padding: 8 }}>
-                      <Text style={{ fontSize: 9, color: NEON.muted, fontFamily: 'monospace', fontWeight: '700' }}>BAIXA DEMANDA</Text>
-                      <Text style={{ fontSize: 14, fontWeight: '800', color: '#FF8C00', fontFamily: 'monospace' }}>{formatBRL(fin.perdaBaixaDemanda)}</Text>
-                    </View>
-                    <View style={{ flex: 1, minWidth: 120, backgroundColor: '#00E5FF08', borderWidth: 1, borderColor: '#00E5FF20', borderRadius: 6, padding: 8 }}>
-                      <Text style={{ fontSize: 9, color: NEON.muted, fontFamily: 'monospace', fontWeight: '700' }}>INVESTIR P/ EVITAR</Text>
-                      <Text style={{ fontSize: 14, fontWeight: '800', color: '#00E5FF', fontFamily: 'monospace' }}>{formatBRL(fin.investimentoPreventivo)}</Text>
-                    </View>
-                  </View>
-                  <Text style={{ fontSize: 10, color: NEON.muted, fontFamily: 'monospace', lineHeight: 14 }} numberOfLines={2}>{fin.racional}</Text>
+                  {/* Row 3: Racional compact */}
+                  <Text style={{ fontSize: 9, color: NEON.muted, fontFamily: 'monospace', lineHeight: 13 }} numberOfLines={2}>{fin.racional}</Text>
                 </TouchableOpacity>
               );
             })}
@@ -753,9 +751,9 @@ const s = StyleSheet.create({
   originBarFill: { height: 4, borderRadius: 2 },
   twoColGrid: { flexDirection: 'row', gap: 16 },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', alignItems: 'center', padding: 16 },
-  modalContent: { borderRadius: 12, padding: 24, width: '100%' },
+  modalContent: { borderRadius: 12, padding: 16, width: '100%' },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
-  modalTitle: { fontSize: 16, fontWeight: '700', flex: 1 },
+  modalTitle: { fontSize: 14, fontWeight: '700', flex: 1 },
   modalSubtitle: { fontSize: 12, marginBottom: 16 },
   modalRiskRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, borderBottomWidth: 1 },
   modalRiskId: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 4 },
