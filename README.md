@@ -5,7 +5,7 @@
 <h1 align="center">Vetor Horizon — Gestão de Riscos Corporativos</h1>
 
 <p align="center">
-  Aplicativo de gestão e análise de riscos baseado na <strong>metodologia ICAPT v5</strong>, desenvolvido como estudo de caso para a empresa <strong>DAMACORP</strong>.
+  Plataforma de gestão e análise de riscos baseada na <strong>metodologia ICAPT v5</strong>, com quantificação financeira pelos frameworks <strong>FAIR Institute</strong>, <strong>COSO ERM</strong> e <strong>RISK IT (ISACA)</strong>. Estudo de caso <strong>DAMACORP</strong>.
 </p>
 
 <p align="center">
@@ -26,20 +26,35 @@
 
 ## Sobre o Projeto
 
-O **Vetor Horizon** é uma plataforma de gestão de riscos corporativos que implementa a metodologia **ICAPT (Identificação, Classificação, Avaliação, Priorização e Tratamento)** em sua versão 5. O aplicativo foi desenvolvido como parte de um estudo de caso acadêmico para a empresa fictícia **DAMACORP**, uma companhia de comércio eletrônico com sede em São Paulo, faturamento de R$ 350 milhões/ano e aproximadamente 1.000 colaboradores.
+O **Vetor Horizon** é uma plataforma completa de gestão de riscos corporativos que implementa a metodologia **ICAPT (Identificação, Classificação, Avaliação, Priorização e Tratamento)** em sua versão 5 (Aula 06). O aplicativo foi desenvolvido como parte de um estudo de caso acadêmico para a empresa fictícia **DAMACORP**, uma companhia de comércio eletrônico com sede em São Paulo, faturamento de R$ 350 milhões/ano e aproximadamente 1.000 colaboradores.
 
-O sistema permite o cadastro, análise e acompanhamento de **25 riscos corporativos** (R003–R027), abrangendo categorias como riscos operacionais, financeiros, tecnológicos, cibernéticos, regulatórios, reputacionais, ambientais e humanos. Cada risco é avaliado com base em matrizes de **Probabilidade × Impacto (P×I)** e priorizado pela metodologia **GUT (Gravidade, Urgência e Tendência)**, com estratégias de tratamento definidas pelo framework **MATE (Mitigar, Aceitar, Transferir, Evitar)**.
+O sistema gerencia **35 riscos corporativos** (R003 a R037), abrangendo categorias como riscos operacionais, financeiros, tecnológicos, cibernéticos, regulatórios, reputacionais, ambientais e humanos. Cada risco é avaliado com matrizes de **Probabilidade x Impacto (P x I)** e priorizado pela metodologia **GUT (Gravidade, Urgência e Tendência)**, com estratégias de tratamento definidas pelo framework **MATE (Mitigar, Aceitar, Transferir, Evitar)**.
+
+A quantificação financeira de cada risco utiliza os frameworks internacionais **FAIR Institute** (SLE, ARO, ALE), **COSO ERM** (Apetite, Tolerância e Capacidade de Risco) e **RISK IT (ISACA)** (Domínio e Cenário de Risco), permitindo apresentações executivas com valores em R$ para o conselho de administração.
 
 ## Funcionalidades
 
 | Tela | Descrição |
 |------|-----------|
-| **Dashboard** | Visão geral com contadores por criticidade (Crítico, Alto, Médio, Baixo), matriz de risco P×I interativa e distribuição por tipo |
-| **Riscos** | Lista completa dos 25 riscos com busca, filtros por criticidade e detalhamento individual com controles, KRI e eficácia |
-| **Evolução** | Comparativo entre 3 aulas (Aula 3 → 4 → 5) com timeline visual, modos Resumo/Comparativo/Matrizes e seletor de período |
-| **Estratégico** | Análise estratégica com distribuição por tipo de risco, estratégias MATE, origem (interno/externo) e riscos estratégicos |
-| **Tabelas** | Tabelas detalhadas de P×I e GUT com ordenação e exportação |
-| **Sobre** | Informações do estudo de caso, metodologia ICAPT, estatísticas e equipe de consultores |
+| **Dashboard** | Fluxo de Risco com 3 matrizes lado a lado (Inerente → Deslocamento → Residual), cards por criticidade, Top 10 GUT, distribuição por tipo e impacto financeiro consolidado |
+| **Riscos** | Catálogo completo dos 35 riscos com busca, filtros por criticidade e detalhamento individual com todos os campos ICAPT v5, controles, KRI e impacto financeiro |
+| **Evolução** | Comparativo entre 4 versões (Aula 03 → 04 → 05 → 06) com timeline visual, modos Resumo/Comparativo/Matrizes e seletor de período |
+| **Estratégico** | Análise estratégica com distribuição por tipo, estratégias MATE, TPRM, investimentos preventivos priorizados por ROI e impacto financeiro por risco |
+| **Relatório Executivo** | Apresentação com 10 slides seguindo o roteiro 10-20-30, com panorama de riscos, impacto financeiro FAIR, governança COSO/RISK IT, investimentos preventivos e próximos passos |
+| **Tabelas** | Tabelas de referência ICAPT v5: Impacto detalhado (6 dimensões), critérios GUT, níveis de probabilidade e faixas de classificação |
+| **Sobre** | Informações do estudo de caso, metodologia ICAPT, estatísticas, equipe de consultores e tutorial interativo |
+
+## Frameworks de Quantificação Financeira
+
+| Framework | Aplicação no Projeto |
+|-----------|---------------------|
+| **FAIR Institute** | SLE (Single Loss Expectancy), ARO (Annualized Rate of Occurrence) e ALE (Annualized Loss Expectancy) para cada risco |
+| **COSO ERM** | Apetite de Risco (limite aceitável), Tolerância (variação aceitável) e Capacidade de Risco (limite máximo) em R$ |
+| **RISK IT (ISACA)** | Domínio de Risco (Governança, Avaliação, Resposta) e Cenário de Risco por tipo |
+
+## Wizard Interativo por Menu
+
+Cada menu do aplicativo possui um **wizard tutorial** que é ativado automaticamente na primeira visita. O wizard explica o propósito da tela, suas funcionalidades e dicas de uso. Na tela "Sobre", é possível reabrir o tutorial de qualquer menu a qualquer momento.
 
 ## Metodologia ICAPT
 
@@ -47,8 +62,8 @@ A metodologia ICAPT é um framework estruturado para gestão de riscos corporati
 
 1. **Identificação** — Identificar fontes de risco (internas e externas), ameaças e descrever o risco na Forma 3
 2. **Classificação** — Classificar como estratégico (SIM/NÃO) e definir o tipo de risco conforme taxonomia
-3. **Avaliação** — Avaliar Probabilidade (1–5) × Impacto (1–5) = Risco Inerente (1–25)
-4. **Priorização** — Priorizar com GUT: Gravidade × Urgência × Tendência (1–125)
+3. **Avaliação** — Avaliar Probabilidade (1-5) x Impacto (1-5) = Risco Inerente (1-25)
+4. **Priorização** — Priorizar com GUT: Gravidade x Urgência x Tendência (1-125)
 5. **Tratamento** — Definir estratégia MATE (Mitigar, Aceitar, Transferir, Evitar), controles e KRIs
 
 ### Normas de Referência
@@ -82,32 +97,41 @@ A metodologia ICAPT é um framework estruturado para gestão de riscos corporati
 | TypeScript | 5.9 | Tipagem estática |
 | NativeWind | 4 | Tailwind CSS para React Native |
 | Expo Router | 6 | Navegação baseada em arquivos |
+| Reanimated | 4.x | Animações nativas |
+| tRPC | 11.x | API type-safe |
 | Vitest | 2.x | Testes unitários |
 
 ## Estrutura do Projeto
 
 ```
 vetor-horizon-risk/
-├── app/                    # Telas do aplicativo (Expo Router)
-│   ├── (tabs)/             # Navegação por abas
-│   │   ├── index.tsx       # Dashboard
-│   │   ├── risks.tsx       # Lista de Riscos
-│   │   ├── evolution.tsx   # Evolução entre Aulas
-│   │   ├── strategic.tsx   # Análise Estratégica
-│   │   ├── tables.tsx      # Tabelas P×I e GUT
-│   │   └── settings.tsx    # Sobre o Projeto
-│   └── risk/[id].tsx       # Detalhe do Risco
-├── assets/images/          # Ícones e logo
-├── components/             # Componentes reutilizáveis
-├── data/                   # Planilha Excel fonte dos dados
-├── hooks/                  # React hooks customizados
-├── lib/                    # Lógica principal
-│   ├── evolution-data.ts   # Dados das 3 aulas (Aula 3, 4 e 5)
-│   ├── risk-context.tsx    # Contexto global de riscos
-│   └── models.ts           # Tipos e interfaces
-├── scripts/                # Scripts utilitários
-│   └── extract-risks.mjs  # Extração automática da planilha
-├── netlify.toml            # Configuração de deploy Netlify
+├── app/                        # Telas do aplicativo (Expo Router)
+│   ├── (tabs)/                 # Navegação por abas
+│   │   ├── index.tsx           # Dashboard (3 matrizes em fluxo)
+│   │   ├── risks.tsx           # Catálogo de Riscos
+│   │   ├── evolution.tsx       # Evolução entre Aulas
+│   │   ├── strategic.tsx       # Análise Estratégica
+│   │   ├── report.tsx          # Relatório Executivo (10 slides)
+│   │   ├── tables.tsx          # Tabelas de Referência
+│   │   └── settings.tsx        # Sobre o Projeto
+│   ├── risk/[id].tsx           # Detalhe do Risco
+│   └── risk/new.tsx            # Cadastro de Novo Risco
+├── assets/images/              # Ícones, logo e splash
+├── components/                 # Componentes reutilizáveis
+│   ├── wizard-overlay.tsx      # Wizard tutorial por menu
+│   ├── web-layout.tsx          # Layout desktop com sidebar
+│   └── ui/                     # Componentes UI (GlowCard, PulsingBadge, etc.)
+├── data/                       # Planilha Excel fonte dos dados
+├── hooks/                      # React hooks customizados
+├── lib/                        # Lógica principal
+│   ├── models.ts               # Tipos, interfaces e tabelas ICAPT
+│   ├── financial-data.ts       # Dados financeiros FAIR/COSO/RISK IT
+│   ├── evolution-data.ts       # Dados das 4 aulas (03, 04, 05, 06)
+│   ├── risk-context.tsx        # Contexto global de riscos
+│   └── trpc.ts                 # Cliente API
+├── server/                     # Backend (tRPC + Express)
+├── scripts/                    # Scripts utilitários
+├── netlify.toml                # Configuração de deploy Netlify
 └── package.json
 ```
 

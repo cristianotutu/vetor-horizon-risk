@@ -4,13 +4,14 @@ import { ScreenContainer } from "@/components/screen-container";
 import { useRisks } from "@/lib/risk-context";
 import { getRiskLevel, getMatrixColor, getGutLevel, Risk } from "@/lib/models";
 import { useColors } from "@/hooks/use-colors";
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { GlowCard } from "@/components/ui/glow-card";
 import { AnimatedCounter } from "@/components/ui/animated-counter";
 import { PulsingBadge } from "@/components/ui/pulsing-badge";
 import { StatusIndicator } from "@/components/ui/status-indicator";
 import Animated, { FadeInDown, FadeInRight } from "react-native-reanimated";
+import { useWizard } from "@/components/wizard-overlay";
 
 const vetorHorizonLogo = require("@/assets/images/vetor-horizon-logo.png");
 
@@ -33,6 +34,11 @@ export default function DashboardScreen() {
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;
   const [activeFilter, setActiveFilter] = useState<FilterState>(null);
+  const { triggerWizard } = useWizard();
+
+  useEffect(() => {
+    if (!loading) triggerWizard('dashboard');
+  }, [loading]);
   const [hoveredCell, setHoveredCell] = useState<string | null>(null);
   const [tooltipVisible, setTooltipVisible] = useState<string | null>(null);
 
@@ -57,20 +63,14 @@ export default function DashboardScreen() {
     return matrix;
   }, [risks]);
 
-  // Matriz Residual: posiciona riscos com base no risco residual
   const matrixResidual = useMemo(() => {
     const matrix: Risk[][][] = Array.from({ length: 5 }, () =>
       Array.from({ length: 5 }, () => [] as Risk[])
     );
     risks.forEach(r => {
       if (r.riscoResidual && r.riscoResidual > 0) {
-        // Estimar P e I residuais: reduzir proporcionalmente
-        const reducao = r.reducaoPretendida || 0;
-        const pResidual = Math.max(1, Math.min(5, Math.round(r.probabilidade * (1 - reducao / (r.riscoInerente * 2)))));
-        const iResidual = Math.max(1, Math.min(5, Math.round(r.impacto * (1 - reducao / (r.riscoInerente * 2)))));
-        // Ajustar para que pResidual * iResidual se aproxime do riscoResidual
         const targetRes = r.riscoResidual;
-        let bestP = pResidual, bestI = iResidual, bestDiff = Math.abs(pResidual * iResidual - targetRes);
+        let bestP = r.probabilidade, bestI = r.impacto, bestDiff = 999;
         for (let p = 1; p <= 5; p++) {
           for (let i = 1; i <= 5; i++) {
             const diff = Math.abs(p * i - targetRes);
@@ -81,7 +81,6 @@ export default function DashboardScreen() {
         }
         matrix[5 - bestP][bestI - 1].push(r);
       } else {
-        // Sem tratamento: mantém na posição inerente
         if (r.probabilidade >= 1 && r.probabilidade <= 5 && r.impacto >= 1 && r.impacto <= 5) {
           matrix[5 - r.probabilidade][r.impacto - 1].push(r);
         }
@@ -90,7 +89,6 @@ export default function DashboardScreen() {
     return matrix;
   }, [risks]);
 
-  // Dados de deslocamento: de onde para onde cada risco se moveu
   const deslocamentoData = useMemo(() => {
     return risks.map(r => {
       const pOrig = r.probabilidade;
@@ -113,7 +111,6 @@ export default function DashboardScreen() {
     }).filter(d => d.pOrig !== d.pRes || d.iOrig !== d.iRes);
   }, [risks]);
 
-  // Eficácia dos controles
   const eficaciaStats = useMemo(() => {
     const comTratamento = risks.filter(r => r.riscoResidual && r.riscoResidual > 0 && r.riscoResidual < r.riscoInerente);
     const totalInerente = comTratamento.reduce((s, r) => s + r.riscoInerente, 0);
@@ -154,8 +151,6 @@ export default function DashboardScreen() {
     const roiMedio = totalInvestimento > 0 ? ((totalEconomia / totalInvestimento) * 100) : 0;
     return { totalExposicaoAlta, totalExposicaoBaixa, totalInvestimento, totalEconomia, roiMedio, riscosComDados };
   }, [risks]);
-
-
 
   const handleStatPress = useCallback((level: string) => {
     let filtered: Risk[] = [];
@@ -210,6 +205,100 @@ export default function DashboardScreen() {
       </ScreenContainer>
     );
   }
+
+  // ─── MATRIX RENDERER (compact) ─────────────────────────────
+  const renderCompactMatrix = (matrixData: Risk[][][], prefix: string, interactive: boolean = true) => (
+    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+      <View style={{ width: 16, alignItems: 'center', justifyContent: 'center' }}>
+        <Text style={{ color: '#6B8A7A', fontSize: 9, fontWeight: '700', fontFamily: 'monospace', transform: [{ rotate: '-90deg' }] }}>P</Text>
+      </View>
+      <View style={{ flex: 1 }}>
+        {matrixData.map((row, rowIdx) => (
+          <View key={rowIdx} style={{ flexDirection: 'row', marginBottom: 2 }}>
+            <View style={{ width: 16, justifyContent: 'center', alignItems: 'center' }}>
+              <Text style={{ color: '#6B8A7A', fontSize: 9, fontWeight: '600', fontFamily: 'monospace' }}>{5 - rowIdx}</Text>
+            </View>
+            {row.map((cellRisks, colIdx) => {
+              const prob = 5 - rowIdx;
+              const imp = colIdx + 1;
+              const bgColor = getMatrixColor(prob, imp);
+              const count = cellRisks.length;
+              const cellKey = `${prefix}-${rowIdx}-${colIdx}`;
+              const isHovered = hoveredCell === cellKey;
+              return (
+                <TouchableOpacity
+                  key={colIdx}
+                  style={{
+                    flex: 1,
+                    aspectRatio: 1,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    borderRadius: 4,
+                    marginHorizontal: 1,
+                    backgroundColor: count > 0 ? bgColor + '25' : '#111820',
+                    borderColor: isHovered ? bgColor : (count > 0 ? bgColor + '50' : '#1A3A2A'),
+                    borderWidth: isHovered ? 2 : 1,
+                  }}
+                  onPress={() => interactive && handleMatrixPress(prob, imp, cellRisks)}
+                  onPressIn={() => setHoveredCell(cellKey)}
+                  onPressOut={() => setHoveredCell(null)}
+                  activeOpacity={count > 0 ? 0.7 : 1}
+                >
+                  {count > 0 ? (
+                    <View style={{ alignItems: 'center' }}>
+                      <Text style={{ color: bgColor, fontSize: isDesktop ? 14 : 13, fontWeight: '800', fontFamily: 'monospace' }}>{count}</Text>
+                      {(() => {
+                        const cellFin = cellRisks.reduce((s, r) => s + (r.impactoFinanceiro?.perdaMediaEsperada || 0), 0);
+                        if (cellFin > 0) {
+                          const fmt = cellFin >= 1000000 ? `${(cellFin / 1000000).toFixed(1)}M` : cellFin >= 1000 ? `${(cellFin / 1000).toFixed(0)}K` : `${cellFin.toFixed(0)}`;
+                          return (
+                            <View style={{ backgroundColor: bgColor + '30', borderRadius: 3, paddingHorizontal: 2, paddingVertical: 1, borderWidth: 1, borderColor: bgColor + '60', marginTop: 1 }}>
+                              <Text style={{ color: '#FFFFFF', fontSize: 7, fontWeight: '800', fontFamily: 'monospace' }}>R${fmt}</Text>
+                            </View>
+                          );
+                        }
+                        return null;
+                      })()}
+                    </View>
+                  ) : null}
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        ))}
+        <View style={{ flexDirection: 'row', marginTop: 2, marginLeft: 16 }}>
+          {[1, 2, 3, 4, 5].map(n => (
+            <View key={n} style={{ flex: 1, alignItems: 'center' }}>
+              <Text style={{ color: '#6B8A7A', fontSize: 9, fontWeight: '600', fontFamily: 'monospace' }}>{n}</Text>
+            </View>
+          ))}
+        </View>
+        <Text style={{ color: '#6B8A7A', fontSize: 8, fontWeight: '700', fontFamily: 'monospace', textAlign: 'center', marginTop: 2, marginLeft: 16, letterSpacing: 1 }}>IMPACTO</Text>
+      </View>
+    </View>
+  );
+
+  const tooltipDescriptions: Record<string, string> = {
+    inerente: 'Risco ANTES dos controles. Exposição bruta: Probabilidade × Impacto originais.',
+    deslocamento: 'Mostra a migração do risco inerente → residual. Quanto maior o deslocamento, mais eficaz o controle.',
+    residual: 'Risco APÓS os controles. Exposição real considerando as medidas de mitigação.',
+  };
+
+  const matrixLegend = (
+    <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
+      {[
+        { label: 'Baixo', color: '#00FF88' },
+        { label: 'Médio', color: '#FFD600' },
+        { label: 'Alto', color: '#FF8C00' },
+        { label: 'Crítico', color: '#FF3D3D' },
+      ].map(item => (
+        <View key={item.label} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+          <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: item.color }} />
+          <Text style={{ color: '#6B8A7A', fontSize: 8, fontWeight: '600', fontFamily: 'monospace' }}>{item.label}</Text>
+        </View>
+      ))}
+    </View>
+  );
 
   const renderRiskModal = () => {
     if (!activeFilter) return null;
@@ -381,265 +470,182 @@ export default function DashboardScreen() {
           </View>
         </View>
 
-        {/* Main Content Grid */}
-        <View style={[styles.section, isDesktop && styles.sectionDesktop]}>
-          <View style={[styles.contentGrid, isDesktop && styles.contentGridDesktop]}>
-            {/* Left Column: Matrix + Risk by Type */}
-            <View style={[styles.column, isDesktop && { flex: 1 }]}>
-              {/* === 3 MATRIZES DE RISCO === */}
-              {/* Renderizador de Matriz reutilizável */}
-              {(() => {
-                const renderMatrix = (matrixData: Risk[][][], prefix: string, interactive: boolean = true) => (
-                  <View style={styles.matrixWrapper}>
-                    <View style={styles.matrixYAxis}>
-                      <Text style={[styles.axisTitle, { color: '#6B8A7A', fontFamily: 'monospace' }]}>P</Text>
+        {/* === 3 MATRIZES EM FLUXO HORIZONTAL (Desktop) === */}
+        <View style={[styles.section, isDesktop && styles.sectionDesktop, { marginTop: 20 }]}>
+          <Animated.View entering={FadeInDown.duration(500).delay(300)}>
+            <GlowCard variant="default">
+              <View style={styles.cardHeader}>
+                <Text style={[styles.cardTitle, { color: '#00E5FF', fontFamily: 'monospace', fontSize: 14 }]}>FLUXO DE RISCO: INERENTE → DESLOCAMENTO → RESIDUAL</Text>
+              </View>
+
+              {/* 3 Matrizes lado a lado no desktop, empilhadas no mobile */}
+              <View style={{ flexDirection: isDesktop ? 'row' : 'column', gap: isDesktop ? 12 : 16 }}>
+                {/* 1. INERENTE */}
+                <View style={{ flex: 1 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#FF3D3D' }} />
+                      <Text style={{ color: '#FF3D3D', fontSize: 10, fontWeight: '800', fontFamily: 'monospace', letterSpacing: 0.5 }}>INERENTE</Text>
                     </View>
-                    <View style={styles.matrixContent}>
-                      {matrixData.map((row, rowIdx) => (
-                        <View key={rowIdx} style={styles.matrixRow}>
-                          <View style={styles.matrixRowLabel}>
-                            <Text style={[styles.matrixLabelText, { color: '#6B8A7A', fontFamily: 'monospace' }]}>{5 - rowIdx}</Text>
-                          </View>
-                          {row.map((cellRisks, colIdx) => {
-                            const prob = 5 - rowIdx;
-                            const imp = colIdx + 1;
-                            const bgColor = getMatrixColor(prob, imp);
-                            const count = cellRisks.length;
-                            const cellKey = `${prefix}-${rowIdx}-${colIdx}`;
-                            const isHovered = hoveredCell === cellKey;
-                            return (
-                              <TouchableOpacity
-                                key={colIdx}
-                                style={[
-                                  styles.matrixCell,
-                                  {
-                                    backgroundColor: count > 0 ? bgColor + '25' : '#111820',
-                                    borderColor: isHovered ? bgColor : (count > 0 ? bgColor + '50' : '#1A3A2A'),
-                                    borderWidth: isHovered ? 2 : 1,
-                                    ...(isHovered && Platform.OS === 'web' ? { shadowColor: bgColor, shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.6, shadowRadius: 8 } : {}),
-                                  },
-                                  count > 0 && styles.matrixCellActive,
-                                ]}
-                                onPress={() => interactive && handleMatrixPress(prob, imp, cellRisks)}
-                                onPressIn={() => setHoveredCell(cellKey)}
-                                onPressOut={() => setHoveredCell(null)}
-                                activeOpacity={count > 0 ? 0.7 : 1}
-                              >
-                                {count > 0 ? (
-                                  <View style={styles.cellContentWrap}>
-                                    <Text style={[styles.matrixCellText, { color: bgColor, fontFamily: 'monospace' }]}>{count}</Text>
-                                    {(() => {
-                                      const cellFin = cellRisks.reduce((s, r) => s + (r.impactoFinanceiro?.perdaMediaEsperada || 0), 0);
-                                      if (cellFin > 0) {
-                                        const fmt = cellFin >= 1000000 ? `${(cellFin / 1000000).toFixed(1)}M` : cellFin >= 1000 ? `${(cellFin / 1000).toFixed(0)}K` : `${cellFin.toFixed(0)}`;
-                                        return (
-                                          <View style={[styles.cellFinancialBadge, { backgroundColor: bgColor + '30', borderColor: bgColor + '60' }]}>
-                                            <Text style={[styles.cellFinancialText, { color: '#FFFFFF', fontFamily: 'monospace' }]}>R$ {fmt}</Text>
-                                          </View>
-                                        );
-                                      }
-                                      return null;
-                                    })()}
-                                    {interactive && (
-                                      <View style={[styles.cellTapHint, { backgroundColor: bgColor + '20', borderWidth: 1, borderColor: bgColor + '40' }]}>
-                                        <Text style={[styles.cellTapHintText, { color: bgColor, fontFamily: 'monospace' }]}>ver</Text>
-                                      </View>
-                                    )}
-                                  </View>
-                                ) : null}
-                              </TouchableOpacity>
-                            );
-                          })}
-                        </View>
-                      ))}
-                      <View style={styles.matrixRow}>
-                        <View style={styles.matrixRowLabel} />
-                        {[1, 2, 3, 4, 5].map(n => (
-                          <View key={n} style={[styles.matrixCell, { borderWidth: 0 }]}>
-                            <Text style={[styles.matrixLabelText, { color: '#6B8A7A', fontFamily: 'monospace' }]}>{n}</Text>
+                    <TouchableOpacity
+                      onPress={() => setTooltipVisible(tooltipVisible === 'inerente' ? null : 'inerente')}
+                      style={{ width: 18, height: 18, borderRadius: 9, backgroundColor: '#FF3D3D20', borderWidth: 1, borderColor: '#FF3D3D50', justifyContent: 'center', alignItems: 'center' }}
+                    >
+                      <Text style={{ color: '#FF3D3D', fontSize: 10, fontWeight: '800', fontFamily: 'monospace' }}>?</Text>
+                    </TouchableOpacity>
+                  </View>
+                  <View style={[{ backgroundColor: '#FF3D3D08', borderWidth: 1, borderColor: '#FF3D3D20', borderRadius: 8, paddingHorizontal: 6, paddingVertical: 4, paddingBottom: 8 }]}>
+                    <Text style={{ color: '#FF3D3D80', fontSize: 8, fontWeight: '700', fontFamily: 'monospace', textAlign: 'center', marginBottom: 4, letterSpacing: 1 }}>ANTES DOS CONTROLES</Text>
+                    {renderCompactMatrix(matrixRisks, 'inerente')}
+                  </View>
+                  {tooltipVisible === 'inerente' && (
+                    <View style={{ backgroundColor: '#FF3D3D10', borderWidth: 1, borderColor: '#FF3D3D30', borderRadius: 6, padding: 8, marginTop: 6 }}>
+                      <Text style={{ color: '#E0F0E0', fontSize: 10, lineHeight: 15, fontFamily: 'monospace' }}>{tooltipDescriptions.inerente}</Text>
+                    </View>
+                  )}
+                </View>
+
+                {/* Arrow → */}
+                {isDesktop && (
+                  <View style={{ justifyContent: 'center', alignItems: 'center', paddingTop: 20 }}>
+                    <Text style={{ color: '#FFD600', fontSize: 24, fontWeight: '800' }}>→</Text>
+                  </View>
+                )}
+                {!isDesktop && (
+                  <View style={{ alignItems: 'center' }}>
+                    <Text style={{ color: '#FFD600', fontSize: 20, fontWeight: '800' }}>↓</Text>
+                  </View>
+                )}
+
+                {/* 2. DESLOCAMENTO */}
+                <View style={{ flex: 1 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#FFD600' }} />
+                      <Text style={{ color: '#FFD600', fontSize: 10, fontWeight: '800', fontFamily: 'monospace', letterSpacing: 0.5 }}>DESLOCAMENTO</Text>
+                    </View>
+                    <TouchableOpacity
+                      onPress={() => setTooltipVisible(tooltipVisible === 'deslocamento' ? null : 'deslocamento')}
+                      style={{ width: 18, height: 18, borderRadius: 9, backgroundColor: '#FFD60020', borderWidth: 1, borderColor: '#FFD60050', justifyContent: 'center', alignItems: 'center' }}
+                    >
+                      <Text style={{ color: '#FFD600', fontSize: 10, fontWeight: '800', fontFamily: 'monospace' }}>?</Text>
+                    </TouchableOpacity>
+                  </View>
+                  <View style={{ backgroundColor: '#FFD60008', borderWidth: 1, borderColor: '#FFD60020', borderRadius: 8, padding: 8 }}>
+                    {/* Stats compactos */}
+                    <View style={{ flexDirection: 'row', gap: 4, marginBottom: 6 }}>
+                      <View style={{ flex: 1, backgroundColor: '#FFD60010', borderRadius: 4, padding: 4, alignItems: 'center' }}>
+                        <Text style={{ color: '#FFD600', fontSize: 14, fontWeight: '800', fontFamily: 'monospace' }}>{deslocamentoData.length}</Text>
+                        <Text style={{ color: '#6B8A7A', fontSize: 7, fontFamily: 'monospace' }}>DESLOCADOS</Text>
+                      </View>
+                      <View style={{ flex: 1, backgroundColor: '#00FF8810', borderRadius: 4, padding: 4, alignItems: 'center' }}>
+                        <Text style={{ color: '#00FF88', fontSize: 14, fontWeight: '800', fontFamily: 'monospace' }}>{eficaciaStats.reducaoMedia.toFixed(0)}%</Text>
+                        <Text style={{ color: '#6B8A7A', fontSize: 7, fontFamily: 'monospace' }}>REDUÇÃO</Text>
+                      </View>
+                    </View>
+                    {/* Lista compacta de deslocamentos */}
+                    <View style={{ backgroundColor: '#111820', borderRadius: 6, borderWidth: 1, borderColor: '#1A3A2A', overflow: 'hidden' }}>
+                      <View style={{ flexDirection: 'row', paddingHorizontal: 6, paddingVertical: 3, borderBottomWidth: 1, borderBottomColor: '#1A3A2A' }}>
+                        <Text style={{ flex: 1, color: '#00E5FF', fontSize: 8, fontWeight: '700', fontFamily: 'monospace' }}>ID</Text>
+                        <Text style={{ width: 35, color: '#FF3D3D', fontSize: 8, fontWeight: '700', fontFamily: 'monospace', textAlign: 'center' }}>INE</Text>
+                        <Text style={{ width: 14, color: '#FFD600', fontSize: 8, textAlign: 'center' }}>→</Text>
+                        <Text style={{ width: 35, color: '#00FF88', fontSize: 8, fontWeight: '700', fontFamily: 'monospace', textAlign: 'center' }}>RES</Text>
+                        <Text style={{ width: 30, color: '#6B8A7A', fontSize: 8, fontWeight: '700', fontFamily: 'monospace', textAlign: 'right' }}>%</Text>
+                      </View>
+                      <ScrollView nestedScrollEnabled style={{ maxHeight: isDesktop ? 180 : 140 }}>
+                        {deslocamentoData.sort((a, b) => (b.inerente - b.residual) - (a.inerente - a.residual)).map(d => (
+                          <View key={d.id} style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 6, paddingVertical: 3, borderBottomWidth: 1, borderBottomColor: '#1A3A2A20' }}>
+                            <Text style={{ flex: 1, color: '#E0F0E0', fontSize: 9, fontWeight: '700', fontFamily: 'monospace' }}>{d.id}</Text>
+                            <View style={{ width: 35, alignItems: 'center' }}>
+                              <View style={{ backgroundColor: '#FF3D3D20', borderRadius: 3, paddingHorizontal: 4, paddingVertical: 1 }}>
+                                <Text style={{ color: '#FF3D3D', fontSize: 9, fontWeight: '800', fontFamily: 'monospace' }}>{d.inerente}</Text>
+                              </View>
+                            </View>
+                            <Text style={{ width: 14, color: '#FFD600', fontSize: 10, fontWeight: '800', textAlign: 'center' }}>→</Text>
+                            <View style={{ width: 35, alignItems: 'center' }}>
+                              <View style={{ backgroundColor: '#00FF8820', borderRadius: 3, paddingHorizontal: 4, paddingVertical: 1 }}>
+                                <Text style={{ color: '#00FF88', fontSize: 9, fontWeight: '800', fontFamily: 'monospace' }}>{d.residual}</Text>
+                              </View>
+                            </View>
+                            <Text style={{ width: 30, color: '#FFD600', fontSize: 9, fontWeight: '800', fontFamily: 'monospace', textAlign: 'right' }}>-{((1 - d.residual / d.inerente) * 100).toFixed(0)}%</Text>
                           </View>
                         ))}
-                      </View>
-                      <Text style={[styles.xAxisTitle, { color: '#6B8A7A', fontFamily: 'monospace' }]}>IMPACTO</Text>
+                      </ScrollView>
                     </View>
                   </View>
-                );
+                  {tooltipVisible === 'deslocamento' && (
+                    <View style={{ backgroundColor: '#FFD60010', borderWidth: 1, borderColor: '#FFD60030', borderRadius: 6, padding: 8, marginTop: 6 }}>
+                      <Text style={{ color: '#E0F0E0', fontSize: 10, lineHeight: 15, fontFamily: 'monospace' }}>{tooltipDescriptions.deslocamento}</Text>
+                    </View>
+                  )}
+                </View>
 
-                const matrixLegend = (
-                  <View style={styles.legendRow}>
-                    {[
-                      { label: 'Baixo (1-5)', color: '#00FF88' },
-                      { label: 'Médio (6-11)', color: '#FFD600' },
-                      { label: 'Alto (12-19)', color: '#FF8C00' },
-                      { label: 'Crítico (20-25)', color: '#FF3D3D' },
-                    ].map(item => (
-                      <View key={item.label} style={styles.legendItem}>
-                        <View style={[styles.legendDot, { backgroundColor: item.color, shadowColor: item.color, shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.8, shadowRadius: 4 }]} />
-                        <Text style={[styles.legendText, { color: '#6B8A7A', fontFamily: 'monospace' }]}>{item.label}</Text>
-                      </View>
-                    ))}
+                {/* Arrow → */}
+                {isDesktop && (
+                  <View style={{ justifyContent: 'center', alignItems: 'center', paddingTop: 20 }}>
+                    <Text style={{ color: '#00FF88', fontSize: 24, fontWeight: '800' }}>→</Text>
                   </View>
-                );
+                )}
+                {!isDesktop && (
+                  <View style={{ alignItems: 'center' }}>
+                    <Text style={{ color: '#00FF88', fontSize: 20, fontWeight: '800' }}>↓</Text>
+                  </View>
+                )}
 
-                const tooltipDescriptions: Record<string, string> = {
-                  inerente: 'Matriz de Risco Inerente representa o nível de risco ANTES da aplicação de qualquer controle ou tratamento. É a exposição bruta da organização, calculada como Probabilidade × Impacto originais. Mostra onde cada risco se encontra naturalmente.',
-                  deslocamento: 'Matriz de Deslocamento mostra a "corrida" do risco: de onde ele estava (inerente) para onde chegou (residual) após a aplicação dos controles. Cada risco que se deslocou demonstra a eficácia do tratamento aplicado. Quanto maior o deslocamento para a esquerda/baixo, mais eficaz o controle.',
-                  residual: 'Matriz de Risco Residual representa o nível de risco APÓS a aplicação dos controles e tratamentos. É a exposição real da organização considerando as medidas de mitigação implementadas. O objetivo é que todos os riscos migrem para as zonas verde/amarela.',
-                };
+                {/* 3. RESIDUAL */}
+                <View style={{ flex: 1 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#00FF88' }} />
+                      <Text style={{ color: '#00FF88', fontSize: 10, fontWeight: '800', fontFamily: 'monospace', letterSpacing: 0.5 }}>RESIDUAL</Text>
+                    </View>
+                    <TouchableOpacity
+                      onPress={() => setTooltipVisible(tooltipVisible === 'residual' ? null : 'residual')}
+                      style={{ width: 18, height: 18, borderRadius: 9, backgroundColor: '#00FF8820', borderWidth: 1, borderColor: '#00FF8850', justifyContent: 'center', alignItems: 'center' }}
+                    >
+                      <Text style={{ color: '#00FF88', fontSize: 10, fontWeight: '800', fontFamily: 'monospace' }}>?</Text>
+                    </TouchableOpacity>
+                  </View>
+                  <View style={{ backgroundColor: '#00FF8808', borderWidth: 1, borderColor: '#00FF8820', borderRadius: 8, paddingHorizontal: 6, paddingVertical: 4, paddingBottom: 8 }}>
+                    <Text style={{ color: '#00FF8880', fontSize: 8, fontWeight: '700', fontFamily: 'monospace', textAlign: 'center', marginBottom: 4, letterSpacing: 1 }}>APÓS CONTROLES</Text>
+                    {renderCompactMatrix(matrixResidual, 'residual')}
+                  </View>
+                  {tooltipVisible === 'residual' && (
+                    <View style={{ backgroundColor: '#00FF8810', borderWidth: 1, borderColor: '#00FF8830', borderRadius: 6, padding: 8, marginTop: 6 }}>
+                      <Text style={{ color: '#E0F0E0', fontSize: 10, lineHeight: 15, fontFamily: 'monospace' }}>{tooltipDescriptions.residual}</Text>
+                    </View>
+                  )}
+                </View>
+              </View>
 
-                return (
-                  <>
-                    {/* 1. MATRIZ INERENTE */}
-                    <Animated.View entering={FadeInDown.duration(500).delay(300)}>
-                      <GlowCard variant="default">
-                        <View style={styles.cardHeader}>
-                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
-                            <Text style={[styles.cardTitle, { color: '#FF3D3D', fontFamily: 'monospace' }]}>MATRIZ DE RISCO INERENTE</Text>
-                            <TouchableOpacity
-                              onPress={() => setTooltipVisible(tooltipVisible === 'inerente' ? null : 'inerente')}
-                              style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: '#FF3D3D20', borderWidth: 1, borderColor: '#FF3D3D50', justifyContent: 'center', alignItems: 'center' }}
-                            >
-                              <Text style={{ color: '#FF3D3D', fontSize: 12, fontWeight: '800', fontFamily: 'monospace' }}>?</Text>
-                            </TouchableOpacity>
-                          </View>
-                          <View style={[styles.cardBadge, { backgroundColor: '#FF3D3D15', borderWidth: 1, borderColor: '#FF3D3D30' }]}>
-                            <Text style={[styles.cardBadgeText, { color: '#FF3D3D', fontFamily: 'monospace' }]}>ANTES DOS CONTROLES</Text>
-                          </View>
-                        </View>
-                        {tooltipVisible === 'inerente' && (
-                          <View style={{ backgroundColor: '#FF3D3D10', borderWidth: 1, borderColor: '#FF3D3D30', borderRadius: 8, padding: 12, marginBottom: 12 }}>
-                            <Text style={{ color: '#E0F0E0', fontSize: 11, lineHeight: 16, fontFamily: 'monospace' }}>{tooltipDescriptions.inerente}</Text>
-                          </View>
-                        )}
-                        {renderMatrix(matrixRisks, 'inerente')}
-                        {matrixLegend}
-                      </GlowCard>
-                    </Animated.View>
+              {/* Legenda + Comparativo compacto */}
+              {matrixLegend}
+              <View style={{ flexDirection: 'row', gap: 8, marginTop: 12, borderTopWidth: 1, borderTopColor: '#1A3A2A', paddingTop: 12 }}>
+                <View style={{ flex: 1, backgroundColor: '#FF3D3D10', borderWidth: 1, borderColor: '#FF3D3D30', borderRadius: 6, padding: 8, alignItems: 'center' }}>
+                  <Text style={{ color: '#FF3D3D', fontSize: 8, fontWeight: '700', fontFamily: 'monospace', marginBottom: 2 }}>INERENTE</Text>
+                  <Text style={{ color: '#FF3D3D', fontSize: 14, fontWeight: '800', fontFamily: 'monospace' }}>{risks.filter(r => r.riscoInerente >= 20).length} Críticos</Text>
+                  <Text style={{ color: '#FF8C00', fontSize: 11, fontWeight: '700', fontFamily: 'monospace' }}>{risks.filter(r => r.riscoInerente >= 12 && r.riscoInerente < 20).length} Altos</Text>
+                </View>
+                <View style={{ justifyContent: 'center', alignItems: 'center' }}>
+                  <Text style={{ color: '#FFD600', fontSize: 18, fontWeight: '800' }}>→</Text>
+                </View>
+                <View style={{ flex: 1, backgroundColor: '#00FF8810', borderWidth: 1, borderColor: '#00FF8830', borderRadius: 6, padding: 8, alignItems: 'center' }}>
+                  <Text style={{ color: '#00FF88', fontSize: 8, fontWeight: '700', fontFamily: 'monospace', marginBottom: 2 }}>RESIDUAL</Text>
+                  <Text style={{ color: '#FF3D3D', fontSize: 14, fontWeight: '800', fontFamily: 'monospace' }}>{risks.filter(r => (r.riscoResidual || r.riscoInerente) >= 20).length} Críticos</Text>
+                  <Text style={{ color: '#FF8C00', fontSize: 11, fontWeight: '700', fontFamily: 'monospace' }}>{risks.filter(r => { const res = r.riscoResidual || r.riscoInerente; return res >= 12 && res < 20; }).length} Altos</Text>
+                </View>
+              </View>
+            </GlowCard>
+          </Animated.View>
+        </View>
 
-                    {/* 2. MATRIZ DE DESLOCAMENTO */}
-                    <Animated.View entering={FadeInDown.duration(500).delay(400)} style={{ marginTop: 16 }}>
-                      <GlowCard variant="default">
-                        <View style={styles.cardHeader}>
-                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
-                            <Text style={[styles.cardTitle, { color: '#FFD600', fontFamily: 'monospace' }]}>MATRIZ DE DESLOCAMENTO</Text>
-                            <TouchableOpacity
-                              onPress={() => setTooltipVisible(tooltipVisible === 'deslocamento' ? null : 'deslocamento')}
-                              style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: '#FFD60020', borderWidth: 1, borderColor: '#FFD60050', justifyContent: 'center', alignItems: 'center' }}
-                            >
-                              <Text style={{ color: '#FFD600', fontSize: 12, fontWeight: '800', fontFamily: 'monospace' }}>?</Text>
-                            </TouchableOpacity>
-                          </View>
-                          <View style={[styles.cardBadge, { backgroundColor: '#FFD60015', borderWidth: 1, borderColor: '#FFD60030' }]}>
-                            <Text style={[styles.cardBadgeText, { color: '#FFD600', fontFamily: 'monospace' }]}>EFICÁCIA DOS CONTROLES</Text>
-                          </View>
-                        </View>
-                        {tooltipVisible === 'deslocamento' && (
-                          <View style={{ backgroundColor: '#FFD60010', borderWidth: 1, borderColor: '#FFD60030', borderRadius: 8, padding: 12, marginBottom: 12 }}>
-                            <Text style={{ color: '#E0F0E0', fontSize: 11, lineHeight: 16, fontFamily: 'monospace' }}>{tooltipDescriptions.deslocamento}</Text>
-                          </View>
-                        )}
-                        {/* Eficácia resumo */}
-                        <View style={{ flexDirection: 'row', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
-                          <View style={{ flex: 1, minWidth: 120, backgroundColor: '#FFD60010', borderWidth: 1, borderColor: '#FFD60030', borderRadius: 8, padding: 10, alignItems: 'center' }}>
-                            <Text style={{ color: '#FFD600', fontSize: 20, fontWeight: '800', fontFamily: 'monospace' }}>{deslocamentoData.length}</Text>
-                            <Text style={{ color: '#6B8A7A', fontSize: 9, fontFamily: 'monospace', textAlign: 'center' }}>RISCOS DESLOCADOS</Text>
-                          </View>
-                          <View style={{ flex: 1, minWidth: 120, backgroundColor: '#00FF8810', borderWidth: 1, borderColor: '#00FF8830', borderRadius: 8, padding: 10, alignItems: 'center' }}>
-                            <Text style={{ color: '#00FF88', fontSize: 20, fontWeight: '800', fontFamily: 'monospace' }}>{eficaciaStats.reducaoMedia.toFixed(0)}%</Text>
-                            <Text style={{ color: '#6B8A7A', fontSize: 9, fontFamily: 'monospace', textAlign: 'center' }}>REDUÇÃO MÉDIA</Text>
-                          </View>
-                          <View style={{ flex: 1, minWidth: 120, backgroundColor: '#00E5FF10', borderWidth: 1, borderColor: '#00E5FF30', borderRadius: 8, padding: 10, alignItems: 'center' }}>
-                            <Text style={{ color: '#00E5FF', fontSize: 20, fontWeight: '800', fontFamily: 'monospace' }}>{eficaciaStats.totalInerente}</Text>
-                            <Text style={{ color: '#6B8A7A', fontSize: 9, fontFamily: 'monospace', textAlign: 'center' }}>P×I INERENTE TOTAL</Text>
-                          </View>
-                          <View style={{ flex: 1, minWidth: 120, backgroundColor: '#00FF8810', borderWidth: 1, borderColor: '#00FF8830', borderRadius: 8, padding: 10, alignItems: 'center' }}>
-                            <Text style={{ color: '#00FF88', fontSize: 20, fontWeight: '800', fontFamily: 'monospace' }}>{eficaciaStats.totalResidual}</Text>
-                            <Text style={{ color: '#6B8A7A', fontSize: 9, fontFamily: 'monospace', textAlign: 'center' }}>P×I RESIDUAL TOTAL</Text>
-                          </View>
-                        </View>
-                        {/* Lista de deslocamentos */}
-                        <View style={{ backgroundColor: '#111820', borderRadius: 8, borderWidth: 1, borderColor: '#1A3A2A', padding: 10, maxHeight: 280, overflow: 'hidden' }}>
-                          <View style={{ flexDirection: 'row', paddingBottom: 6, borderBottomWidth: 1, borderBottomColor: '#1A3A2A', marginBottom: 4 }}>
-                            <Text style={{ flex: 1, color: '#00E5FF', fontSize: 9, fontWeight: '700', fontFamily: 'monospace' }}>RISCO</Text>
-                            <Text style={{ width: 60, color: '#FF3D3D', fontSize: 9, fontWeight: '700', fontFamily: 'monospace', textAlign: 'center' }}>INERENTE</Text>
-                            <Text style={{ width: 30, color: '#FFD600', fontSize: 9, fontWeight: '700', fontFamily: 'monospace', textAlign: 'center' }}>→</Text>
-                            <Text style={{ width: 60, color: '#00FF88', fontSize: 9, fontWeight: '700', fontFamily: 'monospace', textAlign: 'center' }}>RESIDUAL</Text>
-                            <Text style={{ width: 55, color: '#6B8A7A', fontSize: 9, fontWeight: '700', fontFamily: 'monospace', textAlign: 'right' }}>REDUÇÃO</Text>
-                          </View>
-                          <ScrollView nestedScrollEnabled style={{ maxHeight: 240 }}>
-                            {deslocamentoData.sort((a, b) => (b.inerente - b.residual) - (a.inerente - a.residual)).map(d => (
-                              <View key={d.id} style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 4, borderBottomWidth: 1, borderBottomColor: '#1A3A2A20' }}>
-                                <Text style={{ flex: 1, color: '#E0F0E0', fontSize: 10, fontWeight: '700', fontFamily: 'monospace' }}>{d.id}</Text>
-                                <View style={{ width: 60, alignItems: 'center' }}>
-                                  <View style={{ backgroundColor: '#FF3D3D20', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 }}>
-                                    <Text style={{ color: '#FF3D3D', fontSize: 10, fontWeight: '800', fontFamily: 'monospace' }}>{d.inerente}</Text>
-                                  </View>
-                                </View>
-                                <Text style={{ width: 30, color: '#FFD600', fontSize: 12, fontWeight: '800', textAlign: 'center' }}>→</Text>
-                                <View style={{ width: 60, alignItems: 'center' }}>
-                                  <View style={{ backgroundColor: '#00FF8820', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 }}>
-                                    <Text style={{ color: '#00FF88', fontSize: 10, fontWeight: '800', fontFamily: 'monospace' }}>{d.residual}</Text>
-                                  </View>
-                                </View>
-                                <Text style={{ width: 55, color: '#FFD600', fontSize: 10, fontWeight: '800', fontFamily: 'monospace', textAlign: 'right' }}>-{((1 - d.residual / d.inerente) * 100).toFixed(0)}%</Text>
-                              </View>
-                            ))}
-                          </ScrollView>
-                        </View>
-                      </GlowCard>
-                    </Animated.View>
-
-                    {/* 3. MATRIZ RESIDUAL */}
-                    <Animated.View entering={FadeInDown.duration(500).delay(500)} style={{ marginTop: 16 }}>
-                      <GlowCard variant="default">
-                        <View style={styles.cardHeader}>
-                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
-                            <Text style={[styles.cardTitle, { color: '#00FF88', fontFamily: 'monospace' }]}>MATRIZ DE RISCO RESIDUAL</Text>
-                            <TouchableOpacity
-                              onPress={() => setTooltipVisible(tooltipVisible === 'residual' ? null : 'residual')}
-                              style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: '#00FF8820', borderWidth: 1, borderColor: '#00FF8850', justifyContent: 'center', alignItems: 'center' }}
-                            >
-                              <Text style={{ color: '#00FF88', fontSize: 12, fontWeight: '800', fontFamily: 'monospace' }}>?</Text>
-                            </TouchableOpacity>
-                          </View>
-                          <View style={[styles.cardBadge, { backgroundColor: '#00FF8815', borderWidth: 1, borderColor: '#00FF8830' }]}>
-                            <Text style={[styles.cardBadgeText, { color: '#00FF88', fontFamily: 'monospace' }]}>APÓS CONTROLES</Text>
-                          </View>
-                        </View>
-                        {tooltipVisible === 'residual' && (
-                          <View style={{ backgroundColor: '#00FF8810', borderWidth: 1, borderColor: '#00FF8830', borderRadius: 8, padding: 12, marginBottom: 12 }}>
-                            <Text style={{ color: '#E0F0E0', fontSize: 11, lineHeight: 16, fontFamily: 'monospace' }}>{tooltipDescriptions.residual}</Text>
-                          </View>
-                        )}
-                        {renderMatrix(matrixResidual, 'residual')}
-                        {matrixLegend}
-                        {/* Barra comparativa Inerente vs Residual */}
-                        <View style={{ marginTop: 16, borderTopWidth: 1, borderTopColor: '#1A3A2A', paddingTop: 12 }}>
-                          <Text style={{ color: '#6B8A7A', fontSize: 10, fontWeight: '700', fontFamily: 'monospace', letterSpacing: 1, marginBottom: 8 }}>COMPARATIVO: EXPOSIÇÃO INERENTE vs RESIDUAL</Text>
-                          <View style={{ flexDirection: 'row', gap: 8 }}>
-                            <View style={{ flex: 1, backgroundColor: '#FF3D3D10', borderWidth: 1, borderColor: '#FF3D3D30', borderRadius: 8, padding: 10, alignItems: 'center' }}>
-                              <Text style={{ color: '#FF3D3D', fontSize: 9, fontWeight: '700', fontFamily: 'monospace', marginBottom: 4 }}>INERENTE</Text>
-                              <Text style={{ color: '#FF3D3D', fontSize: 16, fontWeight: '800', fontFamily: 'monospace' }}>{risks.filter(r => r.riscoInerente >= 20).length} Críticos</Text>
-                              <Text style={{ color: '#FF8C00', fontSize: 12, fontWeight: '700', fontFamily: 'monospace' }}>{risks.filter(r => r.riscoInerente >= 12 && r.riscoInerente < 20).length} Altos</Text>
-                            </View>
-                            <View style={{ justifyContent: 'center', alignItems: 'center' }}>
-                              <Text style={{ color: '#FFD600', fontSize: 20, fontWeight: '800' }}>→</Text>
-                            </View>
-                            <View style={{ flex: 1, backgroundColor: '#00FF8810', borderWidth: 1, borderColor: '#00FF8830', borderRadius: 8, padding: 10, alignItems: 'center' }}>
-                              <Text style={{ color: '#00FF88', fontSize: 9, fontWeight: '700', fontFamily: 'monospace', marginBottom: 4 }}>RESIDUAL</Text>
-                              <Text style={{ color: '#FF3D3D', fontSize: 16, fontWeight: '800', fontFamily: 'monospace' }}>{risks.filter(r => (r.riscoResidual || r.riscoInerente) >= 20).length} Críticos</Text>
-                              <Text style={{ color: '#FF8C00', fontSize: 12, fontWeight: '700', fontFamily: 'monospace' }}>{risks.filter(r => { const res = r.riscoResidual || r.riscoInerente; return res >= 12 && res < 20; }).length} Altos</Text>
-                            </View>
-                          </View>
-                        </View>
-                      </GlowCard>
-                    </Animated.View>
-                  </>
-                );
-              })()}
-
+        {/* Content Grid: Type + Top Risks + Financial */}
+        <View style={[styles.section, isDesktop && styles.sectionDesktop, { marginTop: 16 }]}>
+          <View style={[styles.contentGrid, isDesktop && styles.contentGridDesktop]}>
+            {/* Left Column: Risk by Type + Financial */}
+            <View style={[styles.column, isDesktop && { flex: 1 }]}>
               {/* Risks by Type */}
-              <Animated.View entering={FadeInDown.duration(500).delay(400)} style={{ marginTop: 16 }}>
+              <Animated.View entering={FadeInDown.duration(500).delay(400)}>
                 <GlowCard variant="default">
                   <View style={styles.cardHeader}>
                     <Text style={[styles.cardTitle, { color: '#00E5FF', fontFamily: 'monospace' }]}>DISTRIBUIÇÃO POR TIPO</Text>
@@ -673,6 +679,96 @@ export default function DashboardScreen() {
                       </TouchableOpacity>
                     );
                   })}
+                </GlowCard>
+              </Animated.View>
+
+              {/* Financial Summary */}
+              {financialSummary.riscosComDados > 0 && (
+                <Animated.View entering={FadeInDown.duration(500).delay(500)} style={{ marginTop: 16 }}>
+                  <GlowCard variant="default">
+                    <View style={styles.cardHeader}>
+                      <Text style={[styles.cardTitle, { color: '#00E5FF', fontFamily: 'monospace' }]}>IMPACTO FINANCEIRO</Text>
+                      <View style={[styles.cardBadge, { backgroundColor: '#FF3D3D15', borderWidth: 1, borderColor: '#FF3D3D30' }]}>
+                        <Text style={[styles.cardBadgeText, { color: '#FF3D3D', fontFamily: 'monospace' }]}>R$ MILHÕES</Text>
+                      </View>
+                    </View>
+                    <View style={{ gap: 8 }}>
+                      <View style={{ flexDirection: 'row', gap: 8 }}>
+                        <View style={[styles.finCardResponsive, { borderColor: '#FF3D3D30', backgroundColor: '#FF3D3D08' }]}>
+                          <Text style={[styles.finLabel, { color: '#6B8A7A', fontFamily: 'monospace' }]}>EXPOSIÇÃO{"\n"}ALTA DEMANDA</Text>
+                          <Text style={[styles.finValueMobile, { color: '#FF3D3D', fontFamily: 'monospace' }]}>R$ {(financialSummary.totalExposicaoAlta / 1000000).toFixed(1)}M</Text>
+                        </View>
+                        <View style={[styles.finCardResponsive, { borderColor: '#FF8C0030', backgroundColor: '#FF8C0008' }]}>
+                          <Text style={[styles.finLabel, { color: '#6B8A7A', fontFamily: 'monospace' }]}>EXPOSIÇÃO{"\n"}BAIXA DEMANDA</Text>
+                          <Text style={[styles.finValueMobile, { color: '#FF8C00', fontFamily: 'monospace' }]}>R$ {(financialSummary.totalExposicaoBaixa / 1000000).toFixed(1)}M</Text>
+                        </View>
+                      </View>
+                      <View style={{ flexDirection: 'row', gap: 8 }}>
+                        <View style={[styles.finCardResponsive, { borderColor: '#00E5FF30', backgroundColor: '#00E5FF08' }]}>
+                          <Text style={[styles.finLabel, { color: '#6B8A7A', fontFamily: 'monospace' }]}>INVESTIMENTO{"\n"}PREVENTIVO</Text>
+                          <Text style={[styles.finValueMobile, { color: '#00E5FF', fontFamily: 'monospace' }]}>R$ {(financialSummary.totalInvestimento / 1000000).toFixed(1)}M</Text>
+                        </View>
+                        <View style={[styles.finCardResponsive, { borderColor: '#00FF8830', backgroundColor: '#00FF8808' }]}>
+                          <Text style={[styles.finLabel, { color: '#6B8A7A', fontFamily: 'monospace' }]}>ECONOMIA{"\n"}POTENCIAL</Text>
+                          <Text style={[styles.finValueMobile, { color: '#00FF88', fontFamily: 'monospace' }]}>R$ {(financialSummary.totalEconomia / 1000000).toFixed(1)}M</Text>
+                        </View>
+                      </View>
+                    </View>
+                    <View style={{ marginTop: 12, borderTopWidth: 1, borderTopColor: '#1A3A2A', paddingTop: 10 }}>
+                      <Text style={{ color: '#00E5FF', fontFamily: 'monospace', fontWeight: '800', fontSize: 10, textAlign: 'center', marginBottom: 6 }}>INVESTIR R$ {(financialSummary.totalInvestimento / 1000000).toFixed(1)}M → EVITAR PERDA DE ATÉ R$ {(financialSummary.totalExposicaoAlta / 1000000).toFixed(1)}M</Text>
+                      <View style={{ height: 6, backgroundColor: '#111820', borderRadius: 3, overflow: 'hidden' }}>
+                        <View style={{ height: '100%', width: `${Math.min((financialSummary.totalInvestimento / financialSummary.totalExposicaoAlta) * 100, 100)}%`, backgroundColor: '#00E5FF', borderRadius: 3 }} />
+                      </View>
+                      <Text style={{ color: '#6B8A7A', fontFamily: 'monospace', fontSize: 9, textAlign: 'center', marginTop: 4 }}>ROI: {financialSummary.roiMedio.toFixed(0)}% | {financialSummary.riscosComDados} riscos analisados</Text>
+                    </View>
+                  </GlowCard>
+                </Animated.View>
+              )}
+
+              {/* Quick Stats */}
+              <Animated.View entering={FadeInRight.duration(500).delay(400)} style={{ marginTop: 16 }}>
+                <GlowCard variant="default">
+                  <Text style={[styles.cardTitle, { color: '#00E5FF', fontFamily: 'monospace', marginBottom: 12 }]}>RESUMO EXECUTIVO</Text>
+                  <View style={styles.quickStatsGrid}>
+                    <TouchableOpacity
+                      style={[styles.quickStatItem, { borderColor: '#1A3A2A', backgroundColor: '#111820' }]}
+                      onPress={() => {
+                        const estrategicos = risks.filter(r => r.estrategico === 'SIM');
+                        if (estrategicos.length > 0) setActiveFilter({ title: `Riscos Estratégicos (${estrategicos.length})`, risks: estrategicos });
+                      }}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={[styles.quickStatValue, { color: '#00E5FF', fontFamily: 'monospace' }]}>
+                        {risks.filter(r => r.estrategico === 'SIM').length}/{risks.length}
+                      </Text>
+                      <Text style={[styles.quickStatLabel, { color: '#6B8A7A', fontFamily: 'monospace' }]}>Estratégicos</Text>
+                    </TouchableOpacity>
+                    <View style={[styles.quickStatItem, { borderColor: '#1A3A2A', backgroundColor: '#111820' }]}>
+                      <Text style={[styles.quickStatValue, { color: '#FFD600', fontFamily: 'monospace' }]}>
+                        {Math.round(risks.reduce((s, r) => s + r.gutScore, 0) / (risks.length || 1))}
+                      </Text>
+                      <Text style={[styles.quickStatLabel, { color: '#6B8A7A', fontFamily: 'monospace' }]}>GUT Médio</Text>
+                    </View>
+                    <View style={[styles.quickStatItem, { borderColor: '#1A3A2A', backgroundColor: '#111820' }]}>
+                      <Text style={[styles.quickStatValue, { color: '#FF8C00', fontFamily: 'monospace' }]}>
+                        {(risks.reduce((s, r) => s + r.riscoInerente, 0) / (risks.length || 1)).toFixed(1)}
+                      </Text>
+                      <Text style={[styles.quickStatLabel, { color: '#6B8A7A', fontFamily: 'monospace' }]}>P×I Médio</Text>
+                    </View>
+                    <TouchableOpacity
+                      style={[styles.quickStatItem, { borderColor: '#1A3A2A', backgroundColor: '#111820' }]}
+                      onPress={() => {
+                        const emTratamento = risks.filter(r => r.tratamento && r.tratamento !== '');
+                        if (emTratamento.length > 0) setActiveFilter({ title: `Riscos em Tratamento (${emTratamento.length})`, risks: emTratamento });
+                      }}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={[styles.quickStatValue, { color: '#00FF88', fontFamily: 'monospace' }]}>
+                        {risks.filter(r => r.tratamento).length}/{risks.length}
+                      </Text>
+                      <Text style={[styles.quickStatLabel, { color: '#6B8A7A', fontFamily: 'monospace' }]}>Tratamento</Text>
+                    </TouchableOpacity>
+                  </View>
                 </GlowCard>
               </Animated.View>
             </View>
@@ -734,120 +830,9 @@ export default function DashboardScreen() {
                   })}
                 </GlowCard>
               </Animated.View>
-
-              {/* Quick Stats */}
-              <Animated.View entering={FadeInRight.duration(500).delay(400)} style={{ marginTop: 16 }}>
-                <GlowCard variant="default">
-                  <Text style={[styles.cardTitle, { color: '#00E5FF', fontFamily: 'monospace', marginBottom: 12 }]}>RESUMO EXECUTIVO</Text>
-                  <View style={styles.quickStatsGrid}>
-                    <TouchableOpacity
-                      style={[styles.quickStatItem, { borderColor: '#1A3A2A', backgroundColor: '#111820' }]}
-                      onPress={() => {
-                        const estrategicos = risks.filter(r => r.estrategico === 'SIM');
-                        if (estrategicos.length > 0) setActiveFilter({ title: `Riscos Estratégicos (${estrategicos.length})`, risks: estrategicos });
-                      }}
-                      activeOpacity={0.7}
-                    >
-                      <Text style={[styles.quickStatValue, { color: '#00E5FF', fontFamily: 'monospace' }]}>
-                        {risks.filter(r => r.estrategico === 'SIM').length}/{risks.length}
-                      </Text>
-                      <Text style={[styles.quickStatLabel, { color: '#6B8A7A', fontFamily: 'monospace' }]}>Estratégicos</Text>
-                      <Text style={[styles.tapHint, { color: '#00E5FF80', fontFamily: 'monospace' }]}>ver →</Text>
-                    </TouchableOpacity>
-                    <View style={[styles.quickStatItem, { borderColor: '#1A3A2A', backgroundColor: '#111820' }]}>
-                      <Text style={[styles.quickStatValue, { color: '#FFD600', fontFamily: 'monospace' }]}>
-                        {Math.round(risks.reduce((s, r) => s + r.gutScore, 0) / (risks.length || 1))}
-                      </Text>
-                      <Text style={[styles.quickStatLabel, { color: '#6B8A7A', fontFamily: 'monospace' }]}>GUT Médio</Text>
-                    </View>
-                    <View style={[styles.quickStatItem, { borderColor: '#1A3A2A', backgroundColor: '#111820' }]}>
-                      <Text style={[styles.quickStatValue, { color: '#FF8C00', fontFamily: 'monospace' }]}>
-                        {(risks.reduce((s, r) => s + r.riscoInerente, 0) / (risks.length || 1)).toFixed(1)}
-                      </Text>
-                      <Text style={[styles.quickStatLabel, { color: '#6B8A7A', fontFamily: 'monospace' }]}>P×I Médio</Text>
-                    </View>
-                    <TouchableOpacity
-                      style={[styles.quickStatItem, { borderColor: '#1A3A2A', backgroundColor: '#111820' }]}
-                      onPress={() => {
-                        const emTratamento = risks.filter(r => r.tratamento && r.tratamento !== '');
-                        if (emTratamento.length > 0) setActiveFilter({ title: `Riscos em Tratamento (${emTratamento.length})`, risks: emTratamento });
-                      }}
-                      activeOpacity={0.7}
-                    >
-                      <Text style={[styles.quickStatValue, { color: '#00FF88', fontFamily: 'monospace' }]}>
-                        {risks.filter(r => r.tratamento).length}/{risks.length}
-                      </Text>
-                      <Text style={[styles.quickStatLabel, { color: '#6B8A7A', fontFamily: 'monospace' }]}>Tratamento</Text>
-                      <Text style={[styles.tapHint, { color: '#00FF8880', fontFamily: 'monospace' }]}>ver →</Text>
-                    </TouchableOpacity>
-                  </View>
-                </GlowCard>
-              </Animated.View>
             </View>
           </View>
         </View>
-
-        {/* Financial Summary Panel */}
-        {financialSummary.riscosComDados > 0 && (
-          <View style={[styles.section, isDesktop && styles.sectionDesktop, { marginTop: 24 }]}>
-            <Animated.View entering={FadeInDown.duration(500).delay(500)}>
-              <GlowCard variant="default">
-                <View style={{ marginBottom: 20 }}>
-                  <View style={styles.cardHeader}>
-                    <Text style={[styles.cardTitle, { color: '#00E5FF', fontFamily: 'monospace', fontSize: 16 }]}>IMPACTO FINANCEIRO CONSOLIDADO</Text>
-                    <View style={[styles.cardBadge, { backgroundColor: '#FF3D3D15', borderWidth: 1, borderColor: '#FF3D3D30' }]}>
-                      <Text style={[styles.cardBadgeText, { color: '#FF3D3D', fontFamily: 'monospace' }]}>R$ MILHÕES</Text>
-                    </View>
-                  </View>
-                  <Text style={{ fontSize: 11, color: '#6B8A7A', fontFamily: 'monospace', marginTop: -12 }}>Visão consolidada de exposição, investimento e economia — {financialSummary.riscosComDados} riscos analisados</Text>
-                </View>
-                {/* Always 2x2 grid to avoid overflow */}
-                <View style={{ gap: 10 }}>
-                  <View style={{ flexDirection: 'row', gap: 10 }}>
-                    <View style={[styles.finCardResponsive, { borderColor: '#FF3D3D30', backgroundColor: '#FF3D3D08' }]}>
-                      <Text style={[styles.finLabel, { color: '#6B8A7A', fontFamily: 'monospace' }]}>EXPOSIÇÃO TOTAL{"\n"}(ALTA DEMANDA)</Text>
-                      <Text style={[isDesktop ? styles.finValue : styles.finValueMobile, { color: '#FF3D3D', fontFamily: 'monospace' }]}>R$ {(financialSummary.totalExposicaoAlta / 1000000).toFixed(1)}M</Text>
-                      <Text style={[styles.finHint, { color: '#FF3D3D80', fontFamily: 'monospace' }]}>Black Friday / Natal</Text>
-                    </View>
-                    <View style={[styles.finCardResponsive, { borderColor: '#FF8C0030', backgroundColor: '#FF8C0008' }]}>
-                      <Text style={[styles.finLabel, { color: '#6B8A7A', fontFamily: 'monospace' }]}>EXPOSIÇÃO TOTAL{"\n"}(BAIXA DEMANDA)</Text>
-                      <Text style={[isDesktop ? styles.finValue : styles.finValueMobile, { color: '#FF8C00', fontFamily: 'monospace' }]}>R$ {(financialSummary.totalExposicaoBaixa / 1000000).toFixed(1)}M</Text>
-                      <Text style={[styles.finHint, { color: '#FF8C0080', fontFamily: 'monospace' }]}>Período normal</Text>
-                    </View>
-                  </View>
-                  <View style={{ flexDirection: 'row', gap: 10 }}>
-                    <View style={[styles.finCardResponsive, { borderColor: '#00E5FF30', backgroundColor: '#00E5FF08' }]}>
-                      <Text style={[styles.finLabel, { color: '#6B8A7A', fontFamily: 'monospace' }]}>INVESTIMENTO{"\n"}PREVENTIVO</Text>
-                      <Text style={[isDesktop ? styles.finValue : styles.finValueMobile, { color: '#00E5FF', fontFamily: 'monospace' }]}>R$ {(financialSummary.totalInvestimento / 1000000).toFixed(1)}M</Text>
-                      <Text style={[styles.finHint, { color: '#00E5FF80', fontFamily: 'monospace' }]}>Controles + Contingências</Text>
-                    </View>
-                    <View style={[styles.finCardResponsive, { borderColor: '#00FF8830', backgroundColor: '#00FF8808' }]}>
-                      <Text style={[styles.finLabel, { color: '#6B8A7A', fontFamily: 'monospace' }]}>ECONOMIA{"\n"}POTENCIAL</Text>
-                      <Text style={[isDesktop ? styles.finValue : styles.finValueMobile, { color: '#00FF88', fontFamily: 'monospace' }]}>R$ {(financialSummary.totalEconomia / 1000000).toFixed(1)}M</Text>
-                      <Text style={[styles.finHint, { color: '#00FF8880', fontFamily: 'monospace' }]}>ROI: {financialSummary.roiMedio.toFixed(0)}%</Text>
-                    </View>
-                  </View>
-                </View>
-                <View style={[styles.finBarContainer, { marginTop: 20 }]}>
-                  <Text style={[styles.finBarLabel, { color: '#00E5FF', fontFamily: 'monospace', fontWeight: '800', fontSize: 11 }]}>INVESTIR R$ {(financialSummary.totalInvestimento / 1000000).toFixed(1)}M → EVITAR PERDA DE ATÉ R$ {(financialSummary.totalExposicaoAlta / 1000000).toFixed(1)}M</Text>
-                  <View style={[styles.finBar, { backgroundColor: '#111820' }]}>
-                    <View style={[styles.finBarFill, { width: `${Math.min((financialSummary.totalInvestimento / financialSummary.totalExposicaoAlta) * 100, 100)}%`, backgroundColor: '#00E5FF' }]} />
-                  </View>
-                  <View style={styles.finBarLegend}>
-                    <View style={styles.finBarLegendItem}>
-                      <View style={[styles.legendDot, { backgroundColor: '#00E5FF' }]} />
-                      <Text style={[styles.finBarLegendText, { color: '#6B8A7A', fontFamily: 'monospace' }]}>Investimento</Text>
-                    </View>
-                    <View style={styles.finBarLegendItem}>
-                      <View style={[styles.legendDot, { backgroundColor: '#FF3D3D' }]} />
-                      <Text style={[styles.finBarLegendText, { color: '#6B8A7A', fontFamily: 'monospace' }]}>Exposição evitada</Text>
-                    </View>
-                  </View>
-                </View>
-              </GlowCard>
-            </Animated.View>
-          </View>
-        )}
 
         <View style={{ height: 16 }} />
       </ScrollView>
@@ -874,7 +859,7 @@ const styles = StyleSheet.create({
   statCardInner: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
   statLabel: { fontSize: 10, fontWeight: '700', letterSpacing: 1 },
   tapHint: { fontSize: 9, fontWeight: '600', letterSpacing: 0.5, marginTop: 4 },
-  contentGrid: { marginTop: 20, gap: 16 },
+  contentGrid: { gap: 16 },
   contentGridDesktop: { flexDirection: 'row' },
   column: { gap: 0 },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
@@ -882,26 +867,6 @@ const styles = StyleSheet.create({
   cardBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 4 },
   cardBadgeText: { fontSize: 9, fontWeight: '700', letterSpacing: 1 },
   seeAll: { fontSize: 11, fontWeight: '700', letterSpacing: 0.5 },
-  matrixWrapper: { flexDirection: 'row', alignItems: 'center' },
-  matrixYAxis: { width: 24, alignItems: 'center', justifyContent: 'center' },
-  axisTitle: { fontSize: 12, fontWeight: '700', transform: [{ rotate: '-90deg' }] },
-  matrixContent: { flex: 1 },
-  matrixRow: { flexDirection: 'row', marginBottom: 4 },
-  matrixRowLabel: { width: 28, justifyContent: 'center', alignItems: 'center' },
-  matrixLabelText: { fontSize: 12, fontWeight: '600' },
-  matrixCell: { flex: 1, aspectRatio: 1, justifyContent: 'center', alignItems: 'center', borderRadius: 6, marginHorizontal: 2 },
-  matrixCellActive: { cursor: 'pointer' as any },
-  matrixCellText: { fontSize: 18, fontWeight: '800' },
-  cellContentWrap: { alignItems: 'center', gap: 1 },
-  cellFinancialBadge: { paddingHorizontal: 4, paddingVertical: 2, borderRadius: 4, borderWidth: 1, marginTop: 2 },
-  cellFinancialText: { fontSize: 9, fontWeight: '800', letterSpacing: 0.3 },
-  cellTapHint: { paddingHorizontal: 6, paddingVertical: 1, borderRadius: 3 },
-  cellTapHintText: { fontSize: 7, fontWeight: '700', letterSpacing: 0.5 },
-  xAxisTitle: { fontSize: 11, fontWeight: '700', textAlign: 'center', marginTop: 6, marginLeft: 28, letterSpacing: 1 },
-  legendRow: { flexDirection: 'row', justifyContent: 'center', gap: 16, marginTop: 16, flexWrap: 'wrap' },
-  legendItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  legendDot: { width: 8, height: 8, borderRadius: 4 },
-  legendText: { fontSize: 10, fontWeight: '600' },
   barRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, gap: 8, paddingHorizontal: 4 },
   barLabel: { fontSize: 11, fontWeight: '500', width: 140 },
   barBadge: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 3 },
@@ -943,19 +908,7 @@ const styles = StyleSheet.create({
   modalRiskDesc: { fontSize: 13, lineHeight: 19, marginBottom: 8 },
   modalRiskFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   modalRiskMeta: { fontSize: 10, flex: 1 },
-  modalRiskArrow: { paddingLeft: 8 },
-  levelPill: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 4 },
-  levelPillText: { fontSize: 10, fontWeight: '700' },
-  finCardResponsive: { flex: 1, borderWidth: 1, borderRadius: 8, padding: 12, alignItems: 'center', minWidth: 0 },
-  finLabel: { fontSize: 9, fontWeight: '700', letterSpacing: 0.5, textAlign: 'center', marginBottom: 4 },
-  finValue: { fontSize: 18, fontWeight: '800' },
-  finValueMobile: { fontSize: 16, fontWeight: '800' },
-  finHint: { fontSize: 8, fontWeight: '600', marginTop: 3 },
-  finBarContainer: { borderTopWidth: 1, borderTopColor: '#1A3A2A', paddingTop: 14 },
-  finBarLabel: { fontSize: 10, fontWeight: '700', letterSpacing: 0.5, marginBottom: 8, textAlign: 'center' },
-  finBar: { height: 8, borderRadius: 4, overflow: 'hidden' },
-  finBarFill: { height: '100%', borderRadius: 4 },
-  finBarLegend: { flexDirection: 'row', justifyContent: 'center', gap: 20, marginTop: 8 },
-  finBarLegendItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  finBarLegendText: { fontSize: 9, fontWeight: '600' },
+  finCardResponsive: { flex: 1, borderWidth: 1, borderRadius: 8, padding: 10, alignItems: 'center', minWidth: 0 },
+  finLabel: { fontSize: 8, fontWeight: '700', letterSpacing: 0.5, textAlign: 'center', marginBottom: 3 },
+  finValueMobile: { fontSize: 15, fontWeight: '800' },
 });

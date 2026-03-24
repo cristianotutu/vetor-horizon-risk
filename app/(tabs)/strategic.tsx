@@ -1,5 +1,5 @@
 import { ScrollView, Text, View, TouchableOpacity, StyleSheet, useWindowDimensions, Modal, Platform } from "react-native";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect} from "react";
 import { useRouter } from "expo-router";
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
@@ -10,6 +10,7 @@ import { GlowCard } from "@/components/ui/glow-card";
 import { StatusIndicator } from "@/components/ui/status-indicator";
 import { FINANCIAL_DATA } from "@/lib/financial-data";
 import Animated, { FadeInDown } from "react-native-reanimated";
+import { useWizard } from "@/components/wizard-overlay";
 
 // Neon color palette
 const NEON = {
@@ -56,6 +57,9 @@ function treatmentColor(t: string): string {
 
 export default function StrategicScreen() {
   const { risks } = useRisks();
+
+  const { triggerWizard } = useWizard();
+  useEffect(() => { triggerWizard('strategic'); }, []);
   const colors = useColors();
   const router = useRouter();
   const { width } = useWindowDimensions();

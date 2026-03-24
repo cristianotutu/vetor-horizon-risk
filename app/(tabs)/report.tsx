@@ -1,10 +1,11 @@
 import { View, Text, ScrollView, TouchableOpacity, useWindowDimensions, StyleSheet, Platform } from "react-native";
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect} from "react";
 import { ScreenContainer } from "@/components/screen-container";
 import { useRisks } from "@/lib/risk-context";
 import { getRiskLevel, getGutLevel, Risk } from "@/lib/models";
 import { GlowCard } from "@/components/ui/glow-card";
 import Animated, { FadeInDown } from "react-native-reanimated";
+import { useWizard } from "@/components/wizard-overlay";
 
 // ─── DESIGN TOKENS ────────────────────────────────────────────
 const C = {
@@ -37,6 +38,9 @@ function pct(part: number, total: number): string {
 // ─── MAIN COMPONENT ───────────────────────────────────────────
 export default function ReportScreen() {
   const { risks } = useRisks();
+
+  const { triggerWizard } = useWizard();
+  useEffect(() => { triggerWizard('report'); }, []);
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;
   const [currentSlide, setCurrentSlide] = useState(0);

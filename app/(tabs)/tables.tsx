@@ -4,8 +4,9 @@ import { GlowCard } from "@/components/ui/glow-card";
 import { StatusIndicator } from "@/components/ui/status-indicator";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { TABELA_IMPACTO_DETALHADA, NIVEIS_PROBABILIDADE, TABELA_GUT, getMatrixColor } from "@/lib/models";
-import { useState } from "react";
+import { useState, useEffect} from "react";
 import Animated, { FadeInDown } from "react-native-reanimated";
+import { useWizard } from "@/components/wizard-overlay";
 
 type TabKey = 'matrix' | 'impacto' | 'probabilidade' | 'gut';
 
@@ -34,6 +35,9 @@ function getLevelColor(nivel: number): string {
 }
 
 export default function TablesScreen() {
+
+  const { triggerWizard } = useWizard();
+  useEffect(() => { triggerWizard('tables'); }, []);
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;
   const [activeTab, setActiveTab] = useState<TabKey>('matrix');

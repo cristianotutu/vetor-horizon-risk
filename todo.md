@@ -148,4 +148,10 @@
 - [x] Redesenhar tela Relatório Executivo com padrão de apresentação ao conselho
 - [x] Ajustar layout de "Investimentos Preventivos — Priorizados por ROI" para caber toda informação
 - [x] Incorporar frameworks FAIR/COSO/RISK IT/ISACA para valores em R$ e apetite a risco
-- [ ] Push para GitHub e confirmar deploy no Netlify
+- [x] Push para GitHub e confirmar deploy no Netlify
+- [x] Otimizar tabelas para mostrar toda informação sem espaços vazios
+- [x] Ajustar 3 matrizes de risco em fluxo horizontal (esquerda para direita)
+- [x] Implementar wizard ativado na primeira visita a cada menu
+- [x] Remover chatbot de IA
+- [x] Reescrever README.md profissional
+- [x] Criar documento How-To (guia de uso de cada menu)

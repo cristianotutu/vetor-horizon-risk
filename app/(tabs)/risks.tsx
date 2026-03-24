@@ -5,12 +5,13 @@ import { useRisks } from "@/lib/risk-context";
 import { getRiskLevel, getGutLevel, TIPOS_DE_RISCO } from "@/lib/models";
 import type { Risk } from "@/lib/models";
 import { useColors } from "@/hooks/use-colors";
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect} from "react";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { GlowCard } from "@/components/ui/glow-card";
 import { PulsingBadge } from "@/components/ui/pulsing-badge";
 import { StatusIndicator } from "@/components/ui/status-indicator";
 import Animated, { FadeInDown } from "react-native-reanimated";
+import { useWizard } from "@/components/wizard-overlay";
 
 const LEVEL_COLORS: Record<string, string> = {
   'Crítico': '#FF3D3D',
@@ -28,6 +29,9 @@ const BADGE_LEVEL_MAP: Record<string, 'critical' | 'high' | 'medium' | 'low'> = 
 
 export default function RisksScreen() {
   const { risks, loading } = useRisks();
+
+  const { triggerWizard } = useWizard();
+  useEffect(() => { triggerWizard('risks'); }, []);
   const router = useRouter();
   const colors = useColors();
   const { width } = useWindowDimensions();

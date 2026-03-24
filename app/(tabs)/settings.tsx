@@ -1,13 +1,17 @@
 import { ScrollView, Text, View, StyleSheet, useWindowDimensions, Image, TouchableOpacity, Linking } from "react-native";
+import { useEffect } from "react";
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
 import { useRisks } from "@/lib/risk-context";
-import { WizardButton } from "@/components/wizard-overlay";
+import { WizardButton, useWizard } from "@/components/wizard-overlay";
 
 const vetorHorizonLogo = require("@/assets/images/vetor-horizon-logo.png");
 
 export default function SettingsScreen() {
   const colors = useColors();
+
+  const { triggerWizard } = useWizard();
+  useEffect(() => { triggerWizard('settings'); }, []);
   const { risks } = useRisks();
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;

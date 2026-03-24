@@ -1,5 +1,5 @@
 import { Text, View, ScrollView, TouchableOpacity, FlatList, Modal, StyleSheet, Platform, useWindowDimensions } from "react-native";
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect} from "react";
 import { useRouter } from "expo-router";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
@@ -9,6 +9,7 @@ import { StatusIndicator } from "@/components/ui/status-indicator";
 import { RISKS_AULA3, RISKS_AULA4, RISKS_AULA5, RISKS_AULA6, EVOLUTION_3_TO_4, EVOLUTION_4_TO_5, EVOLUTION_5_TO_6, EVOLUTION_3_TO_6, AULA_RISK_COUNTS } from "@/lib/evolution-data";
 import { getRiskLevel, getGutLevel, Risk } from "@/lib/models";
 import Animated, { FadeInDown } from "react-native-reanimated";
+import { useWizard } from "@/components/wizard-overlay";
 
 type ViewMode = 'overview' | 'comparison' | 'matrix';
 type CompareMode = '3v4' | '4v5' | '5v6' | '3v6';
@@ -65,6 +66,9 @@ export default function EvolutionScreen() {
   const fromData = getAulaData(fromAula);
   const toData = getAulaData(toAula);
   const evolution = useMemo(() => getEvolution(compareMode), [compareMode]);
+
+  const { triggerWizard } = useWizard();
+  useEffect(() => { triggerWizard('evolution'); }, []);
 
   const newRisks = evolution.filter(e => e.type === 'new');
   const modifiedRisks = evolution.filter(e => e.type === 'modified');
