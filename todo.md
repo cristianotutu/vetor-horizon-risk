@@ -162,3 +162,4 @@
 - [ ] Ajustar Relatório Executivo para refletir fielmente o E-Book 3
 - [ ] Corrigir visão evolutiva (tela Evolução)
 - [ ] Eliminar espaços vazios em todas as telas
+- [ ] Redesenhar 3 matrizes: maiores, mais atrativas, melhor aproveitamento de espaço no desktop

@@ -165,18 +165,19 @@ export default function DashboardScreen() {
 
   // ─── MATRIX 5x5 RENDERER ─────────────────────────────
   const renderMatrix5x5 = (matrixData: Risk[][][], prefix: string, interactive = true) => {
-    const cellSize = isDesktop ? 44 : 40;
+    const cellSize = isDesktop ? 68 : 48;
+    const gap = isDesktop ? 3 : 2;
     return (
       <View>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <View style={{ width: 14, alignItems: 'center', marginRight: 2 }}>
-            <Text style={{ color: '#6B8A7A', fontSize: 7, fontWeight: '700', fontFamily: MONO, transform: [{ rotate: '-90deg' }], width: 60, textAlign: 'center' }}>PROBABILIDADE</Text>
+          <View style={{ width: 18, alignItems: 'center', marginRight: 4 }}>
+            <Text style={{ color: '#6B8A7A', fontSize: 8, fontWeight: '700', fontFamily: MONO, transform: [{ rotate: '-90deg' }], width: 80, textAlign: 'center', letterSpacing: 2 }}>PROBABILIDADE</Text>
           </View>
           <View>
             {matrixData.map((row, rowIdx) => (
-              <View key={rowIdx} style={{ flexDirection: 'row', marginBottom: 1 }}>
-                <View style={{ width: 14, justifyContent: 'center', alignItems: 'center' }}>
-                  <Text style={{ color: '#6B8A7A', fontSize: 9, fontWeight: '600', fontFamily: MONO }}>{5 - rowIdx}</Text>
+              <View key={rowIdx} style={{ flexDirection: 'row', marginBottom: gap }}>
+                <View style={{ width: 18, justifyContent: 'center', alignItems: 'center' }}>
+                  <Text style={{ color: '#6B8A7A', fontSize: 11, fontWeight: '700', fontFamily: MONO }}>{5 - rowIdx}</Text>
                 </View>
                 {row.map((cellRisks, colIdx) => {
                   const prob = 5 - rowIdx;
@@ -191,10 +192,11 @@ export default function DashboardScreen() {
                       style={{
                         width: cellSize, height: cellSize,
                         justifyContent: 'center', alignItems: 'center',
-                        borderRadius: 3, marginHorizontal: 1,
-                        backgroundColor: count > 0 ? bgColor + '25' : '#111820',
-                        borderColor: isHovered ? bgColor : (count > 0 ? bgColor + '50' : '#1A3A2A'),
-                        borderWidth: isHovered ? 2 : 1,
+                        borderRadius: 6, marginHorizontal: gap / 2,
+                        backgroundColor: count > 0 ? bgColor + '30' : '#0D1117',
+                        borderColor: isHovered ? bgColor : (count > 0 ? bgColor + '60' : '#1A2A22'),
+                        borderWidth: isHovered ? 2.5 : 1,
+                        ...(count > 0 ? { shadowColor: bgColor, shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.3, shadowRadius: 6 } : {}),
                       }}
                       onPress={() => interactive && handleMatrixPress(prob, imp, cellRisks)}
                       onPressIn={() => setHoveredCell(cellKey)}
@@ -203,14 +205,14 @@ export default function DashboardScreen() {
                     >
                       {count > 0 && (
                         <View style={{ alignItems: 'center' }}>
-                          <Text style={{ color: bgColor, fontSize: 13, fontWeight: '800', fontFamily: MONO }}>{count}</Text>
+                          <Text style={{ color: bgColor, fontSize: isDesktop ? 18 : 14, fontWeight: '900', fontFamily: MONO }}>{count}</Text>
                           {(() => {
                             const cellFin = cellRisks.reduce((s, r) => s + (r.impactoFinanceiro?.perdaMediaEsperada || 0), 0);
                             if (cellFin > 0) {
-                              const fmt = cellFin >= 1000000 ? `${(cellFin / 1000000).toFixed(1)}M` : cellFin >= 1000 ? `${(cellFin / 1000).toFixed(0)}K` : `${cellFin.toFixed(0)}`;
+                              const fmt = cellFin >= 1000000 ? `R$${(cellFin / 1000000).toFixed(1)}M` : cellFin >= 1000 ? `R$${(cellFin / 1000).toFixed(0)}K` : `R$${cellFin.toFixed(0)}`;
                               return (
-                                <View style={{ backgroundColor: bgColor + '30', borderRadius: 2, paddingHorizontal: 2, borderWidth: 1, borderColor: bgColor + '60' }}>
-                                  <Text style={{ color: '#FFF', fontSize: 6, fontWeight: '800', fontFamily: MONO }}>R${fmt}</Text>
+                                <View style={{ backgroundColor: bgColor + '35', borderRadius: 3, paddingHorizontal: 4, paddingVertical: 1, borderWidth: 1, borderColor: bgColor + '70', marginTop: 1 }}>
+                                  <Text style={{ color: '#FFF', fontSize: isDesktop ? 8 : 7, fontWeight: '800', fontFamily: MONO }}>{fmt}</Text>
                                 </View>
                               );
                             }
@@ -223,14 +225,14 @@ export default function DashboardScreen() {
                 })}
               </View>
             ))}
-            <View style={{ flexDirection: 'row', marginTop: 2, marginLeft: 14 }}>
+            <View style={{ flexDirection: 'row', marginTop: 4, marginLeft: 18 }}>
               {[1, 2, 3, 4, 5].map(n => (
-                <View key={n} style={{ width: cellSize + 2, alignItems: 'center' }}>
-                  <Text style={{ color: '#6B8A7A', fontSize: 9, fontWeight: '600', fontFamily: MONO }}>{n}</Text>
+                <View key={n} style={{ width: cellSize + gap, alignItems: 'center' }}>
+                  <Text style={{ color: '#6B8A7A', fontSize: 11, fontWeight: '700', fontFamily: MONO }}>{n}</Text>
                 </View>
               ))}
             </View>
-            <Text style={{ color: '#6B8A7A', fontSize: 7, fontWeight: '700', fontFamily: MONO, textAlign: 'center', marginTop: 1, marginLeft: 14, letterSpacing: 1 }}>IMPACTO</Text>
+            <Text style={{ color: '#6B8A7A', fontSize: 8, fontWeight: '700', fontFamily: MONO, textAlign: 'center', marginTop: 2, marginLeft: 18, letterSpacing: 2 }}>IMPACTO</Text>
           </View>
         </View>
       </View>
@@ -239,18 +241,19 @@ export default function DashboardScreen() {
 
   // ─── DESLOCAMENTO MATRIX (shows migration arrows) ─────────────────────────────
   const renderDeslocamentoMatrix = () => {
-    const cellSize = isDesktop ? 44 : 40;
+    const cellSize = isDesktop ? 68 : 48;
+    const gap = isDesktop ? 3 : 2;
     return (
       <View>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <View style={{ width: 14, alignItems: 'center', marginRight: 2 }}>
-            <Text style={{ color: '#6B8A7A', fontSize: 7, fontWeight: '700', fontFamily: MONO, transform: [{ rotate: '-90deg' }], width: 60, textAlign: 'center' }}>PROBABILIDADE</Text>
+          <View style={{ width: 18, alignItems: 'center', marginRight: 4 }}>
+            <Text style={{ color: '#6B8A7A', fontSize: 8, fontWeight: '700', fontFamily: MONO, transform: [{ rotate: '-90deg' }], width: 80, textAlign: 'center', letterSpacing: 2 }}>PROBABILIDADE</Text>
           </View>
           <View>
             {deslocamentoMatrix.map((row, rowIdx) => (
-              <View key={rowIdx} style={{ flexDirection: 'row', marginBottom: 1 }}>
-                <View style={{ width: 14, justifyContent: 'center', alignItems: 'center' }}>
-                  <Text style={{ color: '#6B8A7A', fontSize: 9, fontWeight: '600', fontFamily: MONO }}>{5 - rowIdx}</Text>
+              <View key={rowIdx} style={{ flexDirection: 'row', marginBottom: gap }}>
+                <View style={{ width: 18, justifyContent: 'center', alignItems: 'center' }}>
+                  <Text style={{ color: '#6B8A7A', fontSize: 11, fontWeight: '700', fontFamily: MONO }}>{5 - rowIdx}</Text>
                 </View>
                 {row.map((cell, colIdx) => {
                   const prob = 5 - rowIdx;
@@ -265,10 +268,11 @@ export default function DashboardScreen() {
                       style={{
                         width: cellSize, height: cellSize,
                         justifyContent: 'center', alignItems: 'center',
-                        borderRadius: 3, marginHorizontal: 1,
-                        backgroundColor: hasActivity ? bgColor + '20' : '#111820',
-                        borderColor: hasActivity ? bgColor + '60' : '#1A3A2A',
+                        borderRadius: 6, marginHorizontal: gap / 2,
+                        backgroundColor: hasActivity ? bgColor + '25' : '#0D1117',
+                        borderColor: hasActivity ? bgColor + '60' : '#1A2A22',
                         borderWidth: 1,
+                        ...(hasActivity ? { shadowColor: bgColor, shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.2, shadowRadius: 4 } : {}),
                       }}
                       onPress={() => {
                         const allRisks = [...cell.origins, ...cell.destinations];
@@ -279,19 +283,20 @@ export default function DashboardScreen() {
                     >
                       {hasOrigin && !hasDest && (
                         <View style={{ alignItems: 'center' }}>
-                          <Text style={{ color: '#FF3D3D', fontSize: 11, fontWeight: '800', fontFamily: MONO }}>-{cell.origins.length}</Text>
-                          <Text style={{ color: '#FF3D3D', fontSize: 7, fontFamily: MONO }}>SAIU</Text>
+                          <Text style={{ color: '#FF3D3D', fontSize: isDesktop ? 15 : 12, fontWeight: '900', fontFamily: MONO }}>-{cell.origins.length}</Text>
+                          <Text style={{ color: '#FF3D3D', fontSize: isDesktop ? 9 : 7, fontWeight: '700', fontFamily: MONO }}>SAIU</Text>
                         </View>
                       )}
                       {hasDest && !hasOrigin && (
                         <View style={{ alignItems: 'center' }}>
-                          <Text style={{ color: '#00FF88', fontSize: 11, fontWeight: '800', fontFamily: MONO }}>+{cell.destinations.length}</Text>
-                          <Text style={{ color: '#00FF88', fontSize: 7, fontFamily: MONO }}>ENTROU</Text>
+                          <Text style={{ color: '#00FF88', fontSize: isDesktop ? 15 : 12, fontWeight: '900', fontFamily: MONO }}>+{cell.destinations.length}</Text>
+                          <Text style={{ color: '#00FF88', fontSize: isDesktop ? 9 : 7, fontWeight: '700', fontFamily: MONO }}>ENTROU</Text>
                         </View>
                       )}
                       {hasOrigin && hasDest && (
                         <View style={{ alignItems: 'center' }}>
-                          <Text style={{ color: '#FFD600', fontSize: 9, fontWeight: '800', fontFamily: MONO }}>-{cell.origins.length}/+{cell.destinations.length}</Text>
+                          <Text style={{ color: '#FF3D3D', fontSize: isDesktop ? 12 : 9, fontWeight: '900', fontFamily: MONO }}>-{cell.origins.length}</Text>
+                          <Text style={{ color: '#00FF88', fontSize: isDesktop ? 12 : 9, fontWeight: '900', fontFamily: MONO }}>+{cell.destinations.length}</Text>
                         </View>
                       )}
                     </TouchableOpacity>
@@ -299,14 +304,14 @@ export default function DashboardScreen() {
                 })}
               </View>
             ))}
-            <View style={{ flexDirection: 'row', marginTop: 2, marginLeft: 14 }}>
+            <View style={{ flexDirection: 'row', marginTop: 4, marginLeft: 18 }}>
               {[1, 2, 3, 4, 5].map(n => (
-                <View key={n} style={{ width: cellSize + 2, alignItems: 'center' }}>
-                  <Text style={{ color: '#6B8A7A', fontSize: 9, fontWeight: '600', fontFamily: MONO }}>{n}</Text>
+                <View key={n} style={{ width: cellSize + gap, alignItems: 'center' }}>
+                  <Text style={{ color: '#6B8A7A', fontSize: 11, fontWeight: '700', fontFamily: MONO }}>{n}</Text>
                 </View>
               ))}
             </View>
-            <Text style={{ color: '#6B8A7A', fontSize: 7, fontWeight: '700', fontFamily: MONO, textAlign: 'center', marginTop: 1, marginLeft: 14, letterSpacing: 1 }}>IMPACTO</Text>
+            <Text style={{ color: '#6B8A7A', fontSize: 8, fontWeight: '700', fontFamily: MONO, textAlign: 'center', marginTop: 2, marginLeft: 18, letterSpacing: 2 }}>IMPACTO</Text>
           </View>
         </View>
       </View>
@@ -436,34 +441,32 @@ export default function DashboardScreen() {
               </View>
 
               {/* 3 Matrizes lado a lado (desktop) ou empilhadas (mobile) */}
-              <ScrollView horizontal={isDesktop} showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexDirection: isDesktop ? 'row' : 'column', alignItems: isDesktop ? 'flex-start' : 'center', gap: isDesktop ? 0 : 12 }}>
+              <ScrollView horizontal={isDesktop} showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexDirection: isDesktop ? 'row' : 'column', alignItems: isDesktop ? 'flex-start' : 'center', justifyContent: 'center', gap: isDesktop ? 0 : 16, paddingVertical: 8, ...(isDesktop ? { width: '100%' } : {}) }}>
                 {/* 1. INERENTE */}
                 <View style={{ alignItems: 'center' }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-                    <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: '#FF3D3D' }} />
-                    <Text style={{ color: '#FF3D3D', fontSize: 11, fontWeight: '800', fontFamily: MONO, letterSpacing: 1 }}>INERENTE</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                    <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: '#FF3D3D', shadowColor: '#FF3D3D', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.6, shadowRadius: 6 }} />
+                    <Text style={{ color: '#FF3D3D', fontSize: 13, fontWeight: '900', fontFamily: MONO, letterSpacing: 2 }}>INERENTE</Text>
                   </View>
-                  <View style={{ backgroundColor: '#FF3D3D08', borderWidth: 1, borderColor: '#FF3D3D25', borderRadius: 8, padding: 6 }}>
-                    <Text style={{ color: '#FF3D3D70', fontSize: 7, fontWeight: '700', fontFamily: MONO, textAlign: 'center', marginBottom: 3, letterSpacing: 1 }}>ANTES DOS CONTROLES</Text>
+                  <View style={{ backgroundColor: '#FF3D3D08', borderWidth: 1.5, borderColor: '#FF3D3D30', borderRadius: 10, padding: isDesktop ? 10 : 6 }}>
+                    <Text style={{ color: '#FF3D3D80', fontSize: 8, fontWeight: '700', fontFamily: MONO, textAlign: 'center', marginBottom: 4, letterSpacing: 2 }}>ANTES DOS CONTROLES</Text>
                     {renderMatrix5x5(matrixInerente, 'inerente')}
                   </View>
-                </View>
-
-                {/* Arrow → */}
-                <View style={{ justifyContent: 'center', alignItems: 'center', paddingHorizontal: isDesktop ? 8 : 0, paddingVertical: isDesktop ? 0 : 4 }}>
-                  <View style={{ backgroundColor: '#FFD60020', borderRadius: 20, width: 36, height: 36, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#FFD60040' }}>
-                    <Text style={{ color: '#FFD600', fontSize: 20, fontWeight: '800' }}>{isDesktop ? '→' : '↓'}</Text>
+                </View>                {/* Arrow → */}
+                <View style={{ justifyContent: 'center', alignItems: 'center', paddingHorizontal: isDesktop ? 12 : 0, paddingVertical: isDesktop ? 0 : 6 }}>
+                  <View style={{ backgroundColor: '#00FF8815', borderRadius: 24, width: 44, height: 44, justifyContent: 'center', alignItems: 'center', borderWidth: 1.5, borderColor: '#00FF885050', shadowColor: '#FFD600', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.3, shadowRadius: 8 }}>
+                    <Text style={{ color: '#FFD600', fontSize: 22, fontWeight: '900' }}>{isDesktop ? '→' : '↓'}</Text>
                   </View>
                 </View>
 
                 {/* 2. DESLOCAMENTO */}
                 <View style={{ alignItems: 'center' }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-                    <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: '#FFD600' }} />
-                    <Text style={{ color: '#FFD600', fontSize: 11, fontWeight: '800', fontFamily: MONO, letterSpacing: 1 }}>DESLOCAMENTO</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                    <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: '#FFD600', shadowColor: '#FFD600', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.6, shadowRadius: 6 }} />
+                    <Text style={{ color: '#FFD600', fontSize: 13, fontWeight: '900', fontFamily: MONO, letterSpacing: 2 }}>DESLOCAMENTO</Text>
                   </View>
-                  <View style={{ backgroundColor: '#FFD60008', borderWidth: 1, borderColor: '#FFD60025', borderRadius: 8, padding: 6 }}>
-                    <Text style={{ color: '#FFD60070', fontSize: 7, fontWeight: '700', fontFamily: MONO, textAlign: 'center', marginBottom: 3, letterSpacing: 1 }}>MIGRAÇÃO DOS RISCOS</Text>
+                  <View style={{ backgroundColor: '#FFD60008', borderWidth: 1.5, borderColor: '#FFD60030', borderRadius: 10, padding: isDesktop ? 10 : 6 }}>
+                    <Text style={{ color: '#FFD60080', fontSize: 8, fontWeight: '700', fontFamily: MONO, textAlign: 'center', marginBottom: 4, letterSpacing: 2 }}>MIGRAÇÃO DOS RISCOS</Text>
                     {renderDeslocamentoMatrix()}
                   </View>
                 </View>
@@ -471,41 +474,41 @@ export default function DashboardScreen() {
                 {/* Arrow → */}
                 <View style={{ justifyContent: 'center', alignItems: 'center', paddingHorizontal: isDesktop ? 8 : 0, paddingVertical: isDesktop ? 0 : 4 }}>
                   <View style={{ backgroundColor: '#00FF8820', borderRadius: 20, width: 36, height: 36, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#00FF8840' }}>
-                    <Text style={{ color: '#00FF88', fontSize: 20, fontWeight: '800' }}>{isDesktop ? '→' : '↓'}</Text>
+                    <Text style={{ color: '#00FF88', fontSize: 22, fontWeight: '900' }}>{isDesktop ? '→' : '↓'}</Text>
                   </View>
                 </View>
 
                 {/* 3. RESIDUAL */}
                 <View style={{ alignItems: 'center' }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-                    <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: '#00FF88' }} />
-                    <Text style={{ color: '#00FF88', fontSize: 11, fontWeight: '800', fontFamily: MONO, letterSpacing: 1 }}>RESIDUAL</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                    <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: '#00FF88', shadowColor: '#00FF88', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.6, shadowRadius: 6 }} />
+                    <Text style={{ color: '#00FF88', fontSize: 13, fontWeight: '900', fontFamily: MONO, letterSpacing: 2 }}>RESIDUAL</Text>
                   </View>
-                  <View style={{ backgroundColor: '#00FF8808', borderWidth: 1, borderColor: '#00FF8825', borderRadius: 8, padding: 6 }}>
-                    <Text style={{ color: '#00FF8870', fontSize: 7, fontWeight: '700', fontFamily: MONO, textAlign: 'center', marginBottom: 3, letterSpacing: 1 }}>APÓS CONTROLES</Text>
+                  <View style={{ backgroundColor: '#00FF8808', borderWidth: 1.5, borderColor: '#00FF8830', borderRadius: 10, padding: isDesktop ? 10 : 6 }}>
+                    <Text style={{ color: '#00FF8880', fontSize: 8, fontWeight: '700', fontFamily: MONO, textAlign: 'center', marginBottom: 4, letterSpacing: 2 }}>APÓS CONTROLES</Text>
                     {renderMatrix5x5(matrixResidual, 'residual')}
                   </View>
                 </View>
               </ScrollView>
 
               {/* Summary bar */}
-              <View style={{ flexDirection: 'row', gap: 6, marginTop: 10, borderTopWidth: 1, borderTopColor: '#1A3A2A', paddingTop: 10 }}>
-                <View style={{ flex: 1, backgroundColor: '#FF3D3D10', borderWidth: 1, borderColor: '#FF3D3D30', borderRadius: 6, padding: 6, alignItems: 'center' }}>
-                  <Text style={{ color: '#FF3D3D', fontSize: 7, fontWeight: '700', fontFamily: MONO, marginBottom: 2 }}>INERENTE</Text>
-                  <Text style={{ color: '#FF3D3D', fontSize: 16, fontWeight: '800', fontFamily: MONO }}>{risks.filter(r => r.riscoInerente >= 20).length}</Text>
-                  <Text style={{ color: '#FF3D3D80', fontSize: 8, fontFamily: MONO }}>Críticos</Text>
+              <View style={{ flexDirection: 'row', gap: 8, marginTop: 14, borderTopWidth: 1, borderTopColor: '#1A3A2A', paddingTop: 12 }}>
+                <View style={{ flex: 1, backgroundColor: '#FF3D3D10', borderWidth: 1.5, borderColor: '#FF3D3D40', borderRadius: 8, padding: 10, alignItems: 'center' }}>
+                  <Text style={{ color: '#FF3D3D', fontSize: 9, fontWeight: '700', fontFamily: MONO, marginBottom: 3, letterSpacing: 1 }}>INERENTE</Text>
+                  <Text style={{ color: '#FF3D3D', fontSize: 22, fontWeight: '900', fontFamily: MONO }}>{risks.filter(r => r.riscoInerente >= 20).length}</Text>
+                  <Text style={{ color: '#FF3D3D80', fontSize: 9, fontFamily: MONO }}>Críticos</Text>
                 </View>
-                <View style={{ justifyContent: 'center' }}><Text style={{ color: '#FFD600', fontSize: 16, fontWeight: '800' }}>→</Text></View>
-                <View style={{ flex: 1, backgroundColor: '#FFD60010', borderWidth: 1, borderColor: '#FFD60030', borderRadius: 6, padding: 6, alignItems: 'center' }}>
-                  <Text style={{ color: '#FFD600', fontSize: 7, fontWeight: '700', fontFamily: MONO, marginBottom: 2 }}>EFICÁCIA</Text>
-                  <Text style={{ color: '#FFD600', fontSize: 16, fontWeight: '800', fontFamily: MONO }}>{eficaciaStats.reducaoMedia.toFixed(0)}%</Text>
-                  <Text style={{ color: '#FFD60080', fontSize: 8, fontFamily: MONO }}>Redução</Text>
+                <View style={{ justifyContent: 'center' }}><Text style={{ color: '#FFD600', fontSize: 20, fontWeight: '900' }}>→</Text></View>
+                <View style={{ flex: 1, backgroundColor: '#FFD60010', borderWidth: 1.5, borderColor: '#FFD60040', borderRadius: 8, padding: 10, alignItems: 'center' }}>
+                  <Text style={{ color: '#FFD600', fontSize: 9, fontWeight: '700', fontFamily: MONO, marginBottom: 3, letterSpacing: 1 }}>EFICÁCIA</Text>
+                  <Text style={{ color: '#FFD600', fontSize: 22, fontWeight: '900', fontFamily: MONO }}>{eficaciaStats.reducaoMedia.toFixed(0)}%</Text>
+                  <Text style={{ color: '#FFD60080', fontSize: 9, fontFamily: MONO }}>Redução</Text>
                 </View>
-                <View style={{ justifyContent: 'center' }}><Text style={{ color: '#00FF88', fontSize: 16, fontWeight: '800' }}>→</Text></View>
-                <View style={{ flex: 1, backgroundColor: '#00FF8810', borderWidth: 1, borderColor: '#00FF8830', borderRadius: 6, padding: 6, alignItems: 'center' }}>
-                  <Text style={{ color: '#00FF88', fontSize: 7, fontWeight: '700', fontFamily: MONO, marginBottom: 2 }}>RESIDUAL</Text>
-                  <Text style={{ color: '#00FF88', fontSize: 16, fontWeight: '800', fontFamily: MONO }}>{risks.filter(r => (r.riscoResidual || r.riscoInerente) >= 20).length}</Text>
-                  <Text style={{ color: '#00FF8880', fontSize: 8, fontFamily: MONO }}>Críticos</Text>
+                <View style={{ justifyContent: 'center' }}><Text style={{ color: '#00FF88', fontSize: 20, fontWeight: '900' }}>→</Text></View>
+                <View style={{ flex: 1, backgroundColor: '#00FF8810', borderWidth: 1.5, borderColor: '#00FF8840', borderRadius: 8, padding: 10, alignItems: 'center' }}>
+                  <Text style={{ color: '#00FF88', fontSize: 9, fontWeight: '700', fontFamily: MONO, marginBottom: 3, letterSpacing: 1 }}>RESIDUAL</Text>
+                  <Text style={{ color: '#00FF88', fontSize: 22, fontWeight: '900', fontFamily: MONO }}>{risks.filter(r => (r.riscoResidual || r.riscoInerente) >= 20).length}</Text>
+                  <Text style={{ color: '#00FF8880', fontSize: 9, fontFamily: MONO }}>Críticos</Text>
                 </View>
               </View>
             </GlowCard>
