@@ -171,3 +171,4 @@
 - [x] Aproveitar espaço nas Tabelas de Referência (matriz maior)
 - [x] Remover cargo dos consultores no Sobre
 - [x] Wizard mostrar apenas 1 vez (já tem tutorial no Sobre)
+- [ ] Melhorar visualização da tabela de riscos (layout, legibilidade, aproveitamento de espaço)
