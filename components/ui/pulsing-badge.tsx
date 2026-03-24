@@ -33,8 +33,8 @@ const SIZE_CONFIG = {
 };
 
 export function PulsingBadge({ level, label, count, size = "md", pulsing = true }: PulsingBadgeProps) {
-  const config = LEVEL_CONFIG[level];
-  const sizeConfig = SIZE_CONFIG[size];
+  const config = LEVEL_CONFIG[level] || LEVEL_CONFIG.medium;
+  const sizeConfig = SIZE_CONFIG[size] || SIZE_CONFIG.md;
   const pulseScale = useSharedValue(1);
   const dotOpacity = useSharedValue(1);
 

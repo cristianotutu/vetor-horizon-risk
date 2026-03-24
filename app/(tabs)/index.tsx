@@ -405,7 +405,7 @@ export default function DashboardScreen() {
                   {stat.key === 'total' ? (
                     <View style={s.statCardInner}><StatusIndicator status="active" showLabel={false} /><Text style={[s.statLabel, { color: stat.color, fontFamily: MONO }]}>{stat.label}</Text></View>
                   ) : (
-                    <PulsingBadge level={stat.key as any} size="sm" />
+                    <PulsingBadge level={stat.variant === 'default' ? 'medium' : stat.variant} size="sm" />
                   )}
                   <AnimatedCounter value={stat.value} color={stat.color} fontSize={32} />
                   <Text style={[s.tapHint, { color: stat.color + '80', fontFamily: MONO }]}>VER →</Text>
