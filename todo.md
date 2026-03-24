@@ -157,3 +157,8 @@
 - [x] Criar documento How-To (guia de uso de cada menu)
 - [x] Atualizar lista de consultores: remover Pedro Ricci Righeti (manter 4 consultores)
 - [x] Enquadramento inteligente das telas (otimizar espaços, ajustar layouts)
+- [ ] Redesenhar Dashboard: 3 matrizes em fluxo visual horizontal real (Inerente → Deslocamento → Residual)
+- [ ] Redesenhar tela Sobre: consultores em quadrante 2x2 sem espaços vazios
+- [ ] Ajustar Relatório Executivo para refletir fielmente o E-Book 3
+- [ ] Corrigir visão evolutiva (tela Evolução)
+- [ ] Eliminar espaços vazios em todas as telas

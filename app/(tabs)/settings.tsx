@@ -128,29 +128,27 @@ export default function SettingsScreen() {
           </View>
         </View>
 
-        {/* Consultores */}
-        <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border, marginTop: 16 }]}>
+        {/* Consultores - Quadrante 2x2 */}
+        <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border, marginTop: 12 }]}>
           <View style={styles.cardHeaderRow}>
             <View style={[styles.cardIcon, { backgroundColor: colors.primary + '12' }]}>
               <Text style={{ fontSize: 20 }}>👥</Text>
             </View>
             <Text style={[styles.cardTitle, { color: colors.foreground }]}>Consultores - Vetor Horizon</Text>
           </View>
-          <Text style={[styles.methodDesc, { color: colors.muted }]}>
-            Equipe de consultores responsáveis pela análise e gestão de riscos do estudo de caso DAMACORP.
-          </Text>
-          <View style={styles.consultantsList}>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
             {[
-              'Cristiano Siqueira Israel',
-              'Danielli Mezavilla Pinto',
-              'Karolina Guimarães Negrizolo',
-              'Matheus Augusto Arduini',
-            ].map((name, idx) => (
-              <View key={idx} style={[styles.consultantRow, { borderBottomColor: colors.border }]}>
-                <View style={[styles.consultantAvatar, { backgroundColor: colors.primary + '15' }]}>
-                  <Text style={[styles.consultantInitial, { color: colors.primary }]}>{name.charAt(0)}</Text>
+              { name: 'Cristiano Siqueira Israel', role: 'Gestão de Riscos', color: '#00E5FF' },
+              { name: 'Danielli Mezavilla Pinto', role: 'Análise Estratégica', color: '#FF8C00' },
+              { name: 'Karolina Guimarães Negrizolo', role: 'Conformidade & LGPD', color: '#00FF88' },
+              { name: 'Matheus Augusto Arduini', role: 'Segurança da Informação', color: '#FFD600' },
+            ].map((c, idx) => (
+              <View key={idx} style={{ flex: 1, minWidth: isDesktop ? 260 : '45%' as any, backgroundColor: c.color + '08', borderWidth: 1, borderColor: c.color + '25', borderRadius: 12, padding: 14, alignItems: 'center' }}>
+                <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: c.color + '20', borderWidth: 2, borderColor: c.color + '40', justifyContent: 'center', alignItems: 'center', marginBottom: 8 }}>
+                  <Text style={{ fontSize: 20, fontWeight: '800', color: c.color }}>{c.name.charAt(0)}</Text>
                 </View>
-                <Text style={[styles.consultantName, { color: colors.foreground }]}>{name}</Text>
+                <Text style={{ color: colors.foreground, fontSize: 13, fontWeight: '700', textAlign: 'center' }}>{c.name}</Text>
+                <Text style={{ color: c.color, fontSize: 10, fontWeight: '600', marginTop: 3, textAlign: 'center', letterSpacing: 0.5 }}>{c.role}</Text>
               </View>
             ))}
           </View>
@@ -211,26 +209,26 @@ function StatBox({ label, value, colors }: { label: string; value: string; color
 }
 
 const styles = StyleSheet.create({
-  scrollContent: { flexGrow: 1, paddingHorizontal: 16, paddingBottom: 24 },
-  scrollContentDesktop: { paddingHorizontal: 24 },
-  header: { paddingTop: 10, paddingBottom: 12 },
+  scrollContent: { flexGrow: 1, paddingHorizontal: 14, paddingBottom: 16 },
+  scrollContentDesktop: { paddingHorizontal: 20 },
+  header: { paddingTop: 8, paddingBottom: 8 },
   pageTitle: { fontSize: 22, fontWeight: '800', letterSpacing: -0.5 },
   pageSubtitle: { fontSize: 14, marginTop: 2 },
   grid: { gap: 12 },
   gridDesktop: { flexDirection: 'row', flexWrap: 'wrap' },
-  card: { borderWidth: 1, borderRadius: 14, padding: 18, flex: 1, minWidth: 340 },
-  cardHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 },
-  cardIcon: { width: 40, height: 40, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
-  cardTitle: { fontSize: 18, fontWeight: '700', flex: 1 },
+  card: { borderWidth: 1, borderRadius: 12, padding: 14, flex: 1, minWidth: 300 },
+  cardHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
+  cardIcon: { width: 34, height: 34, borderRadius: 8, justifyContent: 'center', alignItems: 'center' },
+  cardTitle: { fontSize: 16, fontWeight: '700', flex: 1 },
   infoGrid: { gap: 0 },
   infoItem: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingVertical: 10, borderBottomWidth: 0.5, borderBottomColor: '#E2E8F020' },
   infoLabel: { fontSize: 13, fontWeight: '500', flex: 1 },
   infoValue: { fontSize: 13, fontWeight: '600', flex: 2, textAlign: 'right' },
-  methodDesc: { fontSize: 14, lineHeight: 21, marginBottom: 16 },
-  stepsContainer: { gap: 12 },
-  stepRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 14 },
-  stepBadge: { width: 36, height: 36, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
-  stepNumber: { fontSize: 16, fontWeight: '800' },
+  methodDesc: { fontSize: 13, lineHeight: 19, marginBottom: 10 },
+  stepsContainer: { gap: 8 },
+  stepRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
+  stepBadge: { width: 30, height: 30, borderRadius: 8, justifyContent: 'center', alignItems: 'center' },
+  stepNumber: { fontSize: 14, fontWeight: '800' },
   stepContent: { flex: 1 },
   stepTitle: { fontSize: 15, fontWeight: '700' },
   stepDesc: { fontSize: 13, lineHeight: 18, marginTop: 3 },
@@ -247,7 +245,7 @@ const styles = StyleSheet.create({
   consultantAvatar: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center' },
   consultantInitial: { fontSize: 18, fontWeight: '700' },
   consultantName: { fontSize: 15, fontWeight: '600', flex: 1 },
-  footer: { alignItems: 'center', paddingTop: 32, paddingBottom: 20 },
+  footer: { alignItems: 'center', paddingTop: 20, paddingBottom: 12 },
   footerBrand: { fontSize: 18, fontWeight: '800' },
   footerSub: { fontSize: 13, marginTop: 2 },
   footerVersion: { fontSize: 12, marginTop: 4 },
