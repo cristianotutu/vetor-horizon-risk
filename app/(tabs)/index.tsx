@@ -34,6 +34,7 @@ export default function DashboardScreen() {
   const isDesktop = width >= 768;
   const [activeFilter, setActiveFilter] = useState<FilterState>(null);
   const [hoveredCell, setHoveredCell] = useState<string | null>(null);
+  const [tooltipVisible, setTooltipVisible] = useState<string | null>(null);
 
   const stats = useMemo(() => {
     const total = risks.length;
@@ -54,6 +55,71 @@ export default function DashboardScreen() {
       }
     });
     return matrix;
+  }, [risks]);
+
+  // Matriz Residual: posiciona riscos com base no risco residual
+  const matrixResidual = useMemo(() => {
+    const matrix: Risk[][][] = Array.from({ length: 5 }, () =>
+      Array.from({ length: 5 }, () => [] as Risk[])
+    );
+    risks.forEach(r => {
+      if (r.riscoResidual && r.riscoResidual > 0) {
+        // Estimar P e I residuais: reduzir proporcionalmente
+        const reducao = r.reducaoPretendida || 0;
+        const pResidual = Math.max(1, Math.min(5, Math.round(r.probabilidade * (1 - reducao / (r.riscoInerente * 2)))));
+        const iResidual = Math.max(1, Math.min(5, Math.round(r.impacto * (1 - reducao / (r.riscoInerente * 2)))));
+        // Ajustar para que pResidual * iResidual se aproxime do riscoResidual
+        const targetRes = r.riscoResidual;
+        let bestP = pResidual, bestI = iResidual, bestDiff = Math.abs(pResidual * iResidual - targetRes);
+        for (let p = 1; p <= 5; p++) {
+          for (let i = 1; i <= 5; i++) {
+            const diff = Math.abs(p * i - targetRes);
+            if (diff < bestDiff || (diff === bestDiff && p <= r.probabilidade && i <= r.impacto)) {
+              bestDiff = diff; bestP = p; bestI = i;
+            }
+          }
+        }
+        matrix[5 - bestP][bestI - 1].push(r);
+      } else {
+        // Sem tratamento: mantém na posição inerente
+        if (r.probabilidade >= 1 && r.probabilidade <= 5 && r.impacto >= 1 && r.impacto <= 5) {
+          matrix[5 - r.probabilidade][r.impacto - 1].push(r);
+        }
+      }
+    });
+    return matrix;
+  }, [risks]);
+
+  // Dados de deslocamento: de onde para onde cada risco se moveu
+  const deslocamentoData = useMemo(() => {
+    return risks.map(r => {
+      const pOrig = r.probabilidade;
+      const iOrig = r.impacto;
+      let pRes = pOrig, iRes = iOrig;
+      if (r.riscoResidual && r.riscoResidual > 0 && r.riscoResidual < r.riscoInerente) {
+        const targetRes = r.riscoResidual;
+        let bestP = pOrig, bestI = iOrig, bestDiff = 999;
+        for (let p = 1; p <= 5; p++) {
+          for (let i = 1; i <= 5; i++) {
+            const diff = Math.abs(p * i - targetRes);
+            if (diff < bestDiff || (diff === bestDiff && p <= pOrig && i <= iOrig)) {
+              bestDiff = diff; bestP = p; bestI = i;
+            }
+          }
+        }
+        pRes = bestP; iRes = bestI;
+      }
+      return { id: r.id, pOrig, iOrig, pRes, iRes, inerente: r.riscoInerente, residual: r.riscoResidual || r.riscoInerente, reducao: r.reducaoPretendida || 0 };
+    }).filter(d => d.pOrig !== d.pRes || d.iOrig !== d.iRes);
+  }, [risks]);
+
+  // Eficácia dos controles
+  const eficaciaStats = useMemo(() => {
+    const comTratamento = risks.filter(r => r.riscoResidual && r.riscoResidual > 0 && r.riscoResidual < r.riscoInerente);
+    const totalInerente = comTratamento.reduce((s, r) => s + r.riscoInerente, 0);
+    const totalResidual = comTratamento.reduce((s, r) => s + (r.riscoResidual || r.riscoInerente), 0);
+    const reducaoMedia = totalInerente > 0 ? ((1 - totalResidual / totalInerente) * 100) : 0;
+    return { comTratamento: comTratamento.length, totalInerente, totalResidual, reducaoMedia };
   }, [risks]);
 
   const topRisks = useMemo(() => {
@@ -320,21 +386,16 @@ export default function DashboardScreen() {
           <View style={[styles.contentGrid, isDesktop && styles.contentGridDesktop]}>
             {/* Left Column: Matrix + Risk by Type */}
             <View style={[styles.column, isDesktop && { flex: 1 }]}>
-              {/* Risk Matrix */}
-              <Animated.View entering={FadeInDown.duration(500).delay(300)}>
-                <GlowCard variant="default">
-                  <View style={styles.cardHeader}>
-                    <Text style={[styles.cardTitle, { color: '#00E5FF', fontFamily: 'monospace' }]}>MATRIZ DE RISCO (P × I)</Text>
-                    <View style={[styles.cardBadge, { backgroundColor: '#00E5FF15', borderWidth: 1, borderColor: '#00E5FF30' }]}>
-                      <Text style={[styles.cardBadgeText, { color: '#00E5FF', fontFamily: 'monospace' }]}>INTERATIVA</Text>
-                    </View>
-                  </View>
+              {/* === 3 MATRIZES DE RISCO === */}
+              {/* Renderizador de Matriz reutilizável */}
+              {(() => {
+                const renderMatrix = (matrixData: Risk[][][], prefix: string, interactive: boolean = true) => (
                   <View style={styles.matrixWrapper}>
                     <View style={styles.matrixYAxis}>
                       <Text style={[styles.axisTitle, { color: '#6B8A7A', fontFamily: 'monospace' }]}>P</Text>
                     </View>
                     <View style={styles.matrixContent}>
-                      {matrixRisks.map((row, rowIdx) => (
+                      {matrixData.map((row, rowIdx) => (
                         <View key={rowIdx} style={styles.matrixRow}>
                           <View style={styles.matrixRowLabel}>
                             <Text style={[styles.matrixLabelText, { color: '#6B8A7A', fontFamily: 'monospace' }]}>{5 - rowIdx}</Text>
@@ -344,7 +405,7 @@ export default function DashboardScreen() {
                             const imp = colIdx + 1;
                             const bgColor = getMatrixColor(prob, imp);
                             const count = cellRisks.length;
-                            const cellKey = `${rowIdx}-${colIdx}`;
+                            const cellKey = `${prefix}-${rowIdx}-${colIdx}`;
                             const isHovered = hoveredCell === cellKey;
                             return (
                               <TouchableOpacity
@@ -355,16 +416,11 @@ export default function DashboardScreen() {
                                     backgroundColor: count > 0 ? bgColor + '25' : '#111820',
                                     borderColor: isHovered ? bgColor : (count > 0 ? bgColor + '50' : '#1A3A2A'),
                                     borderWidth: isHovered ? 2 : 1,
-                                    ...(isHovered && Platform.OS === 'web' ? {
-                                      shadowColor: bgColor,
-                                      shadowOffset: { width: 0, height: 0 },
-                                      shadowOpacity: 0.6,
-                                      shadowRadius: 8,
-                                    } : {}),
+                                    ...(isHovered && Platform.OS === 'web' ? { shadowColor: bgColor, shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.6, shadowRadius: 8 } : {}),
                                   },
                                   count > 0 && styles.matrixCellActive,
                                 ]}
-                                onPress={() => handleMatrixPress(prob, imp, cellRisks)}
+                                onPress={() => interactive && handleMatrixPress(prob, imp, cellRisks)}
                                 onPressIn={() => setHoveredCell(cellKey)}
                                 onPressOut={() => setHoveredCell(null)}
                                 activeOpacity={count > 0 ? 0.7 : 1}
@@ -373,20 +429,22 @@ export default function DashboardScreen() {
                                   <View style={styles.cellContentWrap}>
                                     <Text style={[styles.matrixCellText, { color: bgColor, fontFamily: 'monospace' }]}>{count}</Text>
                                     {(() => {
-                                      const cellFinancial = cellRisks.reduce((sum, r) => sum + (r.impactoFinanceiro?.perdaMediaEsperada || 0), 0);
-                                      if (cellFinancial > 0) {
-                                        const formatted = cellFinancial >= 1000000 ? `${(cellFinancial / 1000000).toFixed(1)}M` : cellFinancial >= 1000 ? `${(cellFinancial / 1000).toFixed(0)}K` : `${cellFinancial.toFixed(0)}`;
+                                      const cellFin = cellRisks.reduce((s, r) => s + (r.impactoFinanceiro?.perdaMediaEsperada || 0), 0);
+                                      if (cellFin > 0) {
+                                        const fmt = cellFin >= 1000000 ? `${(cellFin / 1000000).toFixed(1)}M` : cellFin >= 1000 ? `${(cellFin / 1000).toFixed(0)}K` : `${cellFin.toFixed(0)}`;
                                         return (
                                           <View style={[styles.cellFinancialBadge, { backgroundColor: bgColor + '30', borderColor: bgColor + '60' }]}>
-                                            <Text style={[styles.cellFinancialText, { color: '#FFFFFF', fontFamily: 'monospace' }]}>R$ {formatted}</Text>
+                                            <Text style={[styles.cellFinancialText, { color: '#FFFFFF', fontFamily: 'monospace' }]}>R$ {fmt}</Text>
                                           </View>
                                         );
                                       }
                                       return null;
                                     })()}
-                                    <View style={[styles.cellTapHint, { backgroundColor: bgColor + '20', borderWidth: 1, borderColor: bgColor + '40' }]}>
-                                      <Text style={[styles.cellTapHintText, { color: bgColor, fontFamily: 'monospace' }]}>ver</Text>
-                                    </View>
+                                    {interactive && (
+                                      <View style={[styles.cellTapHint, { backgroundColor: bgColor + '20', borderWidth: 1, borderColor: bgColor + '40' }]}>
+                                        <Text style={[styles.cellTapHintText, { color: bgColor, fontFamily: 'monospace' }]}>ver</Text>
+                                      </View>
+                                    )}
                                   </View>
                                 ) : null}
                               </TouchableOpacity>
@@ -405,6 +463,9 @@ export default function DashboardScreen() {
                       <Text style={[styles.xAxisTitle, { color: '#6B8A7A', fontFamily: 'monospace' }]}>IMPACTO</Text>
                     </View>
                   </View>
+                );
+
+                const matrixLegend = (
                   <View style={styles.legendRow}>
                     {[
                       { label: 'Baixo (1-5)', color: '#00FF88' },
@@ -418,8 +479,164 @@ export default function DashboardScreen() {
                       </View>
                     ))}
                   </View>
-                </GlowCard>
-              </Animated.View>
+                );
+
+                const tooltipDescriptions: Record<string, string> = {
+                  inerente: 'Matriz de Risco Inerente representa o nível de risco ANTES da aplicação de qualquer controle ou tratamento. É a exposição bruta da organização, calculada como Probabilidade × Impacto originais. Mostra onde cada risco se encontra naturalmente.',
+                  deslocamento: 'Matriz de Deslocamento mostra a "corrida" do risco: de onde ele estava (inerente) para onde chegou (residual) após a aplicação dos controles. Cada risco que se deslocou demonstra a eficácia do tratamento aplicado. Quanto maior o deslocamento para a esquerda/baixo, mais eficaz o controle.',
+                  residual: 'Matriz de Risco Residual representa o nível de risco APÓS a aplicação dos controles e tratamentos. É a exposição real da organização considerando as medidas de mitigação implementadas. O objetivo é que todos os riscos migrem para as zonas verde/amarela.',
+                };
+
+                return (
+                  <>
+                    {/* 1. MATRIZ INERENTE */}
+                    <Animated.View entering={FadeInDown.duration(500).delay(300)}>
+                      <GlowCard variant="default">
+                        <View style={styles.cardHeader}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
+                            <Text style={[styles.cardTitle, { color: '#FF3D3D', fontFamily: 'monospace' }]}>MATRIZ DE RISCO INERENTE</Text>
+                            <TouchableOpacity
+                              onPress={() => setTooltipVisible(tooltipVisible === 'inerente' ? null : 'inerente')}
+                              style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: '#FF3D3D20', borderWidth: 1, borderColor: '#FF3D3D50', justifyContent: 'center', alignItems: 'center' }}
+                            >
+                              <Text style={{ color: '#FF3D3D', fontSize: 12, fontWeight: '800', fontFamily: 'monospace' }}>?</Text>
+                            </TouchableOpacity>
+                          </View>
+                          <View style={[styles.cardBadge, { backgroundColor: '#FF3D3D15', borderWidth: 1, borderColor: '#FF3D3D30' }]}>
+                            <Text style={[styles.cardBadgeText, { color: '#FF3D3D', fontFamily: 'monospace' }]}>ANTES DOS CONTROLES</Text>
+                          </View>
+                        </View>
+                        {tooltipVisible === 'inerente' && (
+                          <View style={{ backgroundColor: '#FF3D3D10', borderWidth: 1, borderColor: '#FF3D3D30', borderRadius: 8, padding: 12, marginBottom: 12 }}>
+                            <Text style={{ color: '#E0F0E0', fontSize: 11, lineHeight: 16, fontFamily: 'monospace' }}>{tooltipDescriptions.inerente}</Text>
+                          </View>
+                        )}
+                        {renderMatrix(matrixRisks, 'inerente')}
+                        {matrixLegend}
+                      </GlowCard>
+                    </Animated.View>
+
+                    {/* 2. MATRIZ DE DESLOCAMENTO */}
+                    <Animated.View entering={FadeInDown.duration(500).delay(400)} style={{ marginTop: 16 }}>
+                      <GlowCard variant="default">
+                        <View style={styles.cardHeader}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
+                            <Text style={[styles.cardTitle, { color: '#FFD600', fontFamily: 'monospace' }]}>MATRIZ DE DESLOCAMENTO</Text>
+                            <TouchableOpacity
+                              onPress={() => setTooltipVisible(tooltipVisible === 'deslocamento' ? null : 'deslocamento')}
+                              style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: '#FFD60020', borderWidth: 1, borderColor: '#FFD60050', justifyContent: 'center', alignItems: 'center' }}
+                            >
+                              <Text style={{ color: '#FFD600', fontSize: 12, fontWeight: '800', fontFamily: 'monospace' }}>?</Text>
+                            </TouchableOpacity>
+                          </View>
+                          <View style={[styles.cardBadge, { backgroundColor: '#FFD60015', borderWidth: 1, borderColor: '#FFD60030' }]}>
+                            <Text style={[styles.cardBadgeText, { color: '#FFD600', fontFamily: 'monospace' }]}>EFICÁCIA DOS CONTROLES</Text>
+                          </View>
+                        </View>
+                        {tooltipVisible === 'deslocamento' && (
+                          <View style={{ backgroundColor: '#FFD60010', borderWidth: 1, borderColor: '#FFD60030', borderRadius: 8, padding: 12, marginBottom: 12 }}>
+                            <Text style={{ color: '#E0F0E0', fontSize: 11, lineHeight: 16, fontFamily: 'monospace' }}>{tooltipDescriptions.deslocamento}</Text>
+                          </View>
+                        )}
+                        {/* Eficácia resumo */}
+                        <View style={{ flexDirection: 'row', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
+                          <View style={{ flex: 1, minWidth: 120, backgroundColor: '#FFD60010', borderWidth: 1, borderColor: '#FFD60030', borderRadius: 8, padding: 10, alignItems: 'center' }}>
+                            <Text style={{ color: '#FFD600', fontSize: 20, fontWeight: '800', fontFamily: 'monospace' }}>{deslocamentoData.length}</Text>
+                            <Text style={{ color: '#6B8A7A', fontSize: 9, fontFamily: 'monospace', textAlign: 'center' }}>RISCOS DESLOCADOS</Text>
+                          </View>
+                          <View style={{ flex: 1, minWidth: 120, backgroundColor: '#00FF8810', borderWidth: 1, borderColor: '#00FF8830', borderRadius: 8, padding: 10, alignItems: 'center' }}>
+                            <Text style={{ color: '#00FF88', fontSize: 20, fontWeight: '800', fontFamily: 'monospace' }}>{eficaciaStats.reducaoMedia.toFixed(0)}%</Text>
+                            <Text style={{ color: '#6B8A7A', fontSize: 9, fontFamily: 'monospace', textAlign: 'center' }}>REDUÇÃO MÉDIA</Text>
+                          </View>
+                          <View style={{ flex: 1, minWidth: 120, backgroundColor: '#00E5FF10', borderWidth: 1, borderColor: '#00E5FF30', borderRadius: 8, padding: 10, alignItems: 'center' }}>
+                            <Text style={{ color: '#00E5FF', fontSize: 20, fontWeight: '800', fontFamily: 'monospace' }}>{eficaciaStats.totalInerente}</Text>
+                            <Text style={{ color: '#6B8A7A', fontSize: 9, fontFamily: 'monospace', textAlign: 'center' }}>P×I INERENTE TOTAL</Text>
+                          </View>
+                          <View style={{ flex: 1, minWidth: 120, backgroundColor: '#00FF8810', borderWidth: 1, borderColor: '#00FF8830', borderRadius: 8, padding: 10, alignItems: 'center' }}>
+                            <Text style={{ color: '#00FF88', fontSize: 20, fontWeight: '800', fontFamily: 'monospace' }}>{eficaciaStats.totalResidual}</Text>
+                            <Text style={{ color: '#6B8A7A', fontSize: 9, fontFamily: 'monospace', textAlign: 'center' }}>P×I RESIDUAL TOTAL</Text>
+                          </View>
+                        </View>
+                        {/* Lista de deslocamentos */}
+                        <View style={{ backgroundColor: '#111820', borderRadius: 8, borderWidth: 1, borderColor: '#1A3A2A', padding: 10, maxHeight: 280, overflow: 'hidden' }}>
+                          <View style={{ flexDirection: 'row', paddingBottom: 6, borderBottomWidth: 1, borderBottomColor: '#1A3A2A', marginBottom: 4 }}>
+                            <Text style={{ flex: 1, color: '#00E5FF', fontSize: 9, fontWeight: '700', fontFamily: 'monospace' }}>RISCO</Text>
+                            <Text style={{ width: 60, color: '#FF3D3D', fontSize: 9, fontWeight: '700', fontFamily: 'monospace', textAlign: 'center' }}>INERENTE</Text>
+                            <Text style={{ width: 30, color: '#FFD600', fontSize: 9, fontWeight: '700', fontFamily: 'monospace', textAlign: 'center' }}>→</Text>
+                            <Text style={{ width: 60, color: '#00FF88', fontSize: 9, fontWeight: '700', fontFamily: 'monospace', textAlign: 'center' }}>RESIDUAL</Text>
+                            <Text style={{ width: 55, color: '#6B8A7A', fontSize: 9, fontWeight: '700', fontFamily: 'monospace', textAlign: 'right' }}>REDUÇÃO</Text>
+                          </View>
+                          <ScrollView nestedScrollEnabled style={{ maxHeight: 240 }}>
+                            {deslocamentoData.sort((a, b) => (b.inerente - b.residual) - (a.inerente - a.residual)).map(d => (
+                              <View key={d.id} style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 4, borderBottomWidth: 1, borderBottomColor: '#1A3A2A20' }}>
+                                <Text style={{ flex: 1, color: '#E0F0E0', fontSize: 10, fontWeight: '700', fontFamily: 'monospace' }}>{d.id}</Text>
+                                <View style={{ width: 60, alignItems: 'center' }}>
+                                  <View style={{ backgroundColor: '#FF3D3D20', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 }}>
+                                    <Text style={{ color: '#FF3D3D', fontSize: 10, fontWeight: '800', fontFamily: 'monospace' }}>{d.inerente}</Text>
+                                  </View>
+                                </View>
+                                <Text style={{ width: 30, color: '#FFD600', fontSize: 12, fontWeight: '800', textAlign: 'center' }}>→</Text>
+                                <View style={{ width: 60, alignItems: 'center' }}>
+                                  <View style={{ backgroundColor: '#00FF8820', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 }}>
+                                    <Text style={{ color: '#00FF88', fontSize: 10, fontWeight: '800', fontFamily: 'monospace' }}>{d.residual}</Text>
+                                  </View>
+                                </View>
+                                <Text style={{ width: 55, color: '#FFD600', fontSize: 10, fontWeight: '800', fontFamily: 'monospace', textAlign: 'right' }}>-{((1 - d.residual / d.inerente) * 100).toFixed(0)}%</Text>
+                              </View>
+                            ))}
+                          </ScrollView>
+                        </View>
+                      </GlowCard>
+                    </Animated.View>
+
+                    {/* 3. MATRIZ RESIDUAL */}
+                    <Animated.View entering={FadeInDown.duration(500).delay(500)} style={{ marginTop: 16 }}>
+                      <GlowCard variant="default">
+                        <View style={styles.cardHeader}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
+                            <Text style={[styles.cardTitle, { color: '#00FF88', fontFamily: 'monospace' }]}>MATRIZ DE RISCO RESIDUAL</Text>
+                            <TouchableOpacity
+                              onPress={() => setTooltipVisible(tooltipVisible === 'residual' ? null : 'residual')}
+                              style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: '#00FF8820', borderWidth: 1, borderColor: '#00FF8850', justifyContent: 'center', alignItems: 'center' }}
+                            >
+                              <Text style={{ color: '#00FF88', fontSize: 12, fontWeight: '800', fontFamily: 'monospace' }}>?</Text>
+                            </TouchableOpacity>
+                          </View>
+                          <View style={[styles.cardBadge, { backgroundColor: '#00FF8815', borderWidth: 1, borderColor: '#00FF8830' }]}>
+                            <Text style={[styles.cardBadgeText, { color: '#00FF88', fontFamily: 'monospace' }]}>APÓS CONTROLES</Text>
+                          </View>
+                        </View>
+                        {tooltipVisible === 'residual' && (
+                          <View style={{ backgroundColor: '#00FF8810', borderWidth: 1, borderColor: '#00FF8830', borderRadius: 8, padding: 12, marginBottom: 12 }}>
+                            <Text style={{ color: '#E0F0E0', fontSize: 11, lineHeight: 16, fontFamily: 'monospace' }}>{tooltipDescriptions.residual}</Text>
+                          </View>
+                        )}
+                        {renderMatrix(matrixResidual, 'residual')}
+                        {matrixLegend}
+                        {/* Barra comparativa Inerente vs Residual */}
+                        <View style={{ marginTop: 16, borderTopWidth: 1, borderTopColor: '#1A3A2A', paddingTop: 12 }}>
+                          <Text style={{ color: '#6B8A7A', fontSize: 10, fontWeight: '700', fontFamily: 'monospace', letterSpacing: 1, marginBottom: 8 }}>COMPARATIVO: EXPOSIÇÃO INERENTE vs RESIDUAL</Text>
+                          <View style={{ flexDirection: 'row', gap: 8 }}>
+                            <View style={{ flex: 1, backgroundColor: '#FF3D3D10', borderWidth: 1, borderColor: '#FF3D3D30', borderRadius: 8, padding: 10, alignItems: 'center' }}>
+                              <Text style={{ color: '#FF3D3D', fontSize: 9, fontWeight: '700', fontFamily: 'monospace', marginBottom: 4 }}>INERENTE</Text>
+                              <Text style={{ color: '#FF3D3D', fontSize: 16, fontWeight: '800', fontFamily: 'monospace' }}>{risks.filter(r => r.riscoInerente >= 20).length} Críticos</Text>
+                              <Text style={{ color: '#FF8C00', fontSize: 12, fontWeight: '700', fontFamily: 'monospace' }}>{risks.filter(r => r.riscoInerente >= 12 && r.riscoInerente < 20).length} Altos</Text>
+                            </View>
+                            <View style={{ justifyContent: 'center', alignItems: 'center' }}>
+                              <Text style={{ color: '#FFD600', fontSize: 20, fontWeight: '800' }}>→</Text>
+                            </View>
+                            <View style={{ flex: 1, backgroundColor: '#00FF8810', borderWidth: 1, borderColor: '#00FF8830', borderRadius: 8, padding: 10, alignItems: 'center' }}>
+                              <Text style={{ color: '#00FF88', fontSize: 9, fontWeight: '700', fontFamily: 'monospace', marginBottom: 4 }}>RESIDUAL</Text>
+                              <Text style={{ color: '#FF3D3D', fontSize: 16, fontWeight: '800', fontFamily: 'monospace' }}>{risks.filter(r => (r.riscoResidual || r.riscoInerente) >= 20).length} Críticos</Text>
+                              <Text style={{ color: '#FF8C00', fontSize: 12, fontWeight: '700', fontFamily: 'monospace' }}>{risks.filter(r => { const res = r.riscoResidual || r.riscoInerente; return res >= 12 && res < 20; }).length} Altos</Text>
+                            </View>
+                          </View>
+                        </View>
+                      </GlowCard>
+                    </Animated.View>
+                  </>
+                );
+              })()}
 
               {/* Risks by Type */}
               <Animated.View entering={FadeInDown.duration(500).delay(400)} style={{ marginTop: 16 }}>

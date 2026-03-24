@@ -3268,4 +3268,9 @@ function computeEvolution(from: Risk[], to: Risk[]): EvolutionEntry[] {
 
 export const EVOLUTION_3_TO_4 = computeEvolution(RISKS_AULA3, RISKS_AULA4);
 export const EVOLUTION_4_TO_5 = computeEvolution(RISKS_AULA4, RISKS_AULA5);
-export const EVOLUTION_SUMMARY = EVOLUTION_4_TO_5;
+export const EVOLUTION_5_TO_6 = computeEvolution(RISKS_AULA5, RISKS_AULA6);
+export const EVOLUTION_3_TO_6 = computeEvolution(RISKS_AULA3, RISKS_AULA6);
+export const EVOLUTION_SUMMARY = EVOLUTION_5_TO_6;
+
+// Contagens corretas informadas pelo grupo por aula
+export const AULA_RISK_COUNTS = { aula3: 16, aula4: 22, aula5: 25, aula6: 35 };

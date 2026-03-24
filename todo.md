@@ -136,3 +136,10 @@
 - [x] Implementar wizard de onboarding interativo no app (como usar cada tela)
 - [x] Implementar chat com IA (Manus) integrado ao contexto de riscos
 - [x] Push para GitHub e confirmar deploy no Netlify
+- [x] Corrigir evolução de riscos: Aula 3=16, Aula 4=22, Aula 5=25, Aula 6=35
+- [x] Adicionar menu/tela Relatório Executivo para apresentação ao board
+- [x] Ajustar wizard com opção "Não mostrar novamente" persistente
+- [x] Dashboard: substituir matriz única por 3 matrizes (Inerente, Deslocamento, Residual)
+- [x] Dashboard: adicionar tooltip "?" explicativo em cada matriz
+- [x] Dashboard: demonstrar corrida/evolução dos riscos via eficácia dos controles
+- [x] Dashboard: preencher espaços vagos na tela

@@ -48,9 +48,9 @@ const WIZARD_STEPS: WizardStep[] = [
     icon: '📈',
     title: 'Evolução',
     subtitle: 'Comparativo entre Versões',
-    description: 'Acompanhe como os riscos evoluíram entre as Aulas 03, 04 e 05. Veja quais riscos são novos, quais foram modificados e quais permaneceram inalterados, com matrizes comparativas lado a lado.',
+    description: 'Acompanhe como os riscos evoluíram entre as Aulas 03, 04, 05 e 06. Veja quais riscos são novos, quais foram modificados e quais permaneceram inalterados, com matrizes comparativas lado a lado.',
     tips: [
-      'Selecione o modo de comparação: 3v4, 4v5 ou 3v5',
+      'Selecione o modo de comparação: 3v4, 4v5, 5v6 ou 3v6',
       'Cards coloridos mostram novos (verde), modificados (amarelo) e inalterados',
       'Clique nos cards para ver a lista de riscos em cada categoria',
       'As matrizes lado a lado mostram a migração de riscos entre quadrantes',
@@ -100,6 +100,7 @@ const WIZARD_STEPS: WizardStep[] = [
 export function WizardOverlay() {
   const [visible, setVisible] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
+  const [dontShowAgain, setDontShowAgain] = useState(false);
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;
 
@@ -118,10 +119,12 @@ export function WizardOverlay() {
 
   const handleClose = useCallback(async () => {
     setVisible(false);
-    try {
-      await AsyncStorage.setItem(WIZARD_SEEN_KEY, 'true');
-    } catch {}
-  }, []);
+    if (dontShowAgain) {
+      try {
+        await AsyncStorage.setItem(WIZARD_SEEN_KEY, 'true');
+      } catch {}
+    }
+  }, [dontShowAgain]);
 
   const handleNext = useCallback(() => {
     if (currentStep < WIZARD_STEPS.length - 1) {
@@ -195,6 +198,25 @@ export function WizardOverlay() {
               ))}
             </View>
           </ScrollView>
+
+          {/* Don't show again checkbox */}
+          {isLast && (
+            <TouchableOpacity
+              onPress={() => setDontShowAgain(!dontShowAgain)}
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 20, paddingVertical: 8 }}
+              activeOpacity={0.7}
+            >
+              <View style={{
+                width: 20, height: 20, borderRadius: 4, borderWidth: 2,
+                borderColor: dontShowAgain ? '#00E5FF' : '#6B8A7A',
+                backgroundColor: dontShowAgain ? '#00E5FF' + '20' : 'transparent',
+                justifyContent: 'center', alignItems: 'center',
+              }}>
+                {dontShowAgain && <Text style={{ color: '#00E5FF', fontSize: 12, fontWeight: '800' }}>✓</Text>}
+              </View>
+              <Text style={{ color: '#6B8A7A', fontSize: 12, fontFamily: 'monospace' }}>Não mostrar novamente</Text>
+            </TouchableOpacity>
+          )}
 
           {/* Navigation */}
           <View style={s.navRow}>

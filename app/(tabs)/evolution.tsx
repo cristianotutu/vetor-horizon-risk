@@ -1,4 +1,4 @@
-import { ScrollView, Text, View, TouchableOpacity, StyleSheet, useWindowDimensions, Modal, FlatList, Platform } from "react-native";
+import { Text, View, ScrollView, TouchableOpacity, FlatList, Modal, StyleSheet, Platform, useWindowDimensions } from "react-native";
 import { useState, useCallback, useMemo } from "react";
 import { useRouter } from "expo-router";
 import { ScreenContainer } from "@/components/screen-container";
@@ -6,12 +6,12 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 import { GlowCard } from "@/components/ui/glow-card";
 import { AnimatedCounter } from "@/components/ui/animated-counter";
 import { StatusIndicator } from "@/components/ui/status-indicator";
-import { RISKS_AULA3, RISKS_AULA4, RISKS_AULA5, EVOLUTION_3_TO_4, EVOLUTION_4_TO_5 } from "@/lib/evolution-data";
+import { RISKS_AULA3, RISKS_AULA4, RISKS_AULA5, RISKS_AULA6, EVOLUTION_3_TO_4, EVOLUTION_4_TO_5, EVOLUTION_5_TO_6, EVOLUTION_3_TO_6, AULA_RISK_COUNTS } from "@/lib/evolution-data";
 import { getRiskLevel, getGutLevel, Risk } from "@/lib/models";
 import Animated, { FadeInDown } from "react-native-reanimated";
 
 type ViewMode = 'overview' | 'comparison' | 'matrix';
-type CompareMode = '3v4' | '4v5' | '3v5';
+type CompareMode = '3v4' | '4v5' | '5v6' | '3v6';
 type FilterState = { title: string; risks: Risk[]; source?: string } | null;
 
 function normalizeId(id: string) { return id.replace(/\s/g, '').toUpperCase(); }
@@ -19,34 +19,22 @@ function normalizeId(id: string) { return id.replace(/\s/g, '').toUpperCase(); }
 const a3Map = new Map(RISKS_AULA3.map(r => [normalizeId(r.id), r]));
 const a4Map = new Map(RISKS_AULA4.map(r => [normalizeId(r.id), r]));
 const a5Map = new Map(RISKS_AULA5.map(r => [normalizeId(r.id), r]));
+const a6Map = new Map(RISKS_AULA6.map(r => [normalizeId(r.id), r]));
 
-const AULA_COLORS = { '3': '#3B82F6', '4': '#8B5CF6', '5': '#00FF88', 'hoje': '#00E5FF' };
+const AULA_COLORS = { '3': '#3B82F6', '4': '#8B5CF6', '5': '#00FF88', '6': '#00E5FF' };
 
-function getAulaData(n: '3' | '4' | '5') {
+function getAulaData(n: '3' | '4' | '5' | '6') {
   if (n === '3') return { risks: RISKS_AULA3, map: a3Map, label: 'Aula 3', color: AULA_COLORS['3'] };
   if (n === '4') return { risks: RISKS_AULA4, map: a4Map, label: 'Aula 4', color: AULA_COLORS['4'] };
-  return { risks: RISKS_AULA5, map: a5Map, label: 'Aula 5', color: AULA_COLORS['5'] };
+  if (n === '5') return { risks: RISKS_AULA5, map: a5Map, label: 'Aula 5', color: AULA_COLORS['5'] };
+  return { risks: RISKS_AULA6, map: a6Map, label: 'Aula 6', color: AULA_COLORS['6'] };
 }
 
 function getEvolution(mode: CompareMode) {
   if (mode === '3v4') return EVOLUTION_3_TO_4;
   if (mode === '4v5') return EVOLUTION_4_TO_5;
-  const a3Ids = new Set(RISKS_AULA3.map(r => normalizeId(r.id)));
-  return RISKS_AULA5.map(r => {
-    const rid = normalizeId(r.id);
-    if (!a3Ids.has(rid)) return { riskId: rid, type: 'new' as const, changes: ['Novo risco (não existia na Aula 3)'] };
-    const r3 = a3Map.get(rid)!;
-    const changes: string[] = [];
-    if (r3.gutScore !== r.gutScore) changes.push(`GUT: ${r3.gutScore}→${r.gutScore}`);
-    if (r3.riscoInerente !== r.riscoInerente) changes.push(`PxI: ${r3.riscoInerente}→${r.riscoInerente}`);
-    if (r3.tratamento !== r.tratamento && r.tratamento) changes.push('Tratamento atualizado');
-    if (r.controles && (!r3.controles || r.controles.length > r3.controles.length + 20)) changes.push('Controles detalhados');
-    if (r.kri && !r3.kri) changes.push('KRI definido');
-    if (r.consequencia && !r3.consequencia) changes.push('Consequência detalhada');
-    if (r.eficaciaTratamento && !r3.eficaciaTratamento) changes.push('Eficácia definida');
-    if (changes.length > 0) return { riskId: rid, type: 'modified' as const, changes };
-    return { riskId: rid, type: 'unchanged' as const, changes: [] };
-  });
+  if (mode === '5v6') return EVOLUTION_5_TO_6;
+  return EVOLUTION_3_TO_6;
 }
 
 // Compute stats for each aula
@@ -68,12 +56,12 @@ export default function EvolutionScreen() {
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;
   const [viewMode, setViewMode] = useState<ViewMode>('overview');
-  const [compareMode, setCompareMode] = useState<CompareMode>('3v5');
+  const [compareMode, setCompareMode] = useState<CompareMode>('5v6');
   const [activeFilter, setActiveFilter] = useState<FilterState>(null);
   const [expandedRisk, setExpandedRisk] = useState<string | null>(null);
 
-  const fromAula = compareMode[0] as '3' | '4' | '5';
-  const toAula = compareMode[2] as '3' | '4' | '5';
+  const fromAula = compareMode[0] as '3' | '4' | '5' | '6';
+  const toAula = compareMode[2] as '3' | '4' | '5' | '6';
   const fromData = getAulaData(fromAula);
   const toData = getAulaData(toAula);
   const evolution = useMemo(() => getEvolution(compareMode), [compareMode]);
@@ -85,6 +73,7 @@ export default function EvolutionScreen() {
   const stats3 = useMemo(() => getAulaStats(RISKS_AULA3), []);
   const stats4 = useMemo(() => getAulaStats(RISKS_AULA4), []);
   const stats5 = useMemo(() => getAulaStats(RISKS_AULA5), []);
+  const stats6 = useMemo(() => getAulaStats(RISKS_AULA6), []);
 
   const handleRiskPress = useCallback((riskId: string) => {
     setActiveFilter(null);
@@ -93,7 +82,7 @@ export default function EvolutionScreen() {
 
   const handleCellPress = useCallback((prob: number, imp: number, cellRisks: string[], source: string) => {
     if (cellRisks.length === 0) return;
-    const map = source.includes('3') ? a3Map : source.includes('4') ? a4Map : a5Map;
+    const map = source.includes('6') ? a6Map : source.includes('5') ? a5Map : source.includes('4') ? a4Map : a3Map;
     const risksInCell = cellRisks.map(id => map.get(id)).filter(Boolean) as Risk[];
     if (risksInCell.length > 0) {
       setActiveFilter({ title: `${source}: P=${prob} × I=${imp} (Score ${prob * imp})`, risks: risksInCell, source });
@@ -162,13 +151,12 @@ export default function EvolutionScreen() {
   // ---- EVOLUTION CHART (Bar Chart) ----
   const renderEvolutionChart = () => {
     const aulaData = [
-      { label: 'Aula 3', color: AULA_COLORS['3'], stats: stats3 },
-      { label: 'Aula 4', color: AULA_COLORS['4'], stats: stats4 },
-      { label: 'Aula 5', color: AULA_COLORS['5'], stats: stats5 },
-      { label: 'Hoje', color: AULA_COLORS['hoje'], stats: stats5 },
+      { label: 'Aula 3', color: AULA_COLORS['3'], stats: stats3, officialCount: AULA_RISK_COUNTS.aula3 },
+      { label: 'Aula 4', color: AULA_COLORS['4'], stats: stats4, officialCount: AULA_RISK_COUNTS.aula4 },
+      { label: 'Aula 5', color: AULA_COLORS['5'], stats: stats5, officialCount: AULA_RISK_COUNTS.aula5 },
+      { label: 'Aula 6', color: AULA_COLORS['6'], stats: stats6, officialCount: AULA_RISK_COUNTS.aula6 },
     ];
-    const maxTotal = Math.max(...aulaData.map(a => a.stats.total));
-    const maxGUT = Math.max(...aulaData.map(a => a.stats.maxGUT));
+    const maxTotal = Math.max(...aulaData.map(a => a.officialCount));
     const chartHeight = 200;
 
     return (
@@ -180,7 +168,7 @@ export default function EvolutionScreen() {
           </View>
 
           {/* Bar Chart - Total de Riscos */}
-          <Text style={s.chartSubtitle}>Total de Riscos por Fase</Text>
+          <Text style={s.chartSubtitle}>Total de Riscos Mapeados por Fase</Text>
           <View style={s.chartContainer}>
             <View style={s.chartYAxis}>
               {[maxTotal, Math.round(maxTotal * 0.75), Math.round(maxTotal * 0.5), Math.round(maxTotal * 0.25), 0].map((v, i) => (
@@ -189,7 +177,7 @@ export default function EvolutionScreen() {
             </View>
             <View style={s.chartBars}>
               {aulaData.map((aula, idx) => {
-                const barHeight = maxTotal > 0 ? (aula.stats.total / maxTotal) * chartHeight : 0;
+                const barHeight = maxTotal > 0 ? (aula.officialCount / maxTotal) * chartHeight : 0;
                 return (
                   <View key={idx} style={s.chartBarCol}>
                     <View style={[s.chartBarWrapper, { height: chartHeight }]}>
@@ -205,7 +193,7 @@ export default function EvolutionScreen() {
                           shadowRadius: 8,
                         } : {}),
                       }]}>
-                        <Text style={[s.chartBarValue, { color: aula.color }]}>{aula.stats.total}</Text>
+                        <Text style={[s.chartBarValue, { color: aula.color }]}>{aula.officialCount}</Text>
                       </View>
                     </View>
                     <Text style={[s.chartBarLabel, { color: aula.color }]}>{aula.label}</Text>
@@ -230,7 +218,7 @@ export default function EvolutionScreen() {
                   </>
                 )}
               </View>
-              <Text style={s.stackedTotal}>{aula.stats.total}</Text>
+              <Text style={s.stackedTotal}>{aula.officialCount}</Text>
             </View>
           ))}
           <View style={s.legendRow}>
@@ -261,28 +249,28 @@ export default function EvolutionScreen() {
           </View>
 
           {/* Maturity Indicators */}
-          <Text style={[s.chartSubtitle, { marginTop: 24 }]}>Indicadores de Maturidade</Text>
+          <Text style={[s.chartSubtitle, { marginTop: 24 }]}>Indicadores de Maturidade (Aula 6)</Text>
           <View style={s.maturityGrid}>
             <View style={s.maturityItem}>
               <Text style={s.maturityLabel}>Controles Definidos</Text>
               <View style={s.maturityBarTrack}>
-                <View style={[s.maturityBarFill, { width: `${(stats5.comControles / stats5.total) * 100}%`, backgroundColor: '#00FF88' }]} />
+                <View style={[s.maturityBarFill, { width: `${(stats6.comControles / stats6.total) * 100}%`, backgroundColor: '#00FF88' }]} />
               </View>
-              <Text style={[s.maturityValue, { color: '#00FF88' }]}>{stats5.comControles}/{stats5.total}</Text>
+              <Text style={[s.maturityValue, { color: '#00FF88' }]}>{stats6.comControles}/{stats6.total}</Text>
             </View>
             <View style={s.maturityItem}>
               <Text style={s.maturityLabel}>KRI Definidos</Text>
               <View style={s.maturityBarTrack}>
-                <View style={[s.maturityBarFill, { width: `${(stats5.comKRI / stats5.total) * 100}%`, backgroundColor: '#00E5FF' }]} />
+                <View style={[s.maturityBarFill, { width: `${(stats6.comKRI / stats6.total) * 100}%`, backgroundColor: '#00E5FF' }]} />
               </View>
-              <Text style={[s.maturityValue, { color: '#00E5FF' }]}>{stats5.comKRI}/{stats5.total}</Text>
+              <Text style={[s.maturityValue, { color: '#00E5FF' }]}>{stats6.comKRI}/{stats6.total}</Text>
             </View>
             <View style={s.maturityItem}>
               <Text style={s.maturityLabel}>P×I Médio</Text>
               <View style={s.maturityBarTrack}>
-                <View style={[s.maturityBarFill, { width: `${(stats5.avgPxI / 25) * 100}%`, backgroundColor: '#FFD600' }]} />
+                <View style={[s.maturityBarFill, { width: `${(stats6.avgPxI / 25) * 100}%`, backgroundColor: '#FFD600' }]} />
               </View>
-              <Text style={[s.maturityValue, { color: '#FFD600' }]}>{stats5.avgPxI.toFixed(1)}/25</Text>
+              <Text style={[s.maturityValue, { color: '#FFD600' }]}>{stats6.avgPxI.toFixed(1)}/25</Text>
             </View>
           </View>
         </GlowCard>
@@ -302,10 +290,10 @@ export default function EvolutionScreen() {
           <Text style={s.cardTitle}>TIMELINE DO PROJETO</Text>
           <View style={{ marginTop: 16 }}>
             {[
-              { aula: '3', title: 'Identificação Inicial', desc: `${stats3.total} riscos identificados e classificados na Forma 3`, color: AULA_COLORS['3'], details: `${stats3.critico} críticos, ${stats3.alto} altos, ${stats3.medio} médios, ${stats3.baixo} baixos` },
-              { aula: '4', title: 'Revisão e Expansão', desc: `${stats4.total} riscos com avaliação GUT revisada pela Vetor Horizon`, color: AULA_COLORS['4'], details: `+${stats4.total - stats3.total} novos riscos, GUT médio: ${stats4.avgGUT.toFixed(0)}` },
-              { aula: '5', title: 'Maturidade e Detalhamento', desc: `${stats5.total} riscos com controles, KRI e eficácia detalhados`, color: AULA_COLORS['5'], details: `${stats5.comControles} com controles, ${stats5.comKRI} com KRI` },
-              { aula: 'hoje', title: 'Apresentação Final', desc: 'Entrega do relatório completo ao Board da DAMACORP', color: AULA_COLORS['hoje'], details: `${stats5.total} riscos monitorados, modelo ICAPT v5 completo` },
+              { aula: '3', title: 'Identificação Inicial', desc: `${AULA_RISK_COUNTS.aula3} riscos identificados e classificados na Forma 3`, color: AULA_COLORS['3'], details: `${stats3.critico} críticos, ${stats3.alto} altos, ${stats3.medio} médios, ${stats3.baixo} baixos` },
+              { aula: '4', title: 'Revisão e Expansão', desc: `${AULA_RISK_COUNTS.aula4} riscos com avaliação GUT revisada pela Vetor Horizon`, color: AULA_COLORS['4'], details: `+${AULA_RISK_COUNTS.aula4 - AULA_RISK_COUNTS.aula3} novos riscos, GUT médio: ${stats4.avgGUT.toFixed(0)}` },
+              { aula: '5', title: 'Maturidade e Detalhamento', desc: `${AULA_RISK_COUNTS.aula5} riscos com controles, KRI e eficácia detalhados`, color: AULA_COLORS['5'], details: `+${AULA_RISK_COUNTS.aula5 - AULA_RISK_COUNTS.aula4} novos riscos, ${stats5.comControles} com controles, ${stats5.comKRI} com KRI` },
+              { aula: '6', title: 'Apresentação Final', desc: `${AULA_RISK_COUNTS.aula6} riscos — Entrega do relatório completo ao Board da DAMACORP`, color: AULA_COLORS['6'], details: `+${AULA_RISK_COUNTS.aula6 - AULA_RISK_COUNTS.aula5} novos riscos, ${stats6.comControles} com controles, modelo ICAPT v5 completo` },
             ].map((item, idx) => (
               <TouchableOpacity
                 key={idx}
@@ -321,7 +309,7 @@ export default function EvolutionScreen() {
                   <View style={s.timelineHeader}>
                     <View style={[s.timelineBadge, { backgroundColor: item.color + '20', borderColor: item.color + '40' }]}>
                       <Text style={[s.timelineBadgeText, { color: item.color }]}>
-                        {item.aula === 'hoje' ? 'HOJE' : `AULA ${item.aula}`}
+                        AULA {item.aula}
                       </Text>
                     </View>
                     <Text style={s.timelineTitle}>{item.title}</Text>
@@ -417,7 +405,6 @@ export default function EvolutionScreen() {
           const levelTo = rTo ? getRiskLevel(rTo.riscoInerente) : null;
 
           const pxiDelta = rFrom && rTo ? rTo.riscoInerente - rFrom.riscoInerente : null;
-          const gutDelta = rFrom && rTo ? rTo.gutScore - rFrom.gutScore : null;
 
           if (isDesktop) {
             return (
@@ -551,18 +538,17 @@ export default function EvolutionScreen() {
                         key={colIdx}
                         style={[s.matrixCell, {
                           width: cellSize, height: cellSize,
-                          backgroundColor: cellColor + (hasRisks ? '25' : '08'),
+                          backgroundColor: hasRisks ? cellColor + '25' : '#0A0E1440',
                           borderColor: hasRisks ? cellColor + '60' : '#1A3A2A',
-                          borderWidth: hasRisks ? 2 : 1,
                         }]}
                         onPress={() => handleCellPress(prob, imp, cell, source)}
                         activeOpacity={hasRisks ? 0.6 : 1}
                       >
-                        {hasRisks ? (
-                          <View style={s.cellContent}>
-                            {cell.map(id => <Text key={id} style={s.cellId}>{id}</Text>)}
+                        {hasRisks && (
+                          <View style={{ alignItems: 'center' }}>
+                            <Text style={[s.matrixCellText, { color: cellColor }]}>{cell.length}</Text>
                           </View>
-                        ) : null}
+                        )}
                       </TouchableOpacity>
                     );
                   })}
@@ -607,7 +593,7 @@ export default function EvolutionScreen() {
               <StatusIndicator status="monitoring" label="LIVE" />
             </View>
             <Text style={s.pageSubtitle}>
-              Aula 3 ({RISKS_AULA3.length}) → Aula 4 ({RISKS_AULA4.length}) → Aula 5 ({RISKS_AULA5.length}) → Hoje
+              Aula 3 ({AULA_RISK_COUNTS.aula3}) → Aula 4 ({AULA_RISK_COUNTS.aula4}) → Aula 5 ({AULA_RISK_COUNTS.aula5}) → Aula 6 ({AULA_RISK_COUNTS.aula6})
             </Text>
           </View>
         </Animated.View>
@@ -637,7 +623,8 @@ export default function EvolutionScreen() {
             {([
               { key: '3v4' as CompareMode, label: 'Aula 3 → 4' },
               { key: '4v5' as CompareMode, label: 'Aula 4 → 5' },
-              { key: '3v5' as CompareMode, label: 'Aula 3 → 5' },
+              { key: '5v6' as CompareMode, label: 'Aula 5 → 6' },
+              { key: '3v6' as CompareMode, label: 'Aula 3 → 6' },
             ]).map(item => (
               <TouchableOpacity
                 key={item.key}
@@ -680,147 +667,144 @@ const s = StyleSheet.create({
   viewSelectorLabelActive: { color: '#00E5FF' },
 
   // Compare Selector
-  compareSelector: { flexDirection: 'row', marginHorizontal: 24, marginBottom: 16, backgroundColor: '#0D1117', borderRadius: 10, borderWidth: 1, borderColor: '#1A3A2A', padding: 4, gap: 4 },
-  compareSelectorBtn: { flex: 1, alignItems: 'center', paddingVertical: 8, borderRadius: 8 },
-  compareSelectorBtnActive: { backgroundColor: '#00E5FF15' },
-  compareSelectorLabel: { fontSize: 12, fontWeight: '600', color: '#6B8A7A', fontFamily: MONO },
+  compareSelector: { flexDirection: 'row', marginHorizontal: 24, marginBottom: 16, gap: 8, flexWrap: 'wrap' },
+  compareSelectorBtn: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 8, backgroundColor: '#0D1117', borderWidth: 1, borderColor: '#1A3A2A' },
+  compareSelectorBtnActive: { backgroundColor: '#00E5FF15', borderColor: '#00E5FF40' },
+  compareSelectorLabel: { fontSize: 11, fontWeight: '600', color: '#6B8A7A', fontFamily: MONO },
   compareSelectorLabelActive: { color: '#00E5FF' },
 
   section: { paddingHorizontal: 24, gap: 16 },
 
-  // Card Header
+  // Card
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  cardTitle: { fontSize: 14, fontWeight: '700', letterSpacing: 1, color: '#00E5FF', fontFamily: MONO },
+  cardTitle: { fontSize: 13, fontWeight: '700', letterSpacing: 1.5, color: '#00E5FF', fontFamily: MONO },
 
   // Chart
-  chartSubtitle: { fontSize: 11, fontWeight: '600', letterSpacing: 0.5, color: '#6B8A7A', fontFamily: MONO, marginBottom: 12 },
+  chartSubtitle: { fontSize: 11, fontWeight: '600', letterSpacing: 0.5, color: '#6B8A7A', marginBottom: 12, fontFamily: MONO },
   chartContainer: { flexDirection: 'row', alignItems: 'flex-end', gap: 8 },
   chartYAxis: { justifyContent: 'space-between', height: 200, paddingBottom: 4 },
   chartYLabel: { fontSize: 9, color: '#6B8A7A', fontFamily: MONO, textAlign: 'right' },
   chartBars: { flex: 1, flexDirection: 'row', justifyContent: 'space-around', alignItems: 'flex-end' },
   chartBarCol: { alignItems: 'center', flex: 1 },
-  chartBarWrapper: { justifyContent: 'flex-end', width: '100%', paddingHorizontal: 4 },
-  chartBar: { borderRadius: 6, alignItems: 'center', justifyContent: 'center', minHeight: 30 },
-  chartBarValue: { fontSize: 16, fontWeight: '800', fontFamily: MONO },
-  chartBarLabel: { fontSize: 10, fontWeight: '700', fontFamily: MONO, marginTop: 6 },
+  chartBarWrapper: { justifyContent: 'flex-end', alignItems: 'center', width: '100%' },
+  chartBar: { width: '70%', borderRadius: 4, alignItems: 'center', justifyContent: 'center', minHeight: 24 },
+  chartBarValue: { fontSize: 14, fontWeight: '800', fontFamily: MONO },
+  chartBarLabel: { fontSize: 10, fontWeight: '600', marginTop: 6, fontFamily: MONO },
 
-  // Stacked Bar
-  stackedRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
-  stackedLabel: { width: 50, fontSize: 10, fontWeight: '700', fontFamily: MONO },
-  stackedBarTrack: { flex: 1, height: 20, backgroundColor: '#111820', borderRadius: 4, flexDirection: 'row', overflow: 'hidden' },
+  // Stacked
+  stackedRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8, gap: 8 },
+  stackedLabel: { width: 50, fontSize: 10, fontWeight: '600', fontFamily: MONO },
+  stackedBarTrack: { flex: 1, height: 16, borderRadius: 4, flexDirection: 'row', overflow: 'hidden', backgroundColor: '#0A0E14' },
   stackedSegment: { height: '100%' },
-  stackedTotal: { width: 24, fontSize: 11, fontWeight: '700', color: '#E0F0E0', fontFamily: MONO, textAlign: 'right' },
+  stackedTotal: { width: 28, fontSize: 10, fontWeight: '700', color: '#E0F0E0', textAlign: 'right', fontFamily: MONO },
 
-  // Legend
   legendRow: { flexDirection: 'row', justifyContent: 'center', gap: 16, marginTop: 12 },
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   legendDot: { width: 8, height: 8, borderRadius: 4 },
-  legendText: { fontSize: 9, color: '#6B8A7A', fontFamily: MONO },
+  legendText: { fontSize: 10, color: '#6B8A7A', fontFamily: MONO },
 
   // GUT Line
   gutLineContainer: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', paddingVertical: 16 },
   gutLineCol: { alignItems: 'center', flex: 1 },
-  gutLineValue: { fontSize: 22, fontWeight: '800', fontFamily: MONO },
+  gutLineValue: { fontSize: 20, fontWeight: '800', fontFamily: MONO },
   gutLineDot: { width: 12, height: 12, borderRadius: 6, borderWidth: 2, marginVertical: 6 },
-  gutLineConnector: { position: 'absolute', right: -20, top: 32, width: 40, height: 2 },
+  gutLineConnector: { position: 'absolute', right: -20, top: 36, width: 40, height: 2 },
   gutLineLabel: { fontSize: 10, fontWeight: '600', fontFamily: MONO },
 
   // Maturity
   maturityGrid: { gap: 12 },
-  maturityItem: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  maturityLabel: { width: 120, fontSize: 10, fontWeight: '600', color: '#6B8A7A', fontFamily: MONO },
-  maturityBarTrack: { flex: 1, height: 8, backgroundColor: '#111820', borderRadius: 4, overflow: 'hidden' },
+  maturityItem: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  maturityLabel: { width: 120, fontSize: 10, color: '#6B8A7A', fontFamily: MONO },
+  maturityBarTrack: { flex: 1, height: 8, borderRadius: 4, backgroundColor: '#0A0E14' },
   maturityBarFill: { height: '100%', borderRadius: 4 },
-  maturityValue: { width: 50, fontSize: 11, fontWeight: '700', fontFamily: MONO, textAlign: 'right' },
-
-  // Stats Grid
-  statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  statsGridDesktop: { flexWrap: 'nowrap' },
-  statInner: { alignItems: 'center', gap: 6 },
-  statIconBg: { width: 40, height: 40, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
-  statLabel: { fontSize: 10, fontWeight: '700', letterSpacing: 1, color: '#6B8A7A', fontFamily: MONO },
-  statHint: { fontSize: 9, fontWeight: '600', color: '#00FF8880', fontFamily: MONO },
+  maturityValue: { width: 50, fontSize: 10, fontWeight: '700', textAlign: 'right', fontFamily: MONO },
 
   // Timeline
-  timelineItem: { flexDirection: 'row', gap: 12, marginBottom: 4 },
-  timelineDotCol: { alignItems: 'center', width: 20 },
-  timelineDot: { width: 14, height: 14, borderRadius: 7, borderWidth: 2, marginTop: 2 },
-  timelineLine: { width: 2, flex: 1, minHeight: 20 },
-  timelineContent: { flex: 1, paddingBottom: 16 },
+  timelineItem: { flexDirection: 'row', marginBottom: 4 },
+  timelineDotCol: { alignItems: 'center', width: 28 },
+  timelineDot: { width: 12, height: 12, borderRadius: 6, borderWidth: 2 },
+  timelineLine: { width: 2, flex: 1, marginVertical: 2 },
+  timelineContent: { flex: 1, paddingLeft: 12, paddingBottom: 20 },
   timelineHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
-  timelineBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, borderWidth: 1 },
-  timelineBadgeText: { fontSize: 10, fontWeight: '700', fontFamily: MONO, letterSpacing: 0.5 },
-  timelineTitle: { fontSize: 14, fontWeight: '600', color: '#E0F0E0' },
-  timelineDesc: { fontSize: 12, color: '#6B8A7A', lineHeight: 17 },
-  timelineExpanded: { marginTop: 8, padding: 10, borderRadius: 8, borderWidth: 1, backgroundColor: '#111820' },
-  timelineExpandedText: { fontSize: 11, fontFamily: MONO, lineHeight: 16 },
+  timelineBadge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4, borderWidth: 1 },
+  timelineBadgeText: { fontSize: 10, fontWeight: '700', fontFamily: MONO },
+  timelineTitle: { fontSize: 14, fontWeight: '700', color: '#E0F0E0' },
+  timelineDesc: { fontSize: 12, color: '#9BA1A6', lineHeight: 18 },
+  timelineExpanded: { marginTop: 8, padding: 10, borderRadius: 6, borderWidth: 1, backgroundColor: '#0A0E1480' },
+  timelineExpandedText: { fontSize: 11, fontFamily: MONO, lineHeight: 18 },
 
-  // Comparison Table
-  tableHeader: { flexDirection: 'row', borderWidth: 1, borderRadius: 8, padding: 10, marginBottom: 4, backgroundColor: '#111820', borderColor: '#1A3A2A' },
-  thCell: { fontWeight: '700', fontSize: 11, color: '#00E5FF', fontFamily: MONO },
+  // Stats Grid
+  statsGrid: { flexDirection: 'column', gap: 12, marginTop: 8 },
+  statsGridDesktop: { flexDirection: 'row' },
+  statInner: { alignItems: 'center', paddingVertical: 16, gap: 6 },
+  statIconBg: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
+  statLabel: { fontSize: 10, fontWeight: '700', letterSpacing: 1, color: '#6B8A7A', fontFamily: MONO },
+  statHint: { fontSize: 9, color: '#00FF8880', fontFamily: MONO },
+
+  // Table (Desktop)
+  tableHeader: { flexDirection: 'row', paddingHorizontal: 12, paddingVertical: 10, backgroundColor: '#0A0E14', borderRadius: 8, marginBottom: 4, borderWidth: 1, borderColor: '#1A3A2A' },
+  thCell: { fontWeight: '700', fontSize: 10, color: '#6B8A7A', fontFamily: MONO, letterSpacing: 0.5 },
   thId: { width: 60 },
-  thDesc: { flex: 1, paddingHorizontal: 8 },
-  thVal: { width: 85, textAlign: 'center' },
-  thStatus: { width: 90, textAlign: 'center', alignItems: 'center' },
-  tableRow: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#1A3A2A', paddingVertical: 10, alignItems: 'center' },
+  thDesc: { flex: 1, minWidth: 200 },
+  thVal: { width: 80, textAlign: 'center' as any },
+  thStatus: { width: 100, textAlign: 'center' as any },
+  tableRow: { flexDirection: 'row', paddingHorizontal: 12, paddingVertical: 10, borderRadius: 4, borderBottomWidth: 1, borderBottomColor: '#1A3A2A20' },
   tdCell: { justifyContent: 'center' },
-  tdId: { fontSize: 13, fontWeight: '700', color: '#00E5FF', fontFamily: MONO },
-  tdDesc: { fontSize: 12, lineHeight: 16, color: '#E0F0E0' },
-  scoreBox: { borderRadius: 6, padding: 6, alignItems: 'center', borderWidth: 1 },
-  scoreBoxText: { fontSize: 15, fontWeight: '700', fontFamily: MONO },
-  naText: { fontSize: 14, textAlign: 'center', color: '#6B8A7A' },
-  gutText: { fontSize: 14, fontWeight: '600', textAlign: 'center', color: '#E0F0E0', fontFamily: MONO },
-  statusBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, borderWidth: 1 },
-  statusText: { fontSize: 10, fontWeight: '700', fontFamily: MONO, letterSpacing: 0.5 },
-  deltaText: { fontSize: 10, fontWeight: '700', fontFamily: MONO, marginTop: 4 },
+  tdId: { fontSize: 12, fontWeight: '700', color: '#00E5FF', fontFamily: MONO },
+  tdDesc: { fontSize: 11, color: '#9BA1A6', lineHeight: 16 },
+  scoreBox: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, borderWidth: 1, alignSelf: 'center' },
+  scoreBoxText: { fontSize: 13, fontWeight: '800', fontFamily: MONO, textAlign: 'center' },
+  naText: { fontSize: 12, color: '#6B8A7A', textAlign: 'center', fontFamily: MONO },
+  gutText: { fontSize: 12, fontWeight: '600', color: '#9BA1A6', textAlign: 'center', fontFamily: MONO },
+  statusBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 4, borderWidth: 1, alignSelf: 'center' },
+  statusText: { fontSize: 9, fontWeight: '700', fontFamily: MONO },
+  deltaText: { fontSize: 10, fontWeight: '700', fontFamily: MONO, textAlign: 'center', marginTop: 2 },
 
-  // Mobile Comparison Card
-  compCard: { borderRadius: 12, borderWidth: 1, borderColor: '#1A3A2A', backgroundColor: '#0D1117', padding: 14, marginBottom: 8 },
+  // Comparison Cards (Mobile)
+  compCard: { backgroundColor: '#0D1117', borderRadius: 12, padding: 16, marginBottom: 10, borderWidth: 1, borderColor: '#1A3A2A' },
   compCardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
-  compId: { fontSize: 14, fontWeight: '700', color: '#00E5FF', fontFamily: MONO },
-  compDesc: { fontSize: 12, lineHeight: 16, marginBottom: 8, color: '#6B8A7A' },
-  compScores: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around', gap: 8 },
-  compScoreCol: { alignItems: 'center' },
-  compScoreLabel: { fontSize: 10, fontWeight: '600', marginBottom: 2, color: '#6B8A7A', fontFamily: MONO },
+  compId: { fontSize: 14, fontWeight: '800', color: '#00E5FF', fontFamily: MONO },
+  compDesc: { fontSize: 12, color: '#9BA1A6', lineHeight: 18, marginBottom: 10 },
+  compScores: { flexDirection: 'row', alignItems: 'center', gap: 8, justifyContent: 'space-between' },
+  compScoreCol: { flex: 1 },
+  compScoreLabel: { fontSize: 9, fontWeight: '600', color: '#6B8A7A', fontFamily: MONO, marginBottom: 2 },
   compScoreVal: { fontSize: 12, fontWeight: '700', fontFamily: MONO },
   changesList: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 8 },
-  changeChip: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, borderWidth: 1, backgroundColor: '#111820' },
-  changeChipText: { fontSize: 10, fontWeight: '600', fontFamily: MONO },
+  changeChip: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, borderWidth: 1, backgroundColor: '#0A0E14' },
+  changeChipText: { fontSize: 9, fontWeight: '600', fontFamily: MONO },
 
   // Matrix
-  matrixGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 24 },
-  matrixContainer: { flex: 1, minWidth: 340, marginBottom: 16 },
-  matrixHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 },
+  matrixContainer: { marginBottom: 20 },
+  matrixHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
   matrixBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6, borderWidth: 1 },
-  matrixBadgeText: { fontSize: 13, fontWeight: '700', fontFamily: MONO },
-  matrixCount: { fontSize: 12, color: '#6B8A7A', fontFamily: MONO },
+  matrixBadgeText: { fontSize: 11, fontWeight: '700', fontFamily: MONO },
+  matrixCount: { fontSize: 11, color: '#6B8A7A', fontFamily: MONO },
   matrixWrap: { flexDirection: 'row', alignItems: 'center' },
-  yAxisLabel: { justifyContent: 'center', alignItems: 'center', height: 200 },
-  axisText: { fontSize: 10, fontWeight: '600', color: '#6B8A7A', fontFamily: MONO },
+  yAxisLabel: { justifyContent: 'center', alignItems: 'center', height: 260 },
+  axisText: { fontSize: 9, color: '#6B8A7A', fontFamily: MONO, letterSpacing: 1 },
   matrixRow: { flexDirection: 'row' },
-  matrixLabel: { justifyContent: 'center', alignItems: 'center', height: 52 },
-  matrixLabelText: { fontSize: 11, fontWeight: '600', color: '#6B8A7A', fontFamily: MONO },
-  matrixCell: { borderRadius: 4, margin: 1, justifyContent: 'center', alignItems: 'center', padding: 2 },
-  cellContent: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 1, alignItems: 'center' },
-  cellId: { fontSize: 8, fontWeight: '700', color: '#E0F0E0', fontFamily: MONO },
+  matrixLabel: { justifyContent: 'center', alignItems: 'center' },
+  matrixLabelText: { fontSize: 10, color: '#6B8A7A', fontFamily: MONO },
+  matrixCell: { margin: 1, borderRadius: 4, borderWidth: 1, justifyContent: 'center', alignItems: 'center' },
+  matrixCellText: { fontSize: 14, fontWeight: '800', fontFamily: MONO },
   xAxisLabel: { alignItems: 'center', marginTop: 4 },
-
-  pill: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, borderWidth: 1 },
-  pillText: { fontSize: 11, fontWeight: '700', fontFamily: MONO },
+  matrixGrid: { flexDirection: 'row', gap: 24, justifyContent: 'center' },
 
   // Modal
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', alignItems: 'center', padding: 16 },
-  modalContent: { borderRadius: 16, borderWidth: 1, borderColor: '#1A3A2A', backgroundColor: '#0D1117', width: '100%' as any, overflow: 'hidden', maxHeight: '80%' as any },
-  modalHeader: { flexDirection: 'row', alignItems: 'center', padding: 20, borderBottomWidth: 1, borderBottomColor: '#1A3A2A', gap: 12 },
-  modalTitle: { fontSize: 18, fontWeight: '700', color: '#E0F0E0' },
-  modalSub: { fontSize: 12, marginTop: 2, color: '#6B8A7A' },
-  closeBtn: { width: 36, height: 36, borderRadius: 18, justifyContent: 'center', alignItems: 'center', backgroundColor: '#111820' },
-  closeBtnText: { fontSize: 18, fontWeight: '600', color: '#6B8A7A' },
-  modalCard: { borderRadius: 12, borderWidth: 1, borderColor: '#1A3A2A', backgroundColor: '#111820', padding: 16, marginBottom: 10 },
-  modalCardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, flexWrap: 'wrap', gap: 8 },
+  modalOverlay: { flex: 1, backgroundColor: '#00000090', justifyContent: 'center', alignItems: 'center', padding: 16 },
+  modalContent: { backgroundColor: '#0D1117', borderRadius: 16, borderWidth: 1, borderColor: '#1A3A2A', maxHeight: '80%', width: '100%' },
+  modalHeader: { flexDirection: 'row', alignItems: 'center', padding: 20, borderBottomWidth: 1, borderBottomColor: '#1A3A2A' },
+  modalTitle: { fontSize: 16, fontWeight: '700', color: '#E0F0E0', fontFamily: MONO },
+  modalSub: { fontSize: 11, color: '#6B8A7A', marginTop: 2, fontFamily: MONO },
+  closeBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#1A3A2A', alignItems: 'center', justifyContent: 'center' },
+  closeBtnText: { fontSize: 14, color: '#E0F0E0', fontWeight: '700' },
+  modalCard: { backgroundColor: '#0A0E14', borderRadius: 10, padding: 14, marginBottom: 8, borderWidth: 1, borderColor: '#1A3A2A' },
+  modalCardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
   modalIdText: { fontSize: 14, fontWeight: '800', fontFamily: MONO },
-  modalBadges: { flexDirection: 'row', gap: 6, flexWrap: 'wrap' },
-  modalDesc: { fontSize: 13, lineHeight: 19, marginBottom: 8, color: '#E0F0E0' },
+  modalBadges: { flexDirection: 'row', gap: 6 },
+  pill: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4, borderWidth: 1 },
+  pillText: { fontSize: 10, fontWeight: '700', fontFamily: MONO },
+  modalDesc: { fontSize: 12, color: '#9BA1A6', lineHeight: 18, marginBottom: 8 },
   modalFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  modalMeta: { fontSize: 11, flex: 1, color: '#6B8A7A', fontFamily: MONO },
+  modalMeta: { fontSize: 10, color: '#6B8A7A', fontFamily: MONO },
 });

@@ -67,6 +67,13 @@ export default function TabLayout() {
             }}
           />
           <Tabs.Screen
+            name="report"
+            options={{
+              title: "Relat\u00f3rio",
+              tabBarIcon: ({ color }) => <IconSymbol size={24} name="doc.richtext" color={color} />,
+            }}
+          />
+          <Tabs.Screen
             name="tables"
             options={{
               title: "Tabelas",

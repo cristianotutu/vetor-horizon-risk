@@ -49,6 +49,7 @@ const MAPPING = {
   "doc.text.fill": "description",
   "person.fill": "person",
   "globe": "public",
+  "doc.richtext": "article",
 } as IconMapping;
 
 /**

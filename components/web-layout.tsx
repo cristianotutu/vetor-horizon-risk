@@ -10,6 +10,7 @@ const NAV_ITEMS = [
   { key: '/(tabs)/risks', label: 'Riscos', icon: 'list.bullet' as const, path: '/risks' },
   { key: '/(tabs)/evolution', label: 'Evolucao', icon: 'chart.line.uptrend.xyaxis' as const, path: '/evolution' },
   { key: '/(tabs)/strategic', label: 'Estrat\u00e9gico', icon: 'chart.bar.fill' as const, path: '/strategic' },
+  { key: '/(tabs)/report', label: 'Relatório', icon: 'doc.richtext' as const, path: '/report' },
   { key: '/(tabs)/tables', label: 'Tabelas', icon: 'tablecells' as const, path: '/tables' },
   { key: '/(tabs)/settings', label: 'Sobre', icon: 'gearshape.fill' as const, path: '/settings' },
 ];
