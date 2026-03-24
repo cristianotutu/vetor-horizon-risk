@@ -326,7 +326,9 @@ export default function RisksScreen() {
       {/* Content */}
       {isDesktop ? (
         <ScrollView style={{ flex: 1 }} contentContainerStyle={[styles.tableArea, isDesktop && styles.tableAreaDesktop]}>
-          {renderDesktopTable()}
+          <ScrollView horizontal showsHorizontalScrollIndicator={true} contentContainerStyle={{ minWidth: 900 }}>
+            {renderDesktopTable()}
+          </ScrollView>
           <View style={{ height: 40 }} />
         </ScrollView>
       ) : (
