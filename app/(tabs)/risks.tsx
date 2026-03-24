@@ -184,7 +184,7 @@ export default function RisksScreen() {
             {/* Treatment */}
             <View style={[styles.colTrat, { alignItems: 'center' }]}>
               <View style={[styles.tratBadge, { backgroundColor: '#00E5FF08', borderColor: '#00E5FF20' }]}>
-                <Text style={styles.tratText} numberOfLines={1}>{risk.tratamento || '\u2014'}</Text>
+                <Text style={styles.tratText} numberOfLines={2}>{risk.tratamento || '\u2014'}</Text>
               </View>
             </View>
           </TouchableOpacity>
@@ -375,7 +375,7 @@ const styles = StyleSheet.create({
   colLevel: { width: 56, paddingHorizontal: 1 },
   colGut: { width: 36, paddingHorizontal: 1 },
   colResp: { flex: 1.5, paddingHorizontal: 3 },
-  colTrat: { width: 105, paddingHorizontal: 2 },
+  colTrat: { width: 100, paddingHorizontal: 1 },
   tableRow: { flexDirection: 'row', paddingHorizontal: 6, paddingVertical: 6, borderBottomWidth: 1, alignItems: 'center', minHeight: 40 },
   cellCenter: { justifyContent: 'center', alignItems: 'center' },
   tdId: { fontSize: 11, fontWeight: '700', fontFamily: 'monospace', color: '#00E5FF' },
@@ -387,8 +387,8 @@ const styles = StyleSheet.create({
   gutBadge: { paddingHorizontal: 6, paddingVertical: 3, borderRadius: 4, borderWidth: 1, minWidth: 32, alignItems: 'center' },
   gutText: { fontSize: 11, fontWeight: '700', fontFamily: 'monospace' },
   tdResp: { fontSize: 10, lineHeight: 13, color: '#B0C8B8', fontFamily: 'monospace' },
-  tratBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 4, borderWidth: 1 },
-  tratText: { fontSize: 9, fontWeight: '600', fontFamily: 'monospace', color: '#6BCAAA', textAlign: 'center' },
+  tratBadge: { paddingHorizontal: 4, paddingVertical: 2, borderRadius: 4, borderWidth: 1 },
+  tratText: { fontSize: 8.5, fontWeight: '600', fontFamily: 'monospace', color: '#6BCAAA', textAlign: 'center', lineHeight: 12 },
   emptyTable: { padding: 40, alignItems: 'center' },
   mobileList: { paddingHorizontal: 16, paddingBottom: 80 },
   mobileCard: { borderWidth: 1, borderRadius: 10, padding: 12, marginBottom: 8 },
