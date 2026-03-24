@@ -179,13 +179,13 @@
 - [x] Otimizar Relatório para 1366×768 full viewport (slides maximizados)
 - [x] Otimizar Tabelas de Referência para 1366×768 full viewport (matrizes maiores)
 - [x] Otimizar Sobre para 1366×768 full viewport (conteúdo distribuído)
-- [ ] Criar Risk Engine Core: fórmulas explícitas, pesos normalizados, cenários (baseline/stress/extreme), apetite de risco
-- [ ] Redesenhar Settings como painel de configuração do motor de risco (calibração de pesos, presets de cenário, thresholds de apetite, controles de sensibilidade)
-- [ ] Upgrade Risks: scoring explícito com fórmula visível, clustering por categoria/impacto, heatmap interativo, indicadores leading/lagging, early warning signals
-- [ ] Upgrade Evolution: simulação temporal, projeções de cenário (Monte Carlo style), decomposição de tendência, visualização de volatilidade, choques externos
-- [ ] Upgrade Strategic: camada de decisão, scoring de eficácia de mitigação, análise custo vs impacto, matriz de priorização, simulação what-if
-- [ ] Upgrade Report: output executivo auto-gerado, storytelling visual, nível de confiança do modelo, estrutura PDF-ready, board presentation ready
-- [ ] Upgrade Tables: filtros avançados, ordenação, comparação de cenários, métricas derivadas, scores normalizados, ranking de riscos
-- [ ] System-wide: explainability (toda score com fórmula/drivers/premissas), transparência do modelo, validação (consistency checks, anomaly detection, sensitivity testing)
-- [ ] UX executivo: fluxo de decisão em vez de dashboard, progressão narrativa, carga cognitiva mínima, alto sinal/baixo ruído
-- [ ] Definir correlações entre riscos (dependência/efeitos cascata), framework com camadas (Regulatório, Operacional, Estratégico, Reputacional)
+- [x] Criar Risk Engine Core: fórmulas explícitas, pesos normalizados, cenários (baseline/stress/extreme), apetite de risco
+- [x] Redesenhar Settings como painel de configuração do motor de risco (calibração de pesos, presets de cenário, thresholds de apetite, controles de sensibilidade)
+- [x] Upgrade Risks: scoring explícito com fórmula visível, clustering por categoria/impacto, heatmap interativo, indicadores leading/lagging, early warning signals
+- [x] Upgrade Evolution: simulação temporal, projeções de cenário (Monte Carlo style), decomposição de tendência, visualização de volatilidade, choques externos
+- [x] Upgrade Strategic: camada de decisão, scoring de eficácia de mitigação, análise custo vs impacto, matriz de priorização, simulação what-if
+- [x] Upgrade Report: output executivo auto-gerado, storytelling visual, nível de confiança do modelo, estrutura PDF-ready, board presentation ready
+- [x] Upgrade Tables: filtros avançados, ordenação, comparação de cenários, métricas derivadas, scores normalizados, ranking de riscos
+- [x] System-wide: explainability (toda score com fórmula/drivers/premissas), transparência do modelo, validação (consistency checks, anomaly detection, sensitivity testing)
+- [x] UX executivo: fluxo de decisão em vez de dashboard, progressão narrativa, carga cognitiva mínima, alto sinal/baixo ruído
+- [x] Definir correlações entre riscos (dependência/efeitos cascata), framework com camadas (Regulatório, Operacional, Estratégico, Reputacional)

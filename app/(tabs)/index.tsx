@@ -3,6 +3,7 @@ import { useRouter } from "expo-router";
 import { ScreenContainer } from "@/components/screen-container";
 import { useRisks } from "@/lib/risk-context";
 import { getRiskLevel, getMatrixColor, getGutLevel, Risk } from "@/lib/models";
+import { useEngine } from "@/lib/engine-context";
 import { useColors } from "@/hooks/use-colors";
 import { useMemo, useState, useCallback } from "react";
 import { IconSymbol } from "@/components/ui/icon-symbol";
@@ -29,6 +30,8 @@ export default function DashboardScreen() {
   const [activeFilter, setActiveFilter] = useState<FilterState>(null);
 
   const [hoveredCell, setHoveredCell] = useState<string | null>(null);
+  const { portfolioMetrics, config } = useEngine();
+  const pm = portfolioMetrics;
 
   const stats = useMemo(() => {
     const total = risks.length;
@@ -417,9 +420,43 @@ export default function DashboardScreen() {
           </View>
         </View>
 
-        {/* ═══════════════════════════════════════════════════════════════
+        {/* Engine Score Strip */}
+        {pm && (
+          <View style={[s.section, isDesktop && s.sectionDesktop, { marginTop: 4 }]}>
+            <Animated.View entering={FadeInDown.duration(400).delay(250)}>
+              <View style={{ flexDirection: 'row', gap: 6, backgroundColor: '#0D1117', borderRadius: 8, borderWidth: 1, borderColor: '#1A3A2A', padding: 8 }}>
+                <View style={{ flex: 1, alignItems: 'center' }}>
+                  <Text style={{ color: '#00E5FF', fontSize: 16, fontWeight: '800', fontFamily: MONO }}>{pm.averageCompositeScore.toFixed(1)}</Text>
+                  <Text style={{ color: '#6B8A7A', fontSize: 7, fontWeight: '700', fontFamily: MONO }}>COMPOSITE</Text>
+                </View>
+                <View style={{ width: 1, backgroundColor: '#1A3A2A' }} />
+                <View style={{ flex: 1, alignItems: 'center' }}>
+                  <Text style={{ color: pm.averageConfidence >= 70 ? '#00FF88' : '#FFD600', fontSize: 16, fontWeight: '800', fontFamily: MONO }}>{pm.averageConfidence}%</Text>
+                  <Text style={{ color: '#6B8A7A', fontSize: 7, fontWeight: '700', fontFamily: MONO }}>CONFIANÇA</Text>
+                </View>
+                <View style={{ width: 1, backgroundColor: '#1A3A2A' }} />
+                <View style={{ flex: 1, alignItems: 'center' }}>
+                  <Text style={{ color: '#A855F7', fontSize: 16, fontWeight: '800', fontFamily: MONO }}>{config.scenarioMultipliers[config.scenario].label}</Text>
+                  <Text style={{ color: '#6B8A7A', fontSize: 7, fontWeight: '700', fontFamily: MONO }}>CENÁRIO</Text>
+                </View>
+                <View style={{ width: 1, backgroundColor: '#1A3A2A' }} />
+                <View style={{ flex: 1, alignItems: 'center' }}>
+                  <Text style={{ color: pm.totalWarnings > 5 ? '#FF3D3D' : '#FFD600', fontSize: 16, fontWeight: '800', fontFamily: MONO }}>{pm.totalWarnings}</Text>
+                  <Text style={{ color: '#6B8A7A', fontSize: 7, fontWeight: '700', fontFamily: MONO }}>ALERTAS</Text>
+                </View>
+                <View style={{ width: 1, backgroundColor: '#1A3A2A' }} />
+                <View style={{ flex: 1, alignItems: 'center' }}>
+                  <Text style={{ color: pm.byAppetite.intolerable > 0 ? '#FF3D3D' : '#00FF88', fontSize: 16, fontWeight: '800', fontFamily: MONO }}>{pm.byAppetite.intolerable}</Text>
+                  <Text style={{ color: '#6B8A7A', fontSize: 7, fontWeight: '700', fontFamily: MONO }}>INTOLERÁVEL</Text>
+                </View>
+              </View>
+            </Animated.View>
+          </View>
+        )}
+
+        {/* ═════════════════════════════════════════════════════════════
             3 MATRIZES EM FLUXO HORIZONTAL: INERENTE → DESLOCAMENTO → RESIDUAL
-            ═══════════════════════════════════════════════════════════════ */}
+            ═════════════════════════════════════════════════════════════ */}
         <View style={[s.section, isDesktop && s.sectionDesktop, { marginTop: 4 }]}>
           <Animated.View entering={FadeInDown.duration(500).delay(300)}>
             <GlowCard variant="default">

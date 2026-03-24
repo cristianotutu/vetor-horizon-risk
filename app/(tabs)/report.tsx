@@ -2,6 +2,7 @@ import { View, Text, ScrollView, TouchableOpacity, useWindowDimensions, StyleShe
 import { useState, useMemo, useCallback} from "react";
 import { ScreenContainer } from "@/components/screen-container";
 import { useRisks } from "@/lib/risk-context";
+import { useEngine } from "@/lib/engine-context";
 import { getRiskLevel, getGutLevel, Risk } from "@/lib/models";
 import { GlowCard } from "@/components/ui/glow-card";
 import Animated, { FadeInDown } from "react-native-reanimated";
@@ -37,6 +38,7 @@ function pct(part: number, total: number): string {
 // ─── MAIN COMPONENT ───────────────────────────────────────────
 export default function ReportScreen() {
   const { risks } = useRisks();
+  const { enrichedRisks, portfolioMetrics, config } = useEngine();
 
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;
@@ -174,6 +176,7 @@ export default function ReportScreen() {
     { id: 7, title: 'GOVERNANÇA', subtitle: 'O papel do Conselho', color: C.purple },
     { id: 8, title: 'BENEFÍCIOS', subtitle: 'O que a DAMACORP ganha', color: C.green },
     { id: 9, title: 'PRÓXIMOS PASSOS', subtitle: 'Decisões para hoje', color: C.yellow },
+    { id: 10, title: 'CONFIANÇA', subtitle: 'Transparência do modelo', color: C.cyan },
   ], []);
 
   const goTo = useCallback((idx: number) => {
@@ -689,10 +692,119 @@ export default function ReportScreen() {
     </View>
   );
 
+  const SlideConfianca = () => {
+    const pm = portfolioMetrics;
+    const scenarioLabel = config.scenarioMultipliers[config.scenario].label;
+    const w = config.weights;
+    const topEnriched = enrichedRisks.slice().sort((a, b) => b.compositeScore.total - a.compositeScore.total).slice(0, 5);
+    return (
+      <View style={st.slideContent}>
+        <Text style={{ color: C.text, fontSize: isDesktop ? 20 : 17, fontWeight: '800', fontFamily: 'monospace', marginBottom: 4 }}>Transparência e Confiança do Modelo</Text>
+        <Text style={{ color: C.muted, fontSize: 11, fontFamily: 'monospace', marginBottom: 16 }}>Risk Engine ICAPT v5 — Explainability Layer</Text>
+
+        {/* Engine Config Summary */}
+        <View style={{ backgroundColor: C.cyan + '08', borderWidth: 1, borderColor: C.cyan + '30', borderRadius: 10, padding: 14, marginBottom: 12 }}>
+          <Text style={{ color: C.cyan, fontSize: 11, fontWeight: '800', fontFamily: 'monospace', letterSpacing: 1, marginBottom: 10 }}>CONFIGURAÇÃO DO MOTOR</Text>
+          <View style={{ flexDirection: isDesktop ? 'row' : 'column', gap: 10 }}>
+            <View style={{ flex: 1, alignItems: 'center' }}>
+              <Text style={{ color: C.muted, fontSize: 9, fontFamily: 'monospace', fontWeight: '700' }}>CENÁRIO ATIVO</Text>
+              <Text style={{ color: C.cyan, fontSize: 16, fontWeight: '800', fontFamily: 'monospace' }}>{scenarioLabel}</Text>
+            </View>
+            <View style={{ flex: 1, alignItems: 'center' }}>
+              <Text style={{ color: C.muted, fontSize: 9, fontFamily: 'monospace', fontWeight: '700' }}>CONFIANÇA MÉDIA</Text>
+              <Text style={{ color: pm ? (pm.averageConfidence >= 70 ? C.green : C.yellow) : C.muted, fontSize: 16, fontWeight: '800', fontFamily: 'monospace' }}>{pm?.averageConfidence ?? 0}%</Text>
+            </View>
+            <View style={{ flex: 1, alignItems: 'center' }}>
+              <Text style={{ color: C.muted, fontSize: 9, fontFamily: 'monospace', fontWeight: '700' }}>ALERTAS TOTAIS</Text>
+              <Text style={{ color: pm && pm.totalWarnings > 5 ? C.red : C.yellow, fontSize: 16, fontWeight: '800', fontFamily: 'monospace' }}>{pm?.totalWarnings ?? 0}</Text>
+            </View>
+            <View style={{ flex: 1, alignItems: 'center' }}>
+              <Text style={{ color: C.muted, fontSize: 9, fontFamily: 'monospace', fontWeight: '700' }}>CORRELAÇÃO</Text>
+              <Text style={{ color: C.purple, fontSize: 16, fontWeight: '800', fontFamily: 'monospace' }}>{(config.correlationFactor * 100).toFixed(0)}%</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Weights */}
+        <Text style={{ color: C.cyan, fontSize: 10, fontWeight: '700', fontFamily: 'monospace', letterSpacing: 1, marginBottom: 8 }}>PESOS DO COMPOSITE SCORE (NORMALIZADOS)</Text>
+        <View style={{ flexDirection: 'row', gap: 6, marginBottom: 12 }}>
+          {[
+            { label: 'Risco Inerente', value: w.inherent, color: C.red },
+            { label: 'GUT Score', value: w.gut, color: C.orange },
+            { label: 'Impacto Financeiro', value: w.financial, color: C.yellow },
+            { label: 'Eficácia Controles', value: w.controlEffectiveness, color: C.green },
+          ].map(item => (
+            <View key={item.label} style={{ flex: 1, backgroundColor: item.color + '08', borderWidth: 1, borderColor: item.color + '25', borderRadius: 6, padding: 8, alignItems: 'center' }}>
+              <Text style={{ color: item.color, fontSize: 18, fontWeight: '800', fontFamily: 'monospace' }}>{(item.value * 100).toFixed(0)}%</Text>
+              <Text style={{ color: C.muted, fontSize: 8, fontFamily: 'monospace', textAlign: 'center', marginTop: 2 }}>{item.label}</Text>
+            </View>
+          ))}
+        </View>
+
+        {/* Appetite Thresholds */}
+        <Text style={{ color: C.cyan, fontSize: 10, fontWeight: '700', fontFamily: 'monospace', letterSpacing: 1, marginBottom: 8 }}>THRESHOLDS DE APETITE DE RISCO</Text>
+        <View style={{ backgroundColor: C.cardAlt, borderRadius: 8, borderWidth: 1, borderColor: C.border, overflow: 'hidden', marginBottom: 12 }}>
+          {[
+            { label: 'Aceitável', threshold: `≤ ${config.appetite.acceptable}`, color: C.green, count: pm?.byAppetite.acceptable ?? 0 },
+            { label: 'Tolerável', threshold: `${config.appetite.acceptable + 1} – ${config.appetite.intolerable - 1}`, color: C.yellow, count: pm?.byAppetite.tolerable ?? 0 },
+            { label: 'Intolerável', threshold: `≥ ${config.appetite.intolerable}`, color: C.red, count: pm?.byAppetite.intolerable ?? 0 },
+          ].map((item, i) => (
+            <View key={item.label} style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 8, borderBottomWidth: i < 2 ? 1 : 0, borderBottomColor: C.border + '40', backgroundColor: i % 2 === 0 ? C.cardAlt : C.card }}>
+              <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: item.color, marginRight: 10 }} />
+              <Text style={{ flex: 1, color: C.text, fontSize: 11, fontWeight: '600', fontFamily: 'monospace' }}>{item.label}</Text>
+              <Text style={{ color: C.muted, fontSize: 10, fontFamily: 'monospace', marginRight: 16 }}>Score {item.threshold}</Text>
+              <Text style={{ color: item.color, fontSize: 14, fontWeight: '800', fontFamily: 'monospace' }}>{item.count} riscos</Text>
+            </View>
+          ))}
+        </View>
+
+        {/* Top 5 Enriched Risks */}
+        <Text style={{ color: C.cyan, fontSize: 10, fontWeight: '700', fontFamily: 'monospace', letterSpacing: 1, marginBottom: 8 }}>TOP 5 RISCOS — COMPOSITE SCORE DETALHADO</Text>
+        <View style={{ backgroundColor: C.cardAlt, borderRadius: 8, borderWidth: 1, borderColor: C.border, overflow: 'hidden' }}>
+          <View style={{ flexDirection: 'row', backgroundColor: C.card, paddingHorizontal: 8, paddingVertical: 5, borderBottomWidth: 1, borderBottomColor: C.border }}>
+            <Text style={{ width: 40, color: C.cyan, fontSize: 8, fontWeight: '700', fontFamily: 'monospace' }}>ID</Text>
+            <Text style={{ flex: 1, color: C.cyan, fontSize: 8, fontWeight: '700', fontFamily: 'monospace' }}>RISCO</Text>
+            <Text style={{ width: 40, color: C.red, fontSize: 8, fontWeight: '700', fontFamily: 'monospace', textAlign: 'center' }}>P×I</Text>
+            <Text style={{ width: 35, color: C.orange, fontSize: 8, fontWeight: '700', fontFamily: 'monospace', textAlign: 'center' }}>GUT</Text>
+            <Text style={{ width: 35, color: C.yellow, fontSize: 8, fontWeight: '700', fontFamily: 'monospace', textAlign: 'center' }}>FIN</Text>
+            <Text style={{ width: 35, color: C.green, fontSize: 8, fontWeight: '700', fontFamily: 'monospace', textAlign: 'center' }}>CTRL</Text>
+            <Text style={{ width: 45, color: C.cyan, fontSize: 8, fontWeight: '700', fontFamily: 'monospace', textAlign: 'center' }}>TOTAL</Text>
+          </View>
+          {topEnriched.map((r, i) => (
+            <View key={r.id} style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8, paddingVertical: 5, borderBottomWidth: 1, borderBottomColor: C.border + '40', backgroundColor: i % 2 === 0 ? C.cardAlt : C.card }}>
+              <Text style={{ width: 40, color: C.text, fontSize: 9, fontWeight: '700', fontFamily: 'monospace' }}>{r.id}</Text>
+              <Text style={{ flex: 1, color: C.muted, fontSize: 8, fontFamily: 'monospace' }} numberOfLines={1}>{r.descricaoRisco.substring(0, 35)}...</Text>
+              <Text style={{ width: 40, color: C.red, fontSize: 9, fontWeight: '700', fontFamily: 'monospace', textAlign: 'center' }}>{r.compositeScore.inherentContribution.toFixed(0)}</Text>
+              <Text style={{ width: 35, color: C.orange, fontSize: 9, fontWeight: '700', fontFamily: 'monospace', textAlign: 'center' }}>{r.compositeScore.gutContribution.toFixed(0)}</Text>
+              <Text style={{ width: 35, color: C.yellow, fontSize: 9, fontWeight: '700', fontFamily: 'monospace', textAlign: 'center' }}>{r.compositeScore.financialContribution.toFixed(0)}</Text>
+              <Text style={{ width: 35, color: C.green, fontSize: 9, fontWeight: '700', fontFamily: 'monospace', textAlign: 'center' }}>{r.compositeScore.controlContribution.toFixed(0)}</Text>
+              <View style={{ width: 45, alignItems: 'center' }}>
+                <View style={{ backgroundColor: C.cyan + '20', borderRadius: 4, paddingHorizontal: 4, paddingVertical: 1 }}>
+                  <Text style={{ color: C.cyan, fontSize: 10, fontWeight: '800', fontFamily: 'monospace' }}>{r.compositeScore.total.toFixed(1)}</Text>
+                </View>
+              </View>
+            </View>
+          ))}
+        </View>
+
+        {/* Formula */}
+        <View style={{ backgroundColor: C.cyan + '08', borderWidth: 1, borderColor: C.cyan + '25', borderRadius: 8, padding: 12, marginTop: 12 }}>
+          <Text style={{ color: C.cyan, fontSize: 9, fontWeight: '700', fontFamily: 'monospace', letterSpacing: 1, marginBottom: 4 }}>FÓRMULA DO COMPOSITE SCORE</Text>
+          <Text style={{ color: C.text, fontSize: 10, fontFamily: 'monospace', lineHeight: 16 }}>
+            CS = (P×I×W_inerente + GUT×W_gut + ALE×W_financeiro + (1-Eficácia)×W_controle) × Multiplicador_Cenário
+          </Text>
+          <Text style={{ color: C.muted, fontSize: 9, fontFamily: 'monospace', lineHeight: 14, marginTop: 4 }}>
+            Cada componente é normalizado para escala 0-100 antes da ponderação. O multiplicador de cenário ajusta a probabilidade conforme o contexto (Baseline: 1.0x, Stress: 1.5x, Extreme: 2.5x).
+          </Text>
+        </View>
+      </View>
+    );
+  };
+
   const slideComponents = [
     SlideAbertura, SlideContexto, SlideMetodologia, SlideAmeacas,
     SlideMapaCalor, SlideImpactoFinanceiro, SlideTratamento,
-    SlideGovernanca, SlideBeneficios, SlideProximosPassos,
+    SlideGovernanca, SlideBeneficios, SlideProximosPassos, SlideConfianca,
   ];
 
   const CurrentSlideComponent = slideComponents[currentSlide];

@@ -2,80 +2,62 @@ import { FlatList, Text, View, TouchableOpacity, TextInput, StyleSheet, useWindo
 import { useRouter } from "expo-router";
 import { ScreenContainer } from "@/components/screen-container";
 import { useRisks } from "@/lib/risk-context";
+import { useEngine } from "@/lib/engine-context";
 import { getRiskLevel, getGutLevel, TIPOS_DE_RISCO } from "@/lib/models";
 import type { Risk } from "@/lib/models";
+import type { EnrichedRisk, RiskLayer } from "@/lib/risk-engine";
 import { useColors } from "@/hooks/use-colors";
-import { useState, useMemo, useCallback} from "react";
+import { useState, useMemo, useCallback } from "react";
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { GlowCard } from "@/components/ui/glow-card";
 import { PulsingBadge } from "@/components/ui/pulsing-badge";
 import { StatusIndicator } from "@/components/ui/status-indicator";
 import Animated, { FadeInDown } from "react-native-reanimated";
 
+const MONO = Platform.OS === 'web' ? 'monospace' : undefined;
+
 const LEVEL_COLORS: Record<string, string> = {
-  'Cr\u00edtico': '#FF3D3D',
-  'Alto': '#FF8C00',
-  'M\u00e9dio': '#FFD600',
-  'Baixo': '#00FF88',
+  'Crítico': '#FF3D3D', 'Alto': '#FF8C00', 'Médio': '#FFD600', 'Baixo': '#00FF88',
 };
-
 const BADGE_LEVEL_MAP: Record<string, 'critical' | 'high' | 'medium' | 'low'> = {
-  'Cr\u00edtico': 'critical',
-  'Alto': 'high',
-  'M\u00e9dio': 'medium',
-  'Baixo': 'low',
+  'Crítico': 'critical', 'Alto': 'high', 'Médio': 'medium', 'Baixo': 'low',
 };
+const APPETITE_COLORS = { acceptable: '#00FF88', tolerable: '#FFD600', intolerable: '#FF3D3D' };
+const APPETITE_LABELS = { acceptable: 'Aceitável', tolerable: 'Tolerável', intolerable: 'Intolerável' };
+const LAYER_COLORS: Record<RiskLayer, string> = { 'Regulatório': '#8B5CF6', 'Operacional': '#FF8C00', 'Estratégico': '#3B82F6', 'Reputacional': '#F43F5E' };
 
-// Abbreviate long type names for compact table display
 function abbreviateType(tipo: string): string {
   const map: Record<string, string> = {
-    'Estrat\u00e9gico': 'Estrat\u00e9gico',
-    'Operacional': 'Operacional',
-    'Financeiro': 'Financeiro',
-    'Conformidade (Regulat\u00f3rio e Legal)': 'Conformidade',
-    'Seguran\u00e7a da Informa\u00e7\u00e3o (Cibern\u00e9tico)': 'Seg. Info.',
-    'Tecnol\u00f3gico': 'Tecnol\u00f3gico',
-    'Reputacional': 'Reputacional',
-    'Ambiental e Clim\u00e1tico': 'Ambiental',
-    'Humano (Pessoas e Cultura Organizacional)': 'Humano / RH',
-    'Cadeia de Suprimentos': 'Cadeia Suprim.',
+    'Estratégico': 'Estratégico', 'Operacional': 'Operacional', 'Financeiro': 'Financeiro',
+    'Conformidade (Regulatório e Legal)': 'Conformidade', 'Segurança da Informação (Cibernético)': 'Seg. Info.',
+    'Tecnológico': 'Tecnológico', 'Reputacional': 'Reputacional', 'Ambiental e Climático': 'Ambiental',
+    'Humano (Pessoas e Cultura Organizacional)': 'Humano / RH', 'Cadeia de Suprimentos': 'Cadeia Suprim.',
   };
   if (map[tipo]) return map[tipo];
   const cleaned = tipo.replace(/^Risco\s+/, '').replace(/^de\s+/, '');
-  if (map[cleaned]) return map[cleaned];
-  return cleaned.length > 16 ? cleaned.substring(0, 14) + '\u2026' : cleaned;
+  return map[cleaned] || (cleaned.length > 16 ? cleaned.substring(0, 14) + '…' : cleaned);
 }
 
-// Abbreviate long responsible names for table
 function abbreviateResp(resp: string): string {
-  if (!resp) return '\u2014';
-  let short = resp.replace(/\s*\(Owner\)\.?/g, '').replace(/\.\s*Correspons\u00e1veis:.*$/s, '').trim();
-  if (short.length > 45) {
-    short = short.substring(0, 43) + '\u2026';
-  }
-  return short;
+  if (!resp) return '—';
+  let short = resp.replace(/\s*\(Owner\)\.?/g, '').replace(/\.\s*Corresponsáveis:.*$/s, '').trim();
+  return short.length > 40 ? short.substring(0, 38) + '…' : short;
 }
 
-// Color for type badge
 function getTypeColor(tipo: string): string {
   const map: Record<string, string> = {
-    'Estrat\u00e9gico': '#FF8C00',
-    'Operacional': '#00BFFF',
-    'Financeiro': '#FFD600',
-    'Conformidade': '#C084FC',
-    'Seg. Info.': '#FF3D3D',
-    'Tecnol\u00f3gico': '#00E5FF',
-    'Reputacional': '#F472B6',
-    'Ambiental': '#22C55E',
-    'Humano / RH': '#FB923C',
-    'Cadeia Suprim.': '#94A3B8',
+    'Estratégico': '#FF8C00', 'Operacional': '#00BFFF', 'Financeiro': '#FFD600', 'Conformidade': '#C084FC',
+    'Seg. Info.': '#FF3D3D', 'Tecnológico': '#00E5FF', 'Reputacional': '#F472B6', 'Ambiental': '#22C55E',
+    'Humano / RH': '#FB923C', 'Cadeia Suprim.': '#94A3B8',
   };
-  const abbr = abbreviateType(tipo);
-  return map[abbr] || '#6B8A7A';
+  return map[abbreviateType(tipo)] || '#6B8A7A';
 }
+
+type ViewMode = 'table' | 'heatmap' | 'clustering';
+type SortField = 'rank' | 'composite' | 'inherent' | 'gut' | 'financial';
 
 export default function RisksScreen() {
   const { risks, loading } = useRisks();
+  const { enrichedRisks, config, portfolioMetrics } = useEngine();
   const router = useRouter();
   const colors = useColors();
   const { width } = useWindowDimensions();
@@ -83,240 +65,360 @@ export default function RisksScreen() {
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState<string | null>(null);
   const [filterLevel, setFilterLevel] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>('table');
+  const [sortField, setSortField] = useState<SortField>('rank');
+  const [expandedRisk, setExpandedRisk] = useState<string | null>(null);
 
   const filteredRisks = useMemo(() => {
-    let result = risks;
+    let result = [...enrichedRisks];
     if (search.trim()) {
       const q = search.toLowerCase();
-      result = result.filter(r =>
-        r.id.toLowerCase().includes(q) ||
-        r.descricaoRisco.toLowerCase().includes(q) ||
-        r.fonteDeRisco.toLowerCase().includes(q) ||
-        r.ameaca.toLowerCase().includes(q)
-      );
+      result = result.filter(r => r.id.toLowerCase().includes(q) || r.descricaoRisco.toLowerCase().includes(q) || r.fonteDeRisco.toLowerCase().includes(q));
     }
-    if (filterType) {
-      result = result.filter(r => r.tipoRisco === filterType);
-    }
-    if (filterLevel) {
-      result = result.filter(r => getRiskLevel(r.riscoInerente).label === filterLevel);
-    }
-    return result.sort((a, b) => b.gutScore - a.gutScore);
-  }, [risks, search, filterType, filterLevel]);
+    if (filterType) result = result.filter(r => r.tipoRisco === filterType);
+    if (filterLevel) result = result.filter(r => getRiskLevel(r.riscoInerente).label === filterLevel);
 
+    switch (sortField) {
+      case 'rank': return result.sort((a, b) => a.globalRank - b.globalRank);
+      case 'composite': return result.sort((a, b) => b.compositeScore.total - a.compositeScore.total);
+      case 'inherent': return result.sort((a, b) => b.riscoInerente - a.riscoInerente);
+      case 'gut': return result.sort((a, b) => b.gutScore - a.gutScore);
+      case 'financial': return result.sort((a, b) => (b.compositeScore.financialContribution - a.compositeScore.financialContribution));
+      default: return result;
+    }
+  }, [enrichedRisks, search, filterType, filterLevel, sortField]);
+
+  const pm = portfolioMetrics;
+
+  // ============================================================
+  // HEATMAP VIEW — 5x5 matrix with risk dots
+  // ============================================================
+  const renderHeatmap = () => {
+    const matrix: EnrichedRisk[][][] = Array.from({ length: 5 }, () => Array.from({ length: 5 }, () => []));
+    filteredRisks.forEach(r => {
+      const p = Math.min(5, Math.max(1, r.probabilidade)) - 1;
+      const i = Math.min(5, Math.max(1, r.impacto)) - 1;
+      matrix[4 - i][p].push(r);
+    });
+    const cellColors = [
+      ['#00FF8830', '#00FF8830', '#FFD60030', '#FFD60030', '#FF8C0030'],
+      ['#00FF8830', '#FFD60030', '#FFD60030', '#FF8C0030', '#FF8C0030'],
+      ['#FFD60030', '#FFD60030', '#FF8C0030', '#FF8C0030', '#FF3D3D30'],
+      ['#FFD60030', '#FF8C0030', '#FF8C0030', '#FF3D3D30', '#FF3D3D30'],
+      ['#FF8C0030', '#FF8C0030', '#FF3D3D30', '#FF3D3D30', '#FF3D3D30'],
+    ];
+
+    return (
+      <View style={[st.heatmapContainer, { backgroundColor: '#0D1117', borderColor: '#1A3A2A' }]}>
+        <Text style={[st.sectionTitle, { color: '#00E5FF', fontFamily: MONO }]}>HEATMAP — PROBABILIDADE × IMPACTO</Text>
+        <Text style={[st.sectionDesc, { color: '#6B8A7A' }]}>Cada ponto representa um risco. Tamanho proporcional ao Composite Score.</Text>
+        <View style={st.heatmapGrid}>
+          {/* Y-axis label */}
+          <View style={st.heatmapYAxis}>
+            {[5, 4, 3, 2, 1].map(n => <Text key={n} style={[st.axisLabel, { color: '#6B8A7A', fontFamily: MONO }]}>{n}</Text>)}
+          </View>
+          <View style={{ flex: 1 }}>
+            {matrix.map((row, ri) => (
+              <View key={ri} style={st.heatmapRow}>
+                {row.map((cell, ci) => (
+                  <View key={ci} style={[st.heatmapCell, { backgroundColor: cellColors[ri][ci], borderColor: '#1A3A2A30' }]}>
+                    {cell.map(r => {
+                      const size = Math.max(10, Math.min(24, r.compositeScore.total / 4));
+                      const appColor = APPETITE_COLORS[r.appetiteStatus];
+                      return (
+                        <TouchableOpacity key={r.id} onPress={() => setExpandedRisk(expandedRisk === r.id ? null : r.id)} activeOpacity={0.6}>
+                          <View style={[st.heatmapDot, { width: size, height: size, borderRadius: size / 2, backgroundColor: appColor + '80', borderColor: appColor }]}>
+                            <Text style={{ fontSize: 6, color: '#fff', fontWeight: '800', fontFamily: MONO }}>{r.id.replace('R0', '').replace('R', '')}</Text>
+                          </View>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                ))}
+              </View>
+            ))}
+            {/* X-axis labels */}
+            <View style={st.heatmapXAxis}>
+              {[1, 2, 3, 4, 5].map(n => <Text key={n} style={[st.axisLabel, { color: '#6B8A7A', fontFamily: MONO, flex: 1, textAlign: 'center' }]}>{n}</Text>)}
+            </View>
+          </View>
+        </View>
+        <View style={st.heatmapLegend}>
+          <Text style={{ color: '#6B8A7A', fontSize: 9, fontFamily: MONO }}>← PROBABILIDADE →</Text>
+          <View style={{ flexDirection: 'row', gap: 10 }}>
+            {Object.entries(APPETITE_LABELS).map(([key, label]) => (
+              <View key={key} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: APPETITE_COLORS[key as keyof typeof APPETITE_COLORS] }} />
+                <Text style={{ color: '#6B8A7A', fontSize: 9, fontFamily: MONO }}>{label}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+        {/* Expanded risk detail */}
+        {expandedRisk && (() => {
+          const r = filteredRisks.find(x => x.id === expandedRisk);
+          if (!r) return null;
+          return (
+            <View style={[st.expandedDetail, { borderColor: APPETITE_COLORS[r.appetiteStatus] + '40', backgroundColor: APPETITE_COLORS[r.appetiteStatus] + '08' }]}>
+              <Text style={{ color: '#00E5FF', fontSize: 12, fontWeight: '800', fontFamily: MONO }}>{r.id} — Rank #{r.globalRank}</Text>
+              <Text style={{ color: '#E0F0E0', fontSize: 11, marginTop: 2 }} numberOfLines={2}>{r.descricaoRisco}</Text>
+              <Text style={{ color: '#6B8A7A', fontSize: 10, fontFamily: MONO, marginTop: 4 }}>
+                Composite: {r.compositeScore.total.toFixed(1)} | P×I: {r.riscoInerente} | GUT: {r.gutScore} | Controles: {r.controlEffectivenessScore}%
+              </Text>
+              <Text style={{ color: '#6B8A7A', fontSize: 9, fontFamily: MONO, marginTop: 2 }}>{r.compositeScore.formula}</Text>
+            </View>
+          );
+        })()}
+      </View>
+    );
+  };
+
+  // ============================================================
+  // CLUSTERING VIEW — by risk layer
+  // ============================================================
+  const renderClustering = () => {
+    const layers: RiskLayer[] = ['Regulatório', 'Operacional', 'Estratégico', 'Reputacional'];
+    return (
+      <View style={{ gap: 8 }}>
+        <Text style={[st.sectionTitle, { color: '#00E5FF', fontFamily: MONO, paddingHorizontal: 4 }]}>CLUSTERING POR CAMADA DE RISCO</Text>
+        {layers.map(layer => {
+          const layerRisks = filteredRisks.filter(r => r.riskLayer === layer);
+          if (layerRisks.length === 0) return null;
+          const avgScore = layerRisks.reduce((s, r) => s + r.compositeScore.total, 0) / layerRisks.length;
+          const layerColor = LAYER_COLORS[layer];
+          return (
+            <View key={layer} style={[st.clusterCard, { borderColor: layerColor + '30', backgroundColor: '#0D1117' }]}>
+              <View style={st.clusterHeader}>
+                <View style={[st.clusterBadge, { backgroundColor: layerColor + '15' }]}>
+                  <Text style={{ color: layerColor, fontSize: 11, fontWeight: '800', fontFamily: MONO }}>{layer.toUpperCase()}</Text>
+                </View>
+                <Text style={{ color: '#6B8A7A', fontSize: 10, fontFamily: MONO }}>{layerRisks.length} riscos | Média: {avgScore.toFixed(1)}</Text>
+              </View>
+              {layerRisks.map(r => {
+                const appColor = APPETITE_COLORS[r.appetiteStatus];
+                return (
+                  <TouchableOpacity key={r.id} style={st.clusterRow} onPress={() => router.push(`/risk/${r.id}` as any)} activeOpacity={0.6}>
+                    <Text style={{ color: '#00E5FF', fontSize: 10, fontWeight: '700', fontFamily: MONO, width: 36 }}>{r.id}</Text>
+                    <View style={[st.clusterScoreBar, { backgroundColor: '#1A3A2A20' }]}>
+                      <View style={{ width: `${Math.min(100, r.compositeScore.total)}%`, height: '100%', backgroundColor: appColor + '50', borderRadius: 2 }} />
+                    </View>
+                    <Text style={{ color: appColor, fontSize: 10, fontWeight: '800', fontFamily: MONO, width: 36, textAlign: 'right' }}>{r.compositeScore.total.toFixed(0)}</Text>
+                    <Text style={{ color: '#E0F0E0', fontSize: 9, flex: 1, marginLeft: 6 }} numberOfLines={1}>{r.descricaoRisco}</Text>
+                    {r.earlyWarnings.length > 0 && <View style={[st.warningDot, { backgroundColor: '#FF3D3D' }]} />}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          );
+        })}
+      </View>
+    );
+  };
+
+  // ============================================================
+  // TABLE VIEW — enhanced with engine data
+  // ============================================================
   const renderDesktopTable = () => (
-    <View style={[styles.tableCard, { backgroundColor: '#0D1117', borderColor: '#1A3A2A' }]}>
+    <View style={[st.tableCard, { backgroundColor: '#0D1117', borderColor: '#1A3A2A' }]}>
       {/* Header row */}
-      <View style={[styles.tableHeaderRow, { borderBottomColor: '#00E5FF30', backgroundColor: '#0A1520' }]}>
-        <View style={styles.colId}><Text style={[styles.thCell, { color: '#00E5FF' }]}>ID</Text></View>
-        <View style={styles.colDesc}><Text style={[styles.thCell, { color: '#00E5FF' }]}>DESCRI\u00c7\u00c3O DO RISCO (FORMA 3)</Text></View>
-        <View style={styles.colType}><Text style={[styles.thCell, { color: '#00E5FF', textAlign: 'center' }]}>TIPO</Text></View>
-        <View style={styles.colPxi}><Text style={[styles.thCell, { color: '#00E5FF', textAlign: 'center' }]}>P\u00d7I</Text></View>
-        <View style={styles.colLevel}><Text style={[styles.thCell, { color: '#00E5FF', textAlign: 'center' }]}>N\u00cdVEL</Text></View>
-        <View style={styles.colGut}><Text style={[styles.thCell, { color: '#00E5FF', textAlign: 'center' }]}>GUT</Text></View>
-        <View style={styles.colResp}><Text style={[styles.thCell, { color: '#00E5FF' }]}>RESPONS\u00c1VEL</Text></View>
-        <View style={styles.colTrat}><Text style={[styles.thCell, { color: '#00E5FF', textAlign: 'center' }]}>TRATAMENTO</Text></View>
+      <View style={[st.tableHeaderRow, { borderBottomColor: '#00E5FF30', backgroundColor: '#0A1520' }]}>
+        <View style={st.colRank}><Text style={[st.thCell, { color: '#00E5FF' }]}>#</Text></View>
+        <View style={st.colId}><Text style={[st.thCell, { color: '#00E5FF' }]}>ID</Text></View>
+        <View style={st.colDesc}><Text style={[st.thCell, { color: '#00E5FF' }]}>DESCRIÇÃO</Text></View>
+        <View style={st.colLayer}><Text style={[st.thCell, { color: '#00E5FF', textAlign: 'center' }]}>CAMADA</Text></View>
+        <View style={st.colComposite}>
+          <TouchableOpacity onPress={() => setSortField(sortField === 'composite' ? 'rank' : 'composite')}>
+            <Text style={[st.thCell, { color: sortField === 'composite' ? '#FFD600' : '#00E5FF', textAlign: 'center' }]}>SCORE{sortField === 'composite' ? ' ▼' : ''}</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={st.colPxi}>
+          <TouchableOpacity onPress={() => setSortField(sortField === 'inherent' ? 'rank' : 'inherent')}>
+            <Text style={[st.thCell, { color: sortField === 'inherent' ? '#FFD600' : '#00E5FF', textAlign: 'center' }]}>P×I{sortField === 'inherent' ? ' ▼' : ''}</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={st.colGut}>
+          <TouchableOpacity onPress={() => setSortField(sortField === 'gut' ? 'rank' : 'gut')}>
+            <Text style={[st.thCell, { color: sortField === 'gut' ? '#FFD600' : '#00E5FF', textAlign: 'center' }]}>GUT{sortField === 'gut' ? ' ▼' : ''}</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={st.colCtrl}><Text style={[st.thCell, { color: '#00E5FF', textAlign: 'center' }]}>CTRL</Text></View>
+        <View style={st.colAppetite}><Text style={[st.thCell, { color: '#00E5FF', textAlign: 'center' }]}>STATUS</Text></View>
+        <View style={st.colWarn}><Text style={[st.thCell, { color: '#00E5FF', textAlign: 'center' }]}>⚠</Text></View>
       </View>
 
       {/* Data rows */}
       {filteredRisks.map((risk, idx) => {
         const level = getRiskLevel(risk.riscoInerente);
-        const gutLevel = getGutLevel(risk.gutScore);
-        const badgeLevel = BADGE_LEVEL_MAP[level.label] || 'low';
         const levelColor = LEVEL_COLORS[level.label] || '#6B8A7A';
-        const typeColor = getTypeColor(risk.tipoRisco);
+        const gutLevel = getGutLevel(risk.gutScore);
+        const appColor = APPETITE_COLORS[risk.appetiteStatus];
+        const layerColor = LAYER_COLORS[risk.riskLayer];
         const isEven = idx % 2 === 0;
+        const isExpanded = expandedRisk === risk.id;
 
         return (
-          <TouchableOpacity
-            key={risk.id}
-            style={[
-              styles.tableRow,
-              { borderBottomColor: '#1A3A2A20' },
-              isEven ? { backgroundColor: '#0A0E14' } : { backgroundColor: '#0D1218' },
-            ]}
-            onPress={() => router.push(`/risk/${risk.id}` as any)}
-            activeOpacity={0.55}
-          >
-            {/* ID */}
-            <View style={styles.colId}>
-              <Text style={styles.tdId}>{risk.id}</Text>
-            </View>
-
-            {/* Description - main content column */}
-            <View style={styles.colDesc}>
-              <Text style={styles.tdDesc} numberOfLines={3}>{risk.descricaoRisco}</Text>
-            </View>
-
-            {/* Type badge */}
-            <View style={[styles.colType, { alignItems: 'center' }]}>
-              <View style={[styles.typeBadge, { backgroundColor: typeColor + '15', borderColor: typeColor + '30' }]}>
-                <Text style={[styles.typeText, { color: typeColor }]} numberOfLines={1}>
-                  {abbreviateType(risk.tipoRisco)}
-                </Text>
+          <View key={risk.id}>
+            <TouchableOpacity
+              style={[st.tableRow, { borderBottomColor: '#1A3A2A20' }, isEven ? { backgroundColor: '#0A0E14' } : { backgroundColor: '#0D1218' }]}
+              onPress={() => setExpandedRisk(isExpanded ? null : risk.id)}
+              activeOpacity={0.55}
+            >
+              <View style={st.colRank}><Text style={[st.tdRank, { color: risk.globalRank <= 5 ? '#FF3D3D' : risk.globalRank <= 10 ? '#FF8C00' : '#6B8A7A' }]}>{risk.globalRank}</Text></View>
+              <View style={st.colId}><Text style={st.tdId}>{risk.id}</Text></View>
+              <View style={st.colDesc}><Text style={st.tdDesc} numberOfLines={2}>{risk.descricaoRisco}</Text></View>
+              <View style={[st.colLayer, { alignItems: 'center' }]}>
+                <View style={[st.layerBadge, { backgroundColor: layerColor + '15', borderColor: layerColor + '30' }]}>
+                  <Text style={{ color: layerColor, fontSize: 7, fontWeight: '700', fontFamily: MONO }}>{risk.riskLayer.substring(0, 5).toUpperCase()}</Text>
+                </View>
               </View>
-            </View>
-
-            {/* P x I score */}
-            <View style={[styles.colPxi, styles.cellCenter]}>
-              <View style={[styles.scoreBadge, { backgroundColor: levelColor + '18', borderColor: levelColor + '40' }]}>
-                <Text style={[styles.scoreText, { color: levelColor }]}>{risk.riscoInerente}</Text>
+              <View style={[st.colComposite, { alignItems: 'center' }]}>
+                <View style={[st.compositeBadge, { backgroundColor: appColor + '15', borderColor: appColor + '40' }]}>
+                  <Text style={{ color: appColor, fontSize: 11, fontWeight: '800', fontFamily: MONO }}>{risk.compositeScore.total.toFixed(0)}</Text>
+                </View>
               </View>
-            </View>
-
-            {/* Level badge */}
-            <View style={[styles.colLevel, styles.cellCenter]}>
-              <PulsingBadge level={badgeLevel} size="sm" pulsing={false} />
-            </View>
-
-            {/* GUT score */}
-            <View style={[styles.colGut, styles.cellCenter]}>
-              <View style={[styles.gutBadge, { backgroundColor: gutLevel.color + '15', borderColor: gutLevel.color + '35' }]}>
-                <Text style={[styles.gutText, { color: gutLevel.color }]}>{risk.gutScore}</Text>
+              <View style={[st.colPxi, st.cellCenter]}>
+                <View style={[st.scoreBadge, { backgroundColor: levelColor + '18', borderColor: levelColor + '40' }]}>
+                  <Text style={[st.scoreText, { color: levelColor }]}>{risk.riscoInerente}</Text>
+                </View>
               </View>
-            </View>
-
-            {/* Responsible */}
-            <View style={styles.colResp}>
-              <Text style={styles.tdResp} numberOfLines={2}>{abbreviateResp(risk.responsavel)}</Text>
-            </View>
-
-            {/* Treatment */}
-            <View style={[styles.colTrat, { alignItems: 'center' }]}>
-              <View style={[styles.tratBadge, { backgroundColor: '#00E5FF08', borderColor: '#00E5FF20' }]}>
-                <Text style={styles.tratText} numberOfLines={2}>{risk.tratamento || '\u2014'}</Text>
+              <View style={[st.colGut, st.cellCenter]}>
+                <View style={[st.gutBadge, { backgroundColor: gutLevel.color + '15', borderColor: gutLevel.color + '35' }]}>
+                  <Text style={[st.gutText, { color: gutLevel.color }]}>{risk.gutScore}</Text>
+                </View>
               </View>
-            </View>
-          </TouchableOpacity>
+              <View style={[st.colCtrl, st.cellCenter]}>
+                <Text style={{ color: risk.controlEffectivenessScore >= 50 ? '#00FF88' : risk.controlEffectivenessScore >= 30 ? '#FFD600' : '#FF3D3D', fontSize: 10, fontWeight: '700', fontFamily: MONO }}>{risk.controlEffectivenessScore}%</Text>
+              </View>
+              <View style={[st.colAppetite, { alignItems: 'center' }]}>
+                <View style={[st.appetiteBadge, { backgroundColor: appColor + '15', borderColor: appColor + '30' }]}>
+                  <Text style={{ color: appColor, fontSize: 7, fontWeight: '700', fontFamily: MONO }}>{APPETITE_LABELS[risk.appetiteStatus].substring(0, 5).toUpperCase()}</Text>
+                </View>
+              </View>
+              <View style={[st.colWarn, st.cellCenter]}>
+                {risk.earlyWarnings.length > 0 && (
+                  <View style={[st.warnBadge, { backgroundColor: '#FF3D3D20' }]}>
+                    <Text style={{ color: '#FF3D3D', fontSize: 9, fontWeight: '800', fontFamily: MONO }}>{risk.earlyWarnings.length}</Text>
+                  </View>
+                )}
+              </View>
+            </TouchableOpacity>
+            {/* Expanded explainability row */}
+            {isExpanded && (
+              <View style={[st.expandRow, { backgroundColor: '#0A1520', borderBottomColor: '#00E5FF20' }]}>
+                <View style={st.expandGrid}>
+                  <View style={st.expandCol}>
+                    <Text style={[st.expandLabel, { color: '#00E5FF' }]}>FÓRMULA</Text>
+                    <Text style={[st.expandValue, { color: '#E0F0E0' }]}>{risk.compositeScore.formula}</Text>
+                    <Text style={[st.expandLabel, { color: '#00E5FF', marginTop: 6 }]}>DRIVERS</Text>
+                    {risk.compositeScore.drivers.map((d, i) => <Text key={i} style={[st.expandValue, { color: '#B0C8B8' }]}>• {d}</Text>)}
+                  </View>
+                  <View style={st.expandCol}>
+                    <Text style={[st.expandLabel, { color: '#00E5FF' }]}>INDICADORES</Text>
+                    {risk.indicators.slice(0, 3).map((ind, i) => (
+                      <View key={i} style={st.indicatorRow}>
+                        <View style={[st.indicatorDot, { backgroundColor: ind.status === 'critical' ? '#FF3D3D' : ind.status === 'warning' ? '#FFD600' : '#00FF88' }]} />
+                        <Text style={{ color: '#B0C8B8', fontSize: 9, fontFamily: MONO, flex: 1 }}>{ind.name}</Text>
+                        <Text style={{ color: ind.type === 'leading' ? '#00E5FF' : '#FF8C00', fontSize: 8, fontFamily: MONO }}>{ind.type.toUpperCase()}</Text>
+                      </View>
+                    ))}
+                    {risk.earlyWarnings.length > 0 && (
+                      <>
+                        <Text style={[st.expandLabel, { color: '#FF3D3D', marginTop: 6 }]}>ALERTAS</Text>
+                        {risk.earlyWarnings.slice(0, 2).map((w, i) => <Text key={i} style={{ color: '#FF8C00', fontSize: 8, lineHeight: 12 }}>⚠ {w}</Text>)}
+                      </>
+                    )}
+                  </View>
+                </View>
+                <TouchableOpacity onPress={() => router.push(`/risk/${risk.id}` as any)} style={st.expandLink} activeOpacity={0.7}>
+                  <Text style={{ color: '#00E5FF', fontSize: 10, fontWeight: '700', fontFamily: MONO }}>VER DETALHES COMPLETOS →</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
         );
       })}
       {filteredRisks.length === 0 && (
-        <View style={styles.emptyTable}>
-          <Text style={{ color: '#6B8A7A', fontSize: 14, fontFamily: 'monospace' }}>NENHUM RISCO ENCONTRADO</Text>
-        </View>
+        <View style={st.emptyTable}><Text style={{ color: '#6B8A7A', fontSize: 14, fontFamily: MONO }}>NENHUM RISCO ENCONTRADO</Text></View>
       )}
     </View>
   );
 
-  const renderMobileCard = useCallback(({ item }: { item: Risk }) => {
-    const level = getRiskLevel(item.riscoInerente);
-    const gutLevel = getGutLevel(item.gutScore);
-    const badgeLevel = BADGE_LEVEL_MAP[level.label] || 'low';
+  const renderMobileCard = useCallback(({ item }: { item: EnrichedRisk }) => {
+    const appColor = APPETITE_COLORS[item.appetiteStatus];
     return (
-      <TouchableOpacity
-        style={[styles.mobileCard, { backgroundColor: '#111820', borderColor: '#1A3A2A' }]}
-        onPress={() => router.push(`/risk/${item.id}` as any)}
-        activeOpacity={0.7}
-      >
-        <View style={styles.mobileCardHeader}>
-          <View style={styles.mobileCardLeft}>
-            <Text style={[styles.mobileRiskId, { color: '#00E5FF', fontFamily: 'monospace' }]}>{item.id}</Text>
-            <PulsingBadge level={badgeLevel} size="sm" pulsing={badgeLevel === 'critical'} />
+      <TouchableOpacity style={[st.mobileCard, { backgroundColor: '#111820', borderColor: appColor + '30' }]} onPress={() => router.push(`/risk/${item.id}` as any)} activeOpacity={0.7}>
+        <View style={st.mobileCardHeader}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Text style={{ color: '#6B8A7A', fontSize: 10, fontFamily: MONO }}>#{item.globalRank}</Text>
+            <Text style={{ color: '#00E5FF', fontSize: 13, fontWeight: '700', fontFamily: MONO }}>{item.id}</Text>
           </View>
-          <View style={styles.mobileCardRight}>
-            <Text style={[styles.mobileScore, { color: '#6B8A7A', fontFamily: 'monospace' }]}>P\u00d7I: {item.riscoInerente}</Text>
-            <View style={[styles.gutBadge, { backgroundColor: gutLevel.color + '15', borderColor: gutLevel.color + '30' }]}>
-              <Text style={[styles.gutText, { color: gutLevel.color }]}>GUT: {item.gutScore}</Text>
-            </View>
+          <View style={[st.compositeBadge, { backgroundColor: appColor + '15', borderColor: appColor + '40' }]}>
+            <Text style={{ color: appColor, fontSize: 12, fontWeight: '800', fontFamily: MONO }}>{item.compositeScore.total.toFixed(0)}</Text>
           </View>
         </View>
-        <Text style={[styles.mobileDesc, { color: '#E0F0E0' }]} numberOfLines={2}>{item.descricaoRisco}</Text>
-        <View style={styles.mobileFooter}>
-          <Text style={[styles.mobileFooterText, { color: '#6B8A7A', fontFamily: 'monospace' }]}>{item.fonteDeRisco}</Text>
-          <Text style={[styles.mobileFooterText, { color: '#6B8A7A', fontFamily: 'monospace' }]}>{item.responsavel || '\u2014'}</Text>
+        <Text style={{ color: '#E0F0E0', fontSize: 13, lineHeight: 18, marginBottom: 6 }} numberOfLines={2}>{item.descricaoRisco}</Text>
+        <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap' }}>
+          <Text style={{ color: '#6B8A7A', fontSize: 9, fontFamily: MONO }}>P×I:{item.riscoInerente}</Text>
+          <Text style={{ color: '#6B8A7A', fontSize: 9, fontFamily: MONO }}>GUT:{item.gutScore}</Text>
+          <Text style={{ color: '#6B8A7A', fontSize: 9, fontFamily: MONO }}>CTRL:{item.controlEffectivenessScore}%</Text>
+          {item.earlyWarnings.length > 0 && <Text style={{ color: '#FF3D3D', fontSize: 9, fontFamily: MONO }}>⚠{item.earlyWarnings.length}</Text>}
         </View>
       </TouchableOpacity>
     );
   }, [router]);
 
   if (loading) {
-    return (
-      <ScreenContainer className="flex-1 items-center justify-center">
-        <StatusIndicator status="monitoring" label="CARREGANDO DADOS..." />
-      </ScreenContainer>
-    );
+    return <ScreenContainer className="flex-1 items-center justify-center"><StatusIndicator status="monitoring" label="CARREGANDO DADOS..." /></ScreenContainer>;
   }
 
   return (
     <ScreenContainer className="flex-1" edges={isDesktop ? [] : ["top", "left", "right"]}>
       {/* Header */}
-      <Animated.View entering={FadeInDown.duration(400)} style={[styles.header, isDesktop && styles.headerDesktop]}>
-        <View style={styles.headerLeft}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-            <Text style={[styles.pageTitle, { color: '#E0F0E0', fontFamily: Platform.OS === 'web' ? 'monospace' : undefined }]}>Riscos Cadastrados</Text>
+      <Animated.View entering={FadeInDown.duration(400)} style={[st.header, isDesktop && st.headerDesktop]}>
+        <View style={st.headerLeft}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <Text style={[st.pageTitle, { color: '#E0F0E0', fontFamily: MONO }]}>Análise de Riscos</Text>
             <StatusIndicator status="active" showLabel={false} />
           </View>
-          <Text style={[styles.pageSubtitle, { color: '#6B8A7A', fontFamily: 'monospace' }]}>{risks.length} riscos no registro</Text>
+          <Text style={{ color: '#6B8A7A', fontSize: 10, fontFamily: MONO }}>
+            {filteredRisks.length}/{enrichedRisks.length} riscos | Cenário: {config.scenarioMultipliers[config.scenario].label}
+            {pm ? ` | Score Médio: ${pm.averageCompositeScore.toFixed(1)}` : ''}
+          </Text>
         </View>
-        <TouchableOpacity
-          style={[styles.addButton, { backgroundColor: '#00E5FF20', borderWidth: 1, borderColor: '#00E5FF40' }]}
-          onPress={() => router.push('/risk/new' as any)}
-          activeOpacity={0.8}
-        >
-          <IconSymbol name="plus.circle.fill" size={18} color="#00E5FF" />
-          <Text style={[styles.addButtonText, { color: '#00E5FF', fontFamily: 'monospace' }]}>NOVO RISCO</Text>
-        </TouchableOpacity>
+        {/* View mode switcher */}
+        <View style={{ flexDirection: 'row', gap: 4 }}>
+          {([['table', 'TABELA'], ['heatmap', 'HEATMAP'], ['clustering', 'CLUSTERS']] as [ViewMode, string][]).map(([mode, label]) => (
+            <TouchableOpacity key={mode} onPress={() => setViewMode(mode)} style={[st.viewModeBtn, { borderColor: viewMode === mode ? '#00E5FF' : '#1A3A2A', backgroundColor: viewMode === mode ? '#00E5FF10' : 'transparent' }]} activeOpacity={0.7}>
+              <Text style={{ color: viewMode === mode ? '#00E5FF' : '#6B8A7A', fontSize: 9, fontWeight: '700', fontFamily: MONO }}>{label}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
       </Animated.View>
 
       {/* Search & Filters */}
-      <View style={[styles.filtersArea, isDesktop && styles.filtersAreaDesktop]}>
-        <View style={[styles.searchBox, { backgroundColor: '#111820', borderColor: '#1A3A2A' }]}>
-          <IconSymbol name="magnifyingglass" size={18} color="#6B8A7A" />
-          <TextInput
-            style={[styles.searchInput, { color: '#E0F0E0', fontFamily: 'monospace' }]}
-            placeholder="Buscar por ID, descri\u00e7\u00e3o, fonte ou amea\u00e7a..."
-            placeholderTextColor="#6B8A7A"
-            value={search}
-            onChangeText={setSearch}
-            returnKeyType="done"
-          />
-          {search.length > 0 && (
-            <TouchableOpacity onPress={() => setSearch('')} activeOpacity={0.7}>
-              <IconSymbol name="xmark" size={16} color="#6B8A7A" />
-            </TouchableOpacity>
-          )}
+      <View style={[st.filtersArea, isDesktop && st.filtersAreaDesktop]}>
+        <View style={[st.searchBox, { backgroundColor: '#111820', borderColor: '#1A3A2A' }]}>
+          <IconSymbol name="magnifyingglass" size={16} color="#6B8A7A" />
+          <TextInput style={[st.searchInput, { color: '#E0F0E0', fontFamily: MONO }]} placeholder="Buscar por ID, descrição, fonte..." placeholderTextColor="#6B8A7A" value={search} onChangeText={setSearch} returnKeyType="done" />
+          {search.length > 0 && <TouchableOpacity onPress={() => setSearch('')} activeOpacity={0.7}><IconSymbol name="xmark" size={14} color="#6B8A7A" /></TouchableOpacity>}
         </View>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterChips}>
-          {['Cr\u00edtico', 'Alto', 'M\u00e9dio', 'Baixo'].map(level => {
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={st.filterChips}>
+          {['Crítico', 'Alto', 'Médio', 'Baixo'].map(level => {
             const isActive = filterLevel === level;
             const chipColor = LEVEL_COLORS[level] || '#6B8A7A';
             return (
-              <TouchableOpacity
-                key={level}
-                style={[
-                  styles.chip,
-                  {
-                    borderColor: isActive ? chipColor : '#1A3A2A',
-                    backgroundColor: isActive ? chipColor + '20' : '#111820',
-                  },
-                ]}
-                onPress={() => setFilterLevel(filterLevel === level ? null : level)}
-                activeOpacity={0.7}
-              >
-                <View style={[styles.chipDot, { backgroundColor: chipColor }]} />
-                <Text style={[styles.chipText, { color: isActive ? chipColor : '#6B8A7A', fontFamily: 'monospace' }]}>{level}</Text>
+              <TouchableOpacity key={level} style={[st.chip, { borderColor: isActive ? chipColor : '#1A3A2A', backgroundColor: isActive ? chipColor + '20' : '#111820' }]} onPress={() => setFilterLevel(filterLevel === level ? null : level)} activeOpacity={0.7}>
+                <View style={[st.chipDot, { backgroundColor: chipColor }]} />
+                <Text style={[st.chipText, { color: isActive ? chipColor : '#6B8A7A', fontFamily: MONO }]}>{level}</Text>
               </TouchableOpacity>
             );
           })}
-          <View style={[styles.chipDivider, { backgroundColor: '#1A3A2A' }]} />
-          {TIPOS_DE_RISCO.map(tipo => {
+          <View style={[st.chipDivider, { backgroundColor: '#1A3A2A' }]} />
+          {TIPOS_DE_RISCO.slice(0, 6).map(tipo => {
             const isActive = filterType === tipo;
             return (
-              <TouchableOpacity
-                key={tipo}
-                style={[
-                  styles.chip,
-                  {
-                    borderColor: isActive ? '#00E5FF' : '#1A3A2A',
-                    backgroundColor: isActive ? '#00E5FF20' : '#111820',
-                  },
-                ]}
-                onPress={() => setFilterType(filterType === tipo ? null : tipo)}
-                activeOpacity={0.7}
-              >
-                <Text style={[styles.chipText, { color: isActive ? '#00E5FF' : '#6B8A7A', fontFamily: 'monospace' }]} numberOfLines={1}>
-                  {abbreviateType(tipo)}
-                </Text>
+              <TouchableOpacity key={tipo} style={[st.chip, { borderColor: isActive ? '#00E5FF' : '#1A3A2A', backgroundColor: isActive ? '#00E5FF20' : '#111820' }]} onPress={() => setFilterType(filterType === tipo ? null : tipo)} activeOpacity={0.7}>
+                <Text style={[st.chipText, { color: isActive ? '#00E5FF' : '#6B8A7A', fontFamily: MONO }]} numberOfLines={1}>{abbreviateType(tipo)}</Text>
               </TouchableOpacity>
             );
           })}
@@ -325,79 +427,91 @@ export default function RisksScreen() {
 
       {/* Content */}
       {isDesktop ? (
-        <ScrollView style={{ flex: 1 }} contentContainerStyle={[styles.tableArea, isDesktop && styles.tableAreaDesktop]}>
-          {renderDesktopTable()}
-          <View style={{ height: 40 }} />
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={[st.tableArea, isDesktop && st.tableAreaDesktop]}>
+          {viewMode === 'heatmap' ? renderHeatmap() : viewMode === 'clustering' ? renderClustering() : renderDesktopTable()}
+          <View style={{ height: 20 }} />
         </ScrollView>
       ) : (
-        <FlatList
-          data={filteredRisks}
-          renderItem={renderMobileCard}
-          keyExtractor={item => item.id}
-          contentContainerStyle={styles.mobileList}
-          ListEmptyComponent={
-            <View style={styles.emptyTable}>
-              <Text style={{ color: '#6B8A7A', fontSize: 14, fontFamily: 'monospace' }}>NENHUM RISCO ENCONTRADO</Text>
-            </View>
-          }
-        />
+        <FlatList data={filteredRisks} renderItem={renderMobileCard} keyExtractor={item => item.id} contentContainerStyle={st.mobileList}
+          ListEmptyComponent={<View style={st.emptyTable}><Text style={{ color: '#6B8A7A', fontSize: 14, fontFamily: MONO }}>NENHUM RISCO ENCONTRADO</Text></View>} />
       )}
     </ScreenContainer>
   );
 }
 
-const styles = StyleSheet.create({
-  header: { paddingHorizontal: 10, paddingTop: 6, paddingBottom: 2, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  headerDesktop: { paddingHorizontal: 14, paddingTop: 6 },
+const st = StyleSheet.create({
+  header: { paddingHorizontal: 10, paddingTop: 4, paddingBottom: 2, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+  headerDesktop: { paddingHorizontal: 14, paddingTop: 4 },
   headerLeft: { flex: 1 },
-  pageTitle: { fontSize: 18, fontWeight: '800', letterSpacing: 1 },
-  pageSubtitle: { fontSize: 11, marginTop: 1, letterSpacing: 0.5 },
-  addButton: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 6 },
-  addButtonText: { fontSize: 11, fontWeight: '700', letterSpacing: 1 },
+  pageTitle: { fontSize: 16, fontWeight: '800', letterSpacing: 1 },
+  viewModeBtn: { paddingHorizontal: 8, paddingVertical: 5, borderRadius: 4, borderWidth: 1 },
   filtersArea: { paddingHorizontal: 10, marginBottom: 2 },
   filtersAreaDesktop: { paddingHorizontal: 14 },
-  searchBox: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderRadius: 6, paddingHorizontal: 10, paddingVertical: 6, gap: 8, marginBottom: 4 },
-  searchInput: { flex: 1, fontSize: 12 },
-  filterChips: { flexDirection: 'row', gap: 4, paddingBottom: 2 },
-  chip: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4, borderWidth: 1 },
-  chipDot: { width: 6, height: 6, borderRadius: 3 },
-  chipText: { fontSize: 10, fontWeight: '600', letterSpacing: 0.5 },
-  chipDivider: { width: 1, marginHorizontal: 4, alignSelf: 'stretch' },
+  searchBox: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 5, gap: 6, marginBottom: 3 },
+  searchInput: { flex: 1, fontSize: 11 },
+  filterChips: { flexDirection: 'row', gap: 3, paddingBottom: 2 },
+  chip: { flexDirection: 'row', alignItems: 'center', gap: 3, paddingHorizontal: 6, paddingVertical: 3, borderRadius: 4, borderWidth: 1 },
+  chipDot: { width: 5, height: 5, borderRadius: 3 },
+  chipText: { fontSize: 9, fontWeight: '600', letterSpacing: 0.3 },
+  chipDivider: { width: 1, marginHorizontal: 3, alignSelf: 'stretch' },
   tableArea: { paddingHorizontal: 4 },
   tableAreaDesktop: { paddingHorizontal: 8 },
   tableCard: { borderWidth: 1, borderRadius: 8, overflow: 'hidden' },
-  tableHeaderRow: { flexDirection: 'row', paddingHorizontal: 4, paddingVertical: 6, borderBottomWidth: 2, alignItems: 'center' },
-  thCell: { fontSize: 9, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.3, fontFamily: 'monospace' },
-  colId: { width: 38, paddingHorizontal: 2 },
-  colDesc: { flex: 3, paddingHorizontal: 3 },
-  colType: { width: 82, paddingHorizontal: 2 },
-  colPxi: { width: 34, paddingHorizontal: 1 },
-  colLevel: { width: 52, paddingHorizontal: 1 },
-  colGut: { width: 34, paddingHorizontal: 1 },
-  colResp: { flex: 1.5, paddingHorizontal: 2 },
-  colTrat: { width: 90, paddingHorizontal: 1 },
-  tableRow: { flexDirection: 'row', paddingHorizontal: 4, paddingVertical: 4, borderBottomWidth: 1, alignItems: 'center', minHeight: 36 },
+  tableHeaderRow: { flexDirection: 'row', paddingHorizontal: 3, paddingVertical: 5, borderBottomWidth: 2, alignItems: 'center' },
+  thCell: { fontSize: 8, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.3, fontFamily: 'monospace' },
+  colRank: { width: 24, paddingHorizontal: 1 },
+  colId: { width: 34, paddingHorizontal: 1 },
+  colDesc: { flex: 3, paddingHorizontal: 2 },
+  colLayer: { width: 48, paddingHorizontal: 1 },
+  colComposite: { width: 42, paddingHorizontal: 1 },
+  colPxi: { width: 30, paddingHorizontal: 1 },
+  colGut: { width: 30, paddingHorizontal: 1 },
+  colCtrl: { width: 34, paddingHorizontal: 1 },
+  colAppetite: { width: 46, paddingHorizontal: 1 },
+  colWarn: { width: 22, paddingHorizontal: 1 },
+  tableRow: { flexDirection: 'row', paddingHorizontal: 3, paddingVertical: 3, borderBottomWidth: 1, alignItems: 'center', minHeight: 32 },
   cellCenter: { justifyContent: 'center', alignItems: 'center' },
-  tdId: { fontSize: 10, fontWeight: '700', fontFamily: 'monospace', color: '#00E5FF' },
-  tdDesc: { fontSize: 10, lineHeight: 14, color: '#E0F0E0' },
-  typeBadge: { paddingHorizontal: 4, paddingVertical: 2, borderRadius: 3, borderWidth: 1, alignItems: 'center' },
-  typeText: { fontSize: 8, fontWeight: '700', fontFamily: 'monospace', textAlign: 'center' },
-  scoreBadge: { paddingHorizontal: 4, paddingVertical: 2, borderRadius: 3, borderWidth: 1, minWidth: 28, alignItems: 'center' },
-  scoreText: { fontSize: 11, fontWeight: '800', fontFamily: 'monospace' },
-  gutBadge: { paddingHorizontal: 4, paddingVertical: 2, borderRadius: 3, borderWidth: 1, minWidth: 28, alignItems: 'center' },
-  gutText: { fontSize: 10, fontWeight: '700', fontFamily: 'monospace' },
-  tdResp: { fontSize: 9, lineHeight: 12, color: '#B0C8B8', fontFamily: 'monospace' },
-  tratBadge: { paddingHorizontal: 3, paddingVertical: 2, borderRadius: 3, borderWidth: 1 },
-  tratText: { fontSize: 8, fontWeight: '600', fontFamily: 'monospace', color: '#6BCAAA', textAlign: 'center', lineHeight: 11 },
-  emptyTable: { padding: 40, alignItems: 'center' },
-  mobileList: { paddingHorizontal: 16, paddingBottom: 80 },
-  mobileCard: { borderWidth: 1, borderRadius: 10, padding: 12, marginBottom: 8 },
-  mobileCardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  mobileCardLeft: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  mobileCardRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  mobileRiskId: { fontSize: 14, fontWeight: '700' },
-  mobileScore: { fontSize: 10 },
-  mobileDesc: { fontSize: 14, lineHeight: 20, marginBottom: 8 },
-  mobileFooter: { flexDirection: 'row', justifyContent: 'space-between' },
-  mobileFooterText: { fontSize: 11 },
+  tdRank: { fontSize: 10, fontWeight: '800', fontFamily: 'monospace', textAlign: 'center' },
+  tdId: { fontSize: 9, fontWeight: '700', fontFamily: 'monospace', color: '#00E5FF' },
+  tdDesc: { fontSize: 9, lineHeight: 13, color: '#E0F0E0' },
+  layerBadge: { paddingHorizontal: 3, paddingVertical: 2, borderRadius: 3, borderWidth: 1 },
+  compositeBadge: { paddingHorizontal: 5, paddingVertical: 2, borderRadius: 4, borderWidth: 1, minWidth: 30, alignItems: 'center' },
+  scoreBadge: { paddingHorizontal: 3, paddingVertical: 2, borderRadius: 3, borderWidth: 1, minWidth: 24, alignItems: 'center' },
+  scoreText: { fontSize: 10, fontWeight: '800', fontFamily: 'monospace' },
+  gutBadge: { paddingHorizontal: 3, paddingVertical: 2, borderRadius: 3, borderWidth: 1, minWidth: 24, alignItems: 'center' },
+  gutText: { fontSize: 9, fontWeight: '700', fontFamily: 'monospace' },
+  appetiteBadge: { paddingHorizontal: 3, paddingVertical: 2, borderRadius: 3, borderWidth: 1 },
+  warnBadge: { width: 18, height: 18, borderRadius: 9, justifyContent: 'center', alignItems: 'center' },
+  expandRow: { paddingHorizontal: 8, paddingVertical: 8, borderBottomWidth: 1 },
+  expandGrid: { flexDirection: 'row', gap: 16 },
+  expandCol: { flex: 1 },
+  expandLabel: { fontSize: 9, fontWeight: '700', fontFamily: 'monospace', letterSpacing: 0.5, marginBottom: 2 },
+  expandValue: { fontSize: 9, lineHeight: 13, fontFamily: 'monospace' },
+  expandLink: { marginTop: 6, paddingTop: 6, borderTopWidth: 1, borderTopColor: '#1A3A2A30' },
+  indicatorRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 2 },
+  indicatorDot: { width: 5, height: 5, borderRadius: 3 },
+  emptyTable: { padding: 30, alignItems: 'center' },
+  mobileList: { paddingHorizontal: 12, paddingBottom: 80 },
+  mobileCard: { borderWidth: 1, borderRadius: 10, padding: 10, marginBottom: 6 },
+  mobileCardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
+  // Heatmap styles
+  sectionTitle: { fontSize: 12, fontWeight: '800', letterSpacing: 0.5, marginBottom: 4 },
+  sectionDesc: { fontSize: 10, marginBottom: 8 },
+  heatmapContainer: { borderWidth: 1, borderRadius: 8, padding: 10 },
+  heatmapGrid: { flexDirection: 'row' },
+  heatmapYAxis: { width: 16, justifyContent: 'space-around', alignItems: 'center' },
+  axisLabel: { fontSize: 9, fontWeight: '600' },
+  heatmapRow: { flexDirection: 'row', flex: 1 },
+  heatmapCell: { flex: 1, aspectRatio: 1, borderWidth: 0.5, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', gap: 2, padding: 2 },
+  heatmapDot: { borderWidth: 1, justifyContent: 'center', alignItems: 'center' },
+  heatmapXAxis: { flexDirection: 'row', marginTop: 2 },
+  heatmapLegend: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 6 },
+  expandedDetail: { marginTop: 8, padding: 8, borderWidth: 1, borderRadius: 6 },
+  // Clustering styles
+  clusterCard: { borderWidth: 1, borderRadius: 8, padding: 8, marginHorizontal: 4 },
+  clusterHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
+  clusterBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 4 },
+  clusterRow: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 3 },
+  clusterScoreBar: { width: 60, height: 6, borderRadius: 3, overflow: 'hidden' },
+  warningDot: { width: 6, height: 6, borderRadius: 3 },
 });

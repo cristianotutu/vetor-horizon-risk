@@ -4,10 +4,11 @@ import { GlowCard } from "@/components/ui/glow-card";
 import { StatusIndicator } from "@/components/ui/status-indicator";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { TABELA_IMPACTO_DETALHADA, NIVEIS_PROBABILIDADE, TABELA_GUT, getMatrixColor } from "@/lib/models";
+import { useEngine } from "@/lib/engine-context";
 import { useState} from "react";
 import Animated, { FadeInDown } from "react-native-reanimated";
 
-type TabKey = 'matrix' | 'impacto' | 'probabilidade' | 'gut';
+type TabKey = 'matrix' | 'impacto' | 'probabilidade' | 'gut' | 'engine';
 
 const MONO = Platform.OS === 'web' ? 'monospace' : undefined;
 
@@ -46,6 +47,7 @@ export default function TablesScreen() {
     { key: 'impacto', label: 'Impacto', icon: 'exclamationmark.triangle.fill', desc: '6 dimensões de impacto' },
     { key: 'probabilidade', label: 'Probabilidade', icon: 'chart.bar.fill', desc: '5 níveis de probabilidade' },
     { key: 'gut', label: 'GUT', icon: 'gauge.medium', desc: 'Gravidade × Urgência × Tendência' },
+    { key: 'engine', label: 'Engine', icon: 'chevron.left.forwardslash.chevron.right', desc: 'Ranking, métricas derivadas e distribuição do Risk Engine' },
   ];
 
   return (
@@ -87,6 +89,7 @@ export default function TablesScreen() {
         {activeTab === 'impacto' && <ImpactoTab isDesktop={isDesktop} expandedLevel={expandedLevel} setExpandedLevel={setExpandedLevel} />}
         {activeTab === 'probabilidade' && <ProbabilidadeTab isDesktop={isDesktop} />}
         {activeTab === 'gut' && <GutTab isDesktop={isDesktop} expandedLevel={expandedLevel} setExpandedLevel={setExpandedLevel} />}
+        {activeTab === 'engine' && <EngineTab isDesktop={isDesktop} />}
 
         <View style={{ height: 40 }} />
       </ScrollView>
@@ -469,6 +472,145 @@ function GutTab({ isDesktop, expandedLevel, setExpandedLevel }: { isDesktop: boo
                 <Text style={[s.formulaBoxLabel, { color: NEON.green }]}>GUT</Text>
                 <Text style={s.formulaBoxDesc}>Score</Text>
                 <Text style={s.formulaBoxRange}>1 – 125</Text>
+              </View>
+            </View>
+          </View>
+        </GlowCard>
+      </Animated.View>
+    </View>
+  );
+}
+
+function EngineTab({ isDesktop }: { isDesktop: boolean }) {
+  const { enrichedRisks, portfolioMetrics, config } = useEngine();
+  const sorted = [...enrichedRisks].sort((a, b) => b.compositeScore.total - a.compositeScore.total);
+  const pm = portfolioMetrics;
+
+  const layerColors: Record<string, string> = { 'Regulatório': '#8B5CF6', 'Operacional': '#FF8C00', 'Estratégico': '#3B82F6', 'Reputacional': '#F43F5E' };
+  const layerLabels: Record<string, string> = { 'Regulatório': 'Regulatório', 'Operacional': 'Operacional', 'Estratégico': 'Estratégico', 'Reputacional': 'Reputacional' };
+  const appetiteColors: Record<string, string> = { acceptable: '#00FF88', tolerable: '#FFD600', intolerable: '#FF3D3D' };
+  const appetiteLabels: Record<string, string> = { acceptable: 'Aceitável', tolerable: 'Tolerável', intolerable: 'Intolerável' };
+
+  return (
+    <View style={s.section}>
+      <Animated.View entering={FadeInDown.duration(500).delay(200)}>
+        <GlowCard variant="default">
+          <View style={s.cardHeader}>
+            <Text style={s.cardTitle}>RISK ENGINE — MÉTRICAS DERIVADAS</Text>
+            <StatusIndicator status="active" label={config.scenarioMultipliers[config.scenario].label.toUpperCase()} />
+          </View>
+          <Text style={s.cardDesc}>
+            Ranking global por Composite Score, distribuição por camada de risco e status de apetite. Dados calculados pelo Risk Engine ICAPT v5.
+          </Text>
+
+          {/* Portfolio Summary */}
+          <View style={{ flexDirection: isDesktop ? 'row' : 'column', gap: 8, marginBottom: 12 }}>
+            {[
+              { label: 'COMPOSITE MÉDIO', value: pm ? pm.averageCompositeScore.toFixed(1) : '0', color: NEON.cyan },
+              { label: 'CONFIANÇA MÉDIA', value: pm ? `${pm.averageConfidence}%` : '0%', color: pm && pm.averageConfidence >= 70 ? '#00FF88' : '#FFD600' },
+              { label: 'ALERTAS', value: pm ? `${pm.totalWarnings}` : '0', color: pm && pm.totalWarnings > 5 ? '#FF3D3D' : '#FFD600' },
+              { label: 'CORRELAÇÃO', value: `${(config.correlationFactor * 100).toFixed(0)}%`, color: '#A855F7' },
+            ].map(item => (
+              <View key={item.label} style={{ flex: 1, backgroundColor: item.color + '08', borderWidth: 1, borderColor: item.color + '25', borderRadius: 8, padding: 10, alignItems: 'center' }}>
+                <Text style={{ color: item.color, fontSize: 20, fontWeight: '800', fontFamily: MONO }}>{item.value}</Text>
+                <Text style={{ color: NEON.muted, fontSize: 8, fontWeight: '700', fontFamily: MONO, marginTop: 2 }}>{item.label}</Text>
+              </View>
+            ))}
+          </View>
+
+          {/* Distribution by Layer */}
+          <Text style={{ color: NEON.cyan, fontSize: 10, fontWeight: '700', fontFamily: MONO, letterSpacing: 1, marginBottom: 6 }}>DISTRIBUIÇÃO POR CAMADA DE RISCO</Text>
+          <View style={{ flexDirection: 'row', gap: 6, marginBottom: 12 }}>
+            {Object.entries(pm?.byLayer ?? {}).map(([layer, count]) => (
+              <View key={layer} style={{ flex: 1, backgroundColor: (layerColors[layer] || NEON.muted) + '10', borderWidth: 1, borderColor: (layerColors[layer] || NEON.muted) + '30', borderRadius: 6, padding: 8, alignItems: 'center' }}>
+                <Text style={{ color: layerColors[layer] || NEON.muted, fontSize: 18, fontWeight: '800', fontFamily: MONO }}>{count as number}</Text>
+                <Text style={{ color: NEON.muted, fontSize: 8, fontFamily: MONO, marginTop: 2 }}>{layerLabels[layer] || layer}</Text>
+              </View>
+            ))}
+          </View>
+
+          {/* Distribution by Appetite */}
+          <Text style={{ color: NEON.cyan, fontSize: 10, fontWeight: '700', fontFamily: MONO, letterSpacing: 1, marginBottom: 6 }}>STATUS DE APETITE DE RISCO</Text>
+          <View style={{ flexDirection: 'row', gap: 6, marginBottom: 12 }}>
+            {Object.entries(pm?.byAppetite ?? {}).map(([status, count]) => (
+              <View key={status} style={{ flex: 1, backgroundColor: (appetiteColors[status] || NEON.muted) + '10', borderWidth: 1, borderColor: (appetiteColors[status] || NEON.muted) + '30', borderRadius: 6, padding: 8, alignItems: 'center' }}>
+                <Text style={{ color: appetiteColors[status] || NEON.muted, fontSize: 18, fontWeight: '800', fontFamily: MONO }}>{count as number}</Text>
+                <Text style={{ color: NEON.muted, fontSize: 8, fontFamily: MONO, marginTop: 2 }}>{appetiteLabels[status] || status}</Text>
+              </View>
+            ))}
+          </View>
+
+          {/* Ranking Table */}
+          <Text style={{ color: NEON.cyan, fontSize: 10, fontWeight: '700', fontFamily: MONO, letterSpacing: 1, marginBottom: 6 }}>RANKING GLOBAL — COMPOSITE SCORE</Text>
+          <View style={{ backgroundColor: NEON.headerBg, borderRadius: 8, borderWidth: 1, borderColor: NEON.cardBorder, overflow: 'hidden' }}>
+            {/* Header */}
+            <View style={{ flexDirection: 'row', backgroundColor: NEON.card, paddingHorizontal: 8, paddingVertical: 5, borderBottomWidth: 1, borderBottomColor: NEON.cardBorder }}>
+              <Text style={{ width: 24, color: NEON.muted, fontSize: 8, fontWeight: '700', fontFamily: MONO }}>#</Text>
+              <Text style={{ width: 42, color: NEON.cyan, fontSize: 8, fontWeight: '700', fontFamily: MONO }}>ID</Text>
+              <Text style={{ flex: 1, color: NEON.cyan, fontSize: 8, fontWeight: '700', fontFamily: MONO }}>RISCO</Text>
+              <Text style={{ width: 40, color: '#FF3D3D', fontSize: 8, fontWeight: '700', fontFamily: MONO, textAlign: 'center' }}>P×I</Text>
+              <Text style={{ width: 35, color: '#FF8C00', fontSize: 8, fontWeight: '700', fontFamily: MONO, textAlign: 'center' }}>GUT</Text>
+              <Text style={{ width: 45, color: NEON.cyan, fontSize: 8, fontWeight: '700', fontFamily: MONO, textAlign: 'center' }}>SCORE</Text>
+              <Text style={{ width: 55, color: '#FFD600', fontSize: 8, fontWeight: '700', fontFamily: MONO, textAlign: 'center' }}>CAMADA</Text>
+              <Text style={{ width: 55, color: '#00FF88', fontSize: 8, fontWeight: '700', fontFamily: MONO, textAlign: 'center' }}>APETITE</Text>
+            </View>
+            {/* Rows */}
+            {sorted.map((r, i) => {
+              const lc = layerColors[r.riskLayer] || NEON.muted;
+              const ac = appetiteColors[r.appetiteStatus] || NEON.muted;
+              return (
+                <View key={r.id} style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8, paddingVertical: 4, borderBottomWidth: 1, borderBottomColor: NEON.cardBorder + '40', backgroundColor: i % 2 === 0 ? NEON.headerBg : NEON.card }}>
+                  <Text style={{ width: 24, color: NEON.muted, fontSize: 9, fontWeight: '700', fontFamily: MONO }}>{i + 1}</Text>
+                  <Text style={{ width: 42, color: NEON.text, fontSize: 9, fontWeight: '700', fontFamily: MONO }}>{r.id}</Text>
+                  <Text style={{ flex: 1, color: NEON.muted, fontSize: 8, fontFamily: MONO }} numberOfLines={1}>{r.descricaoRisco.substring(0, 30)}</Text>
+                  <Text style={{ width: 40, color: '#FF3D3D', fontSize: 9, fontWeight: '700', fontFamily: MONO, textAlign: 'center' }}>{r.riscoInerente}</Text>
+                  <Text style={{ width: 35, color: '#FF8C00', fontSize: 9, fontWeight: '700', fontFamily: MONO, textAlign: 'center' }}>{r.gutScore}</Text>
+                  <View style={{ width: 45, alignItems: 'center' }}>
+                    <View style={{ backgroundColor: NEON.cyan + '20', borderRadius: 4, paddingHorizontal: 4, paddingVertical: 1 }}>
+                      <Text style={{ color: NEON.cyan, fontSize: 9, fontWeight: '800', fontFamily: MONO }}>{r.compositeScore.total.toFixed(1)}</Text>
+                    </View>
+                  </View>
+                  <View style={{ width: 55, alignItems: 'center' }}>
+                    <View style={{ backgroundColor: lc + '15', borderRadius: 4, paddingHorizontal: 4, paddingVertical: 1 }}>
+                      <Text style={{ color: lc, fontSize: 8, fontWeight: '700', fontFamily: MONO }}>{r.riskLayer}</Text>
+                    </View>
+                  </View>
+                  <View style={{ width: 55, alignItems: 'center' }}>
+                    <View style={{ backgroundColor: ac + '15', borderRadius: 4, paddingHorizontal: 4, paddingVertical: 1 }}>
+                      <Text style={{ color: ac, fontSize: 8, fontWeight: '700', fontFamily: MONO }}>{appetiteLabels[r.appetiteStatus] || r.appetiteStatus}</Text>
+                    </View>
+                  </View>
+                </View>
+              );
+            })}
+          </View>
+
+          {/* Composite Score Formula */}
+          <View style={s.formulaCard}>
+            <Text style={s.formulaTitle}>FÓRMULA DO COMPOSITE SCORE</Text>
+            <View style={s.formulaRow}>
+              <View style={s.formulaBox}>
+                <Text style={[s.formulaBoxLabel, { color: '#FF3D3D' }]}>P×I</Text>
+                <Text style={s.formulaBoxDesc}>Inerente</Text>
+                <Text style={s.formulaBoxRange}>w={(config.weights.inherent * 100).toFixed(0)}%</Text>
+              </View>
+              <Text style={s.formulaOperator}>+</Text>
+              <View style={s.formulaBox}>
+                <Text style={[s.formulaBoxLabel, { color: '#FF8C00' }]}>GUT</Text>
+                <Text style={s.formulaBoxDesc}>Prioridade</Text>
+                <Text style={s.formulaBoxRange}>w={(config.weights.gut * 100).toFixed(0)}%</Text>
+              </View>
+              <Text style={s.formulaOperator}>+</Text>
+              <View style={s.formulaBox}>
+                <Text style={[s.formulaBoxLabel, { color: '#FFD600' }]}>FIN</Text>
+                <Text style={s.formulaBoxDesc}>Financeiro</Text>
+                <Text style={s.formulaBoxRange}>w={(config.weights.financial * 100).toFixed(0)}%</Text>
+              </View>
+              <Text style={s.formulaOperator}>+</Text>
+              <View style={s.formulaBox}>
+                <Text style={[s.formulaBoxLabel, { color: '#00FF88' }]}>CTRL</Text>
+                <Text style={s.formulaBoxDesc}>Controles</Text>
+                <Text style={s.formulaBoxRange}>w={(config.weights.controlEffectiveness * 100).toFixed(0)}%</Text>
               </View>
             </View>
           </View>
