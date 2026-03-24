@@ -2,6 +2,7 @@ import { ScrollView, Text, View, StyleSheet, useWindowDimensions, Image, Touchab
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
 import { useRisks } from "@/lib/risk-context";
+import { WizardButton } from "@/components/wizard-overlay";
 
 const vetorHorizonLogo = require("@/assets/images/vetor-horizon-logo.png");
 
@@ -170,6 +171,11 @@ export default function SettingsScreen() {
           >
             <Text style={[styles.linkText, { color: colors.primary }]}>https://vetor-horizon-risk.netlify.app</Text>
           </TouchableOpacity>
+        </View>
+
+        {/* Tutorial */}
+        <View style={{ marginTop: 16, paddingHorizontal: 4 }}>
+          <WizardButton />
         </View>
 
         {/* Footer */}
