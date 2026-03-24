@@ -135,4 +135,4 @@
 - [x] Criar documento executivo com instruções de uso e guia wizard do app
 - [x] Implementar wizard de onboarding interativo no app (como usar cada tela)
 - [x] Implementar chat com IA (Manus) integrado ao contexto de riscos
-- [ ] Push para GitHub e confirmar deploy no Netlify
+- [x] Push para GitHub e confirmar deploy no Netlify
